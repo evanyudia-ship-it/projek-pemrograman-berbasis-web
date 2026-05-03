@@ -81,6 +81,19 @@
 
         </nav>
 
+        <a href="{{ route('profile.index') }}"
+   class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-600 transition {{ request()->is('profile') ? 'bg-blue-600' : 'text-slate-300' }}">
+    <span>👤</span>
+    <span class="font-medium">Profil Saya</span>
+</a>
+
+<a href="{{ route('reputation.index') }}"
+   class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-600 transition {{ request()->is('reputation') ? 'bg-blue-600' : 'text-slate-300' }}">
+    <span>⭐</span>
+    <span class="font-medium">Reputation Point</span>
+</a>
+
+        
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-800">
             <div class="bg-slate-900 rounded-2xl p-4">
                 <p class="text-sm font-semibold">I Made Putu Subali</p>
