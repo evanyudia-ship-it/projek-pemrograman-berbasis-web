@@ -1,144 +1,157 @@
-@extends('layouts.app')
+@extends('layouts.app')  
 
 @section('title', 'Dashboard - Smart Classroom')
 @section('page_title', 'Dashboard')
-@section('page_subtitle', 'Ringkasan ketersediaan dan penggunaan ruang kelas')
+@section('page_subtitle', 'Selamat datang kembali')
 
 @section('content')
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+<div class="max-w-7xl mx-auto">
 
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-sm text-slate-500">Total Ruang</p>
-                <h3 class="text-3xl font-extrabold mt-2">24</h3>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-                🏫
-            </div>
-        </div>
+    <!-- Greeting -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-800">Halo, I Made Putu Subali 👋</h1>
+        <p class="text-slate-600 mt-1">Berikut ringkasan aktivitas hari ini</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-        <div class="flex justify-between items-start">
+    <!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-slate-500">Ruang Tersedia</p>
-                <h3 class="text-3xl font-extrabold mt-2">16</h3>
+                <p class="text-4xl font-bold text-emerald-600 mt-2">{{ $ruang_tersedia }}</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
-                ✅
+            <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-3xl">
+                🏠
             </div>
         </div>
+        <p class="text-xs text-emerald-600 mt-4">dari {{ $total_ruang }} ruang total</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-        <div class="flex justify-between items-start">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-slate-500">Booking Pending</p>
-                <h3 class="text-3xl font-extrabold mt-2">7</h3>
+                <p class="text-sm text-slate-500">Booking Aktif</p>
+                <p class="text-4xl font-bold text-blue-600 mt-2">{{ $booking_aktif }}</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
+            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl">
+                📅
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-4">Hari ini</p>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-slate-500">Menunggu Approval</p>
+                <p class="text-4xl font-bold text-amber-600 mt-2">{{ $menunggu_approval }}</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-3xl">
                 ⏳
             </div>
         </div>
+        <p class="text-xs text-amber-600 mt-4">Perlu dicek</p>
     </div>
 
-    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-        <div class="flex justify-between items-start">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm text-slate-500">No Show</p>
-                <h3 class="text-3xl font-extrabold mt-2">2</h3>
+                <p class="text-sm text-slate-500">Reputation Point</p>
+                <p class="text-4xl font-bold text-purple-600 mt-2">{{ $reputation_point }}</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl">
-                ⚠️
+            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-3xl">
+                ⭐
             </div>
         </div>
+        <p class="text-xs text-purple-600 mt-4">Good Standing</p>
     </div>
-
 </div>
 
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="p-6 border-b border-slate-200 flex justify-between items-center">
-            <div>
-                <h3 class="font-bold text-lg">Jadwal Booking Hari Ini</h3>
-                <p class="text-sm text-slate-500">Daftar penggunaan ruang terbaru</p>
+        <!-- Jadwal Hari Ini -->
+        <div class="space-y-4">
+            @foreach($jadwal_hari_ini as $jadwal)
+            <div class="flex gap-4 bg-slate-50 rounded-2xl p-4 hover:bg-slate-100 transition">
+                <div class="w-20 h-20 bg-blue-100 rounded-2xl flex-shrink-0 flex items-center justify-center text-4xl">
+                    🏛️
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between">
+                        <h3 class="font-semibold">{{ $jadwal['ruangan'] }}</h3>
+                        <span class="text-xs px-3 py-1 rounded-full font-medium
+                            {{ $jadwal['status'] == 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
+                            {{ $jadwal['status'] }}
+                        </span>
+                    </div>
+                    <p class="text-slate-600 text-sm mt-1">{{ $jadwal['waktu'] }} ({{ $jadwal['durasi'] }})</p>
+                    <p class="text-slate-500 text-sm">{{ $jadwal['keperluan'] }}</p>
+                </div>
             </div>
-            <a href="{{ route('bookings.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold">
-                + Booking
-            </a>
+            @endforeach
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500">
-                <tr>
-                    <th class="text-left px-6 py-4">Ruang</th>
-                    <th class="text-left px-6 py-4">Pengguna</th>
-                    <th class="text-left px-6 py-4">Waktu</th>
-                    <th class="text-left px-6 py-4">Status</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                <tr>
-                    <td class="px-6 py-4 font-semibold">R-201</td>
-                    <td class="px-6 py-4">Dosen - Pak Andi</td>
-                    <td class="px-6 py-4">08.00 - 10.00</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Approved</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 font-semibold">Lab Komputer</td>
-                    <td class="px-6 py-4">Organisasi BEM</td>
-                    <td class="px-6 py-4">13.00 - 16.00</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Pending</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 font-semibold">R-105</td>
-                    <td class="px-6 py-4">Mahasiswa</td>
-                    <td class="px-6 py-4">18.00 - 20.00</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Checked In</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <div class="space-y-4">
+                <!-- Booking Item -->
+                <div class="flex gap-4 bg-slate-50 rounded-2xl p-4 hover:bg-slate-100 transition">
+                    <div class="w-20 h-20 bg-blue-100 rounded-2xl flex-shrink-0 flex items-center justify-center text-4xl">
+                        🏛️
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="font-semibold">Ruang Seminar A - Lt. 3</h3>
+                            <span class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-medium">Confirmed</span>
+                        </div>
+                        <p class="text-slate-600 text-sm mt-1">10:00 - 12:00 (2 jam)</p>
+                        <p class="text-slate-500 text-sm">Mata Kuliah: Pemrograman Web Lanjutan</p>
+                    </div>
+                </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <h3 class="font-bold text-lg mb-1">Reputation Point</h3>
-        <p class="text-sm text-slate-500 mb-6">Kontrol perilaku pengguna</p>
-
-        <div class="flex items-center justify-center">
-            <div class="w-40 h-40 rounded-full border-[12px] border-blue-600 flex items-center justify-center">
-                <div class="text-center">
-                    <p class="text-4xl font-extrabold">85</p>
-                    <p class="text-xs text-slate-500">Point</p>
+                <div class="flex gap-4 bg-slate-50 rounded-2xl p-4 hover:bg-slate-100 transition">
+                    <div class="w-20 h-20 bg-amber-100 rounded-2xl flex-shrink-0 flex items-center justify-center text-4xl">
+                        🏛️
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="font-semibold">Ruang Rapat 205</h3>
+                            <span class="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">Pending</span>
+                        </div>
+                        <p class="text-slate-600 text-sm mt-1">13:30 - 15:00 (1.5 jam)</p>
+                        <p class="text-slate-500 text-sm">Rapat Organisasi Mahasiswa</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-6 space-y-3 text-sm">
-            <div class="flex justify-between">
-                <span class="text-slate-500">Status</span>
-                <span class="font-bold text-emerald-600">Trusted</span>
+        <!-- Notifikasi & Booking Aktif -->
+        <div class="lg:col-span-5 space-y-6">
+
+            <!-- Notifikasi Approval -->
+            <div class="bg-white rounded-3xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span>🔔</span> Notifikasi Approval
+                </h2>
+                <div class="space-y-3">
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                        <p class="text-sm font-medium">Booking Ruang Seminar A</p>
+                        <p class="text-xs text-slate-500">Menunggu persetujuan Validator • 2 jam yang lalu</p>
+                        <button onclick="alert('Fitur approval akan dibuat nanti')"
+                                class="mt-3 text-xs bg-amber-600 text-white px-4 py-2 rounded-xl hover:bg-amber-700 transition">
+                            Lihat Detail
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500">Booking aktif</span>
-                <span class="font-bold">3</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-slate-500">Pelanggaran</span>
-                <span class="font-bold text-red-600">0</span>
-            </div>
+
+            <!-- Quick Booking -->
+            <a href="{{ route('bookings.create') }}" 
+               class="block bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-3xl p-8 text-center hover:from-indigo-700 hover:to-blue-700 transition shadow-lg">
+                <span class="text-4xl block mb-3">➕</span>
+                <span class="font-semibold text-lg">Ajukan Booking Baru</span>
+            </a>
+
         </div>
+
     </div>
 
 </div>

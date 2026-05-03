@@ -1,18 +1,24 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\AuthController;
+
+
 
 Route::get('/', function () {
     return redirect('/dashboard');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+     ->name('dashboard');
 
-Route::get('/rooms', function () {
-    return view('rooms.index');
-})->name('rooms.index');
+Route::get('/rooms',      [RoomController::class, 'index'])
+     ->name('rooms.index');
+
+Route::get('/rooms/{id}', [RoomController::class, 'show'])
+     ->name('rooms.show'); 
 
 Route::get('/bookings/create', function () {
     return view('bookings.create');

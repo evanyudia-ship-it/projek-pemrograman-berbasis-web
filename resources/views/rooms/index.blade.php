@@ -1,125 +1,80 @@
 @extends('layouts.app')
 
-@section('title', 'Ketersediaan Ruang')
-@section('page_title', 'Ketersediaan Ruang')
-@section('page_subtitle', 'Lihat ruang kosong dan detail fasilitas ruang kelas')
+@section('title', 'Daftar Ruang - Smart Classroom')
+@section('page_title', 'Daftar Ruang')
+@section('page_subtitle', 'Ketersediaan ruangan kampus saat ini')
 
 @section('content')
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+<div class="max-w-7xl mx-auto">
 
-        <div class="md:col-span-2">
-            <label class="text-sm font-semibold text-slate-700">Cari Ruang</label>
-            <input type="text" id="searchRoom"
-                   class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="Contoh: R-201, Lab, Aula">
-        </div>
-
-        <div>
-            <label class="text-sm font-semibold text-slate-700">Tanggal</label>
-            <input type="date"
-                   class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
-        </div>
-
-        <div>
-            <label class="text-sm font-semibold text-slate-700">Jam Mulai</label>
-            <input type="time"
-                   class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
-        </div>
-
-        <div>
-            <label class="text-sm font-semibold text-slate-700">Jam Selesai</label>
-            <input type="time"
-                   class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
-        </div>
-
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-slate-800">Semua Ruangan</h2>
+        <a href="{{ route('bookings.create') }}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 transition">
+            <span>➕</span> Ajukan Booking
+        </a>
     </div>
-</div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="roomList">
-
-    @php
-        $rooms = [
-            ['code' => 'R-201', 'name' => 'Ruang Kelas 201', 'capacity' => 40, 'status' => 'available', 'facility' => 'LCD, AC, Whiteboard'],
-            ['code' => 'R-105', 'name' => 'Ruang Diskusi 105', 'capacity' => 20, 'status' => 'used', 'facility' => 'Whiteboard, WiFi'],
-            ['code' => 'LAB-01', 'name' => 'Lab Komputer', 'capacity' => 35, 'status' => 'available', 'facility' => 'Komputer, LCD, AC'],
-            ['code' => 'AULA', 'name' => 'Aula Serbaguna', 'capacity' => 120, 'status' => 'maintenance', 'facility' => 'Sound System, LCD'],
-            ['code' => 'R-301', 'name' => 'Ruang Kelas 301', 'capacity' => 45, 'status' => 'available', 'facility' => 'LCD, AC'],
-            ['code' => 'R-302', 'name' => 'Ruang Kelas 302', 'capacity' => 30, 'status' => 'used', 'facility' => 'Whiteboard'],
-        ];
-    @endphp
-
-    @foreach($rooms as $room)
-        <div class="room-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
-             data-name="{{ strtolower($room['code'].' '.$room['name']) }}">
-
-            <div class="h-36 bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center text-white">
-                <div class="text-center">
-                    <p class="text-4xl mb-2">🏫</p>
-                    <h3 class="text-2xl font-extrabold">{{ $room['code'] }}</h3>
-                </div>
-            </div>
-
-            <div class="p-5">
-                <div class="flex justify-between items-start mb-3">
+    <!-- Grid Ruangan -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach($rooms as $room)
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition">
+            
+            <!-- Header Warna -->
+            <div class="h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+            
+            <div class="p-6">
+                <div class="flex justify-between items-start">
                     <div>
-                        <h3 class="font-bold text-lg">{{ $room['name'] }}</h3>
-                        <p class="text-sm text-slate-500">Kapasitas {{ $room['capacity'] }} orang</p>
+                        <span class="text-xs font-mono bg-slate-100 px-2.5 py-1 rounded-lg">{{ $room['kode'] }}</span>
+                        <h3 class="font-semibold text-lg mt-3">{{ $room['nama'] }}</h3>
                     </div>
-
-                    @if($room['status'] === 'available')
-                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Tersedia</span>
-                    @elseif($room['status'] === 'used')
-                        <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">Dipakai</span>
-                    @else
-                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">Maintenance</span>
-                    @endif
+                    <span class="px-4 py-1.5 text-sm font-medium rounded-2xl
+                        {{ $room['status'] == 'Tersedia' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-amber-100 text-amber-700' }}">
+                        {{ $room['status'] }}
+                    </span>
                 </div>
 
-                <p class="text-sm text-slate-600 mb-5">
-                    Fasilitas: {{ $room['facility'] }}
-                </p>
-
-                <div class="flex gap-3">
-                    <button class="flex-1 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm">
-                        Detail
-                    </button>
-
-                    @if($room['status'] === 'available')
-                        <a href="{{ route('bookings.create') }}"
-                           class="flex-1 text-center px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm">
-                            Booking
-                        </a>
-                    @else
-                        <button disabled
-                                class="flex-1 px-4 py-2 rounded-xl bg-slate-200 text-slate-400 font-semibold text-sm cursor-not-allowed">
-                            Tidak Bisa
-                        </button>
-                    @endif
+                <div class="mt-6 space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Kapasitas</span>
+                        <span class="font-semibold">{{ $room['kapasitas'] }} Orang</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block mb-1">Fasilitas</span>
+                        <p class="text-slate-600 text-sm leading-relaxed">
+                            {{ is_array($room['fasilitas']) ? implode(', ', $room['fasilitas']) : $room['fasilitas'] }}
+                        </p>
+                    </div>
                 </div>
             </div>
+
+            {{-- footer card --}}
+            <div class="border-t border-slate-100 px-6 py-4 bg-slate-50 flex justify-between items-center">
+                {{-- Tombol detail selalu tampil --}}
+                <a href="{{ route('rooms.show', $room['id']) }}"
+                class="text-slate-500 hover:text-slate-700 text-sm font-medium">
+                    Lihat Detail →
+                </a>
+
+                @if($room['status'] == 'Tersedia')
+                <a href="{{ route('bookings.create', ['room_id' => $room['id']]) }}"
+                class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    Ajukan Booking →
+                </a>
+                @else
+                <span class="text-amber-600 text-sm font-medium">⏳ Sedang digunakan</span>
+                @endif
+            </div>
+
         </div>
-    @endforeach
+        @endforeach
+    </div>
 
 </div>
-
-@push('scripts')
-<script>
-    $('#searchRoom').on('keyup', function () {
-        let keyword = $(this).val().toLowerCase();
-
-        $('.room-card').each(function () {
-            let name = $(this).data('name');
-
-            if (name.includes(keyword)) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
-        });
-    });
-</script>
-@endpush
 
 @endsection
