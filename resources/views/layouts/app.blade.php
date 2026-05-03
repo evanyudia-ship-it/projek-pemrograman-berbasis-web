@@ -116,10 +116,10 @@
             </a>
 
             <a href="{{ route('reputation.index') }}"
-               class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-600 transition {{ request()->is('reputation') ? 'bg-blue-600' : 'text-slate-300' }}">
-                <span>⭐</span>
-                <span class="font-medium">Reputation Point</span>
-            </a>
+                class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-blue-600 transition {{ request()->is('reputation') ? 'bg-blue-600' : 'text-slate-300' }}">
+                    <span>⭐</span>
+                    <span class="font-medium">Reputation Point</span>
+                </a>
 
             {{-- ADMIN SECTION --}}
             <div class="pt-4 mt-4 border-t border-slate-800">
