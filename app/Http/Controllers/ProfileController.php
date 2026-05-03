@@ -10,7 +10,7 @@ class ProfileController extends Controller
     {
         // sementara dummy user (nanti diganti auth user)
         $user = (object) [
-            'name' => 'I Made Putu Subali',
+            'name' => 'I Made Syaeful Gahar',
             'role' => 'Admin',
             'email' => 'admin@kampus.ac.id',
             'point' => 85,
