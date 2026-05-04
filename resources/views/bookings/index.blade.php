@@ -49,7 +49,7 @@
                        class="rounded-xl"
                        placeholder="Cari kode, ruang, pemohon...">
 
-                <select id="filterStatus" class="rounded-xl">
+                <select id="filterStatus">
                     <option value="">Semua Status</option>
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
@@ -268,7 +268,7 @@
 
 {{-- MODAL DETAIL BOOKING --}}
 <div id="bookingModal"
-     class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+     class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
 
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
 

@@ -65,7 +65,7 @@
             <p class="text-sm text-slate-500 mb-6">Sistem penilaian perilaku pengguna</p>
 
             <div class="flex items-center justify-center mb-6">
-                <div class="w-44 h-44 rounded-full border-[14px] border-blue-600 flex items-center justify-center">
+                <div class="w-44 h-44 rounded-full border-10 border-emerald-600 flex items-center justify-center">
                     <div class="text-center">
                         <p class="text-5xl font-extrabold">85</p>
                         <p class="text-xs text-slate-500">Point</p>
@@ -108,32 +108,32 @@
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Nama Lengkap</label>
-                    <input type="text" value="Admin Kampus" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2">
+                    <input type="text" value="Admin Kampus" class="mt-2 w-full">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Email</label>
-                    <input type="email" value="admin@kampus.ac.id" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2">
+                    <input type="email" value="admin@kampus.ac.id" class="mt-2 w-full">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">NIM / NIP</label>
-                    <input type="text" value="20260001" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2">
+                    <input type="text" value="20260001" class="mt-2 w-full">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">No. HP</label>
-                    <input type="text" value="08123456789" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2">
+                    <input type="text" value="08123456789" class="mt-2 w-full">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Role</label>
-                    <input type="text" value="Admin" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-100" readonly>
+                    <input type="text" value="Admin" class="mt-2 w-full " readonly>
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Organisasi</label>
-                    <input type="text" value="Belum mewakili organisasi" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 bg-slate-100" readonly>
+                    <input type="text" value="Belum mewakili organisasi" class="mt-2 w-full " readonly>
                 </div>
 
             </div>

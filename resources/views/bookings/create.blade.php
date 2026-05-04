@@ -18,7 +18,7 @@
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Ruang</label>
                     <select id="room_id" name="room_id"
-                            class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                            class="mt-2 w-full">
                         <option value="">Pilih ruang</option>
                         <option value="1" data-capacity="40">R-201 - Ruang Kelas 201</option>
                         <option value="2" data-capacity="20">R-105 - Ruang Diskusi 105</option>
@@ -29,7 +29,7 @@
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Jenis Booking</label>
                     <select name="booking_type" id="booking_type"
-                            class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                            class="mt-2 w-full">
                         <option value="">Pilih jenis</option>
                         <option value="belajar_kelompok">Belajar Kelompok</option>
                         <option value="kelas_pengganti">Kelas Pengganti</option>
@@ -41,20 +41,20 @@
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Judul Kegiatan</label>
                     <input type="text" name="title"
-                           class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                           class="mt-2 w-full"
                            placeholder="Contoh: Diskusi Tugas Kelompok">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Tanggal</label>
                     <input type="date" name="date" id="date"
-                           class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-2 w-full ">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Jumlah Peserta</label>
                     <input type="number" name="participant_count" id="participant_count"
-                           class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                           class="mt-2 w-full"
                            placeholder="Contoh: 25">
                     <p id="capacityInfo" class="text-xs text-slate-500 mt-1"></p>
                 </div>
@@ -62,20 +62,20 @@
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Jam Mulai</label>
                     <input type="time" name="start_time" id="start_time"
-                           class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-2 w-full ">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Jam Selesai</label>
                     <input type="time" name="end_time" id="end_time"
-                           class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500">
+                           class="mt-2 w-full">
                     <p id="durationInfo" class="text-xs mt-1"></p>
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Tujuan Penggunaan</label>
                     <textarea name="purpose" rows="4"
-                              class="mt-2 w-full rounded-xl border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+                              class="mt-2 w-full"
                               placeholder="Jelaskan tujuan penggunaan ruang"></textarea>
                 </div>
 

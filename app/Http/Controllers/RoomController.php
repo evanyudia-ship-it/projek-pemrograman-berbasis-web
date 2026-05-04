@@ -6,7 +6,7 @@ class RoomController extends Controller
 {
     private function getRooms(): array
     {
-        return [
+        return session('rooms_data', [
             [
                 'id'         => 1,
                 'nama'       => 'Ruang Seminar A - Lt. 3',
@@ -112,7 +112,7 @@ class RoomController extends Controller
                 'deskripsi'  => 'Ruang meeting kecil dan nyaman dengan sofa. Ideal untuk diskusi tim kecil, interview, dan coaching session.',
                 'jadwal'     => [],
             ],
-        ];
+        ]);
     }
 
     public function index()

@@ -4,167 +4,13 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Smart Classroom')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    
     {{-- Tailwind CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- jQuery CDN --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    {{-- Google Font: DM Sans (clean, modern, sesuai tema Ruangkita) --}}
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['DM Sans', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        * { font-family: 'DM Sans', sans-serif; }
-
-        /* ── Sidebar transition ── */
-        #sidebar {
-            width: 260px;
-            transition: width 0.25s cubic-bezier(.4,0,.2,1);
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        #sidebar.minimized {
-            width: 72px;
-        }
-
-        /* Hide labels & subtitle when minimized */
-        #sidebar.minimized .nav-label,
-        #sidebar.minimized .sidebar-subtitle,
-        #sidebar.minimized .sidebar-brand-text,
-        #sidebar.minimized .admin-section-label,
-        #sidebar.minimized .user-info,
-        #sidebar.minimized .logout-label {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-            white-space: nowrap;
-            transition: opacity 0.15s, width 0.25s;
-        }
-        #sidebar .nav-label,
-        #sidebar .sidebar-subtitle,
-        #sidebar .sidebar-brand-text,
-        #sidebar .admin-section-label,
-        #sidebar .user-info,
-        #sidebar .logout-label {
-            opacity: 1;
-            transition: opacity 0.2s 0.05s, width 0.25s;
-            white-space: nowrap;
-        }
-
-        /* Center icons when minimized */
-        #sidebar.minimized .nav-item {
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
-        #sidebar.minimized .logo-wrap {
-            justify-content: center;
-            padding: 0 0;
-        }
-        #sidebar.minimized .logo-icon {
-            margin-right: 0;
-        }
-        #sidebar.minimized .user-box {
-            justify-content: center;
-        }
-        #sidebar.minimized .user-avatar {
-            margin-right: 0;
-        }
-        #sidebar.minimized .logout-btn {
-            padding-left: 0;
-            padding-right: 0;
-            justify-content: center;
-        }
-
-        /* Disable transition on initial load (prevent flash animation) */
-        .sidebar-no-transition,
-        .sidebar-no-transition * {
-            transition: none !important;
-        }
-
-        /* Nav active & hover */
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-weight: 500;
-            font-size: 0.875rem;
-            color: #475569;
-            transition: background 0.15s, color 0.15s;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .nav-item:hover {
-            background: #f0fdf4;
-            color: #16a34a;
-        }
-        .nav-item.active {
-            background: #22c55e;
-            color: #fff;
-            font-weight: 700;
-        }
-        .nav-item.active .nav-icon {
-            filter: brightness(10);
-        }
-
-        /* Nav icon */
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        /* Inputs */
-        input, select, textarea {
-            border: 1px solid #cbd5e1;
-            padding: 10px 12px;
-            outline: none;
-            background-color: white;
-            border-radius: 10px;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-
-        /* Mobile overlay */
-        #overlay { display: none; }
-        #overlay.show { display: block; }
-
-        /* Toggle button */
-        #btnToggleSidebar {
-            transition: transform 0.25s;
-        }
-
-        /* Tooltip on minimized */
-        #sidebar.minimized .nav-item {
-            position: relative;
-        }
-    </style>
 </head>
 
 <body class="bg-slate-100 text-slate-800">
@@ -179,8 +25,8 @@
                   transform -translate-x-full md:translate-x-0 transition-transform duration-300 h-screen">
 
         {{-- LOGO --}}
-        <div class="h-[68px] flex items-center px-4 border-b border-slate-100 logo-wrap flex-shrink-0">
-            <div class="logo-icon w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-lg flex-shrink-0 mr-3">
+        <div class="h-17 flex items-center px-4 border-b border-slate-100 logo-wrap shrink-0">
+            <div class="logo-icon w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-lg shrink-0 mr-3">
                 🏫
             </div>
             <div class="sidebar-brand-text overflow-hidden">
@@ -221,7 +67,7 @@
 
             <a href="{{ route('schedule.index') }}"
                class="nav-item {{ request()->is('schedule') ? 'active' : '' }}">
-                <span class="nav-icon">🗓️</span>
+                <span class="nav-icon">🕒</span>
                 <span class="nav-label">Jadwal Ruangan</span>
             </a>
 
@@ -237,6 +83,12 @@
                 <span class="nav-label">Reputation Point</span>
             </a>
 
+            <a href="{{ route('help.index') }}"
+                class="nav-item {{ request()->is('help') ? 'active' : '' }}">
+                <span class="nav-icon">❓</span>
+                <span class="nav-label">Bantuan</span>
+            </a>
+
             {{-- Admin Section --}}
             <div class="pt-3">
                 <p class="admin-section-label px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest overflow-hidden">Admin</p>
@@ -247,6 +99,12 @@
                     <span class="nav-label">Approval Admin</span>
                 </a>
 
+                <a href="{{ route('admin.rooms.index') }}"
+                    class="nav-item {{ request()->is('admin/rooms') ? 'active' : '' }}">
+                    <span class="nav-icon">🏗️</span>
+                    <span class="nav-label">Manajemen Ruang</span>
+                </a>
+
                 <a href="{{ route('admin.users.index') }}"
                    class="nav-item {{ request()->is('admin/users') ? 'active' : '' }}">
                     <span class="nav-icon">👥</span>
@@ -254,12 +112,13 @@
                 </a>
             </div>
 
+
         </nav>
 
         {{-- USER BOX + LOGOUT --}}
-        <div class="p-3 border-t border-slate-100 flex-shrink-0">
+        <div class="p-3 border-t border-slate-100 shrink-0">
             <div class="user-box flex items-center gap-3 px-2 py-2 mb-2 overflow-hidden">
-                <div class="user-avatar w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                <div class="user-avatar w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
                     A
                 </div>
                 <div class="user-info overflow-hidden">
@@ -272,7 +131,7 @@
                class="logout-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
                       bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-500
                       text-sm font-semibold transition">
-                <span class="flex-shrink-0">🚪</span>
+                <span class="shrink-0">🚪</span>
                 <span class="logout-label whitespace-nowrap">Logout</span>
             </a>
         </div>
@@ -288,13 +147,13 @@
     <main class="flex-1 w-full min-w-0 flex flex-col">
 
         {{-- TOPBAR --}}
-        <header class="h-[68px] bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 flex-shrink-0">
+        <header class="h-17 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 shrink-0">
 
             <div class="flex items-center gap-3 min-w-0">
 
                 {{-- Toggle Sidebar (Desktop: minimize/expand | Mobile: open) --}}
                 <button id="btnToggleSidebar"
-                        class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition flex-shrink-0"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition shrink-0"
                         title="Toggle Sidebar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

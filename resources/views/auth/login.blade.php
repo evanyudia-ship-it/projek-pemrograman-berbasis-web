@@ -6,40 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- Tailwind CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- jQuery --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    {{-- Font --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        input {
-            border: 1px solid #cbd5e1;
-            padding: 12px 14px;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-        }
-    </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
+<body class="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-100"
+      style="font-family: 'Inter', sans-serif;">
 
 <div class="min-h-screen flex items-center justify-center p-4">
 
     <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
 
         {{-- LEFT SECTION --}}
-        <div class="hidden lg:flex relative bg-gradient-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
+        <div class="hidden lg:flex relative bg-linear-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
 
             <div>
                 <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl mb-6">
@@ -109,7 +91,7 @@
                         <input type="email"
                                name="email"
                                id="email"
-                               class="w-full rounded-xl"
+                               class="w-full rounded-xl login-input"
                                placeholder="contoh: user@kampus.ac.id"
                                required>
                     </div>
@@ -122,7 +104,7 @@
                             <input type="password"
                                    name="password"
                                    id="password"
-                                   class="w-full rounded-xl pr-12"
+                                   class="w-full rounded-xl pr-12 login-input"
                                    placeholder="Masukkan password"
                                    required>
 

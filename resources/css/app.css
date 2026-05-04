@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,6 +7,203 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'DM Sans', sans-serif;
+    --font-inter: 'Inter', sans-serif;  
+    --font-sora: 'Sora', sans-serif;
 }
+
+@layer utilities {
+    .font-sora {
+        font-family: var(--font-sora);
+    }
+}
+
+@layer components {
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
+    }
+
+    .room-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .room-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 40px -10px rgba(0,0,0,0.15);
+    }
+    .room-img {
+        transition: transform 0.4s ease;
+    }
+    .room-card:hover .room-img {
+        transform: scale(1.05);
+    }
+
+    .fade-up {
+        animation: fadeUp 0.4s ease both;
+    }
+    .delay-1 { animation-delay: 0.05s; }
+    .delay-2 { animation-delay: 0.1s; }
+    .delay-3 { animation-delay: 0.15s; }
+    .delay-4 { animation-delay: 0.2s; }
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ── Sidebar transition ── */
+#sidebar {
+    width: 260px;
+    transition: width 0.25s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+#sidebar.minimized { width: 72px; }
+
+#sidebar.minimized .nav-label,
+#sidebar.minimized .sidebar-subtitle,
+#sidebar.minimized .sidebar-brand-text,
+#sidebar.minimized .admin-section-label,
+#sidebar.minimized .user-info,
+#sidebar.minimized .logout-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.15s, width 0.25s;
+}
+#sidebar .nav-label,
+#sidebar .sidebar-subtitle,
+#sidebar .sidebar-brand-text,
+#sidebar .admin-section-label,
+#sidebar .user-info,
+#sidebar .logout-label {
+    opacity: 1;
+    transition: opacity 0.2s 0.05s, width 0.25s;
+    white-space: nowrap;
+}
+
+#sidebar.minimized .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+#sidebar.minimized .logo-wrap { justify-content: center; padding: 0; }
+#sidebar.minimized .logo-icon { margin-right: 0; }
+#sidebar.minimized .user-box { justify-content: center; }
+#sidebar.minimized .user-avatar { margin-right: 0; }
+#sidebar.minimized .logout-btn { padding-left: 0; padding-right: 0; justify-content: center; }
+
+.sidebar-no-transition,
+.sidebar-no-transition * { transition: none !important; }
+
+/* Nav */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #475569;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+}
+.nav-item:hover { background: #f0fdf4; color: #16a34a; }
+.nav-item.active { background: #22c55e; color: #fff; font-weight: 700; }
+.nav-item.active .nav-icon { filter: brightness(10); }
+
+.nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+/* Inputs */
+input, select, textarea {
+    border: 1px solid #cbd5e1;
+    padding: 10px 12px;
+    outline: none;
+    background-color: white;
+    border-radius: 10px;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Mobile overlay */
+#overlay { display: none; }
+#overlay.show { display: block; }
+
+.room-card {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 48px -12px rgba(0,0,0,0.18);
+}
+.room-img {
+    transition: transform 0.45s ease;
+}
+.room-card:hover .room-img {
+    transform: scale(1.06);
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.4s ease both; }
+
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+.filter-btn { transition: all 0.15s ease; }
+.filter-btn.active {
+    background: #0f172a;
+    color: white;
+    border-color: #0f172a;
+}
+
+/* ── rooms/show only ── */
+.delay-1 { animation-delay: 0.06s; }
+.delay-2 { animation-delay: 0.12s; }
+.delay-3 { animation-delay: 0.18s; }
+.delay-4 { animation-delay: 0.24s; }
+
+.cal-cell {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cal-cell:hover {
+    transform: scale(1.15);
+    z-index: 10;
+    position: relative;
+}
+
+.action-btn {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.18);
+}
+
+.hero-img { transition: transform 6s ease; }
+.hero-img:hover { transform: scale(1.03); }

@@ -6,45 +6,6 @@
 
 @section('content')
 
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-    .font-sora { font-family: 'Sora', sans-serif; }
-
-    .room-card {
-        transition: transform 0.22s ease, box-shadow 0.22s ease;
-    }
-    .room-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 48px -12px rgba(0,0,0,0.18);
-    }
-    .room-img {
-        transition: transform 0.45s ease;
-    }
-    .room-card:hover .room-img {
-        transform: scale(1.06);
-    }
-
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(18px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up { animation: fadeUp 0.4s ease both; }
-    .stagger > *:nth-child(1) { animation-delay: 0.05s; }
-    .stagger > *:nth-child(2) { animation-delay: 0.10s; }
-    .stagger > *:nth-child(3) { animation-delay: 0.15s; }
-    .stagger > *:nth-child(4) { animation-delay: 0.20s; }
-    .stagger > *:nth-child(5) { animation-delay: 0.25s; }
-    .stagger > *:nth-child(6) { animation-delay: 0.30s; }
-
-    .filter-btn { transition: all 0.15s ease; }
-    .filter-btn.active {
-        background: #0f172a;
-        color: white;
-        border-color: #0f172a;
-    }
-</style>
-
 <div class="max-w-7xl mx-auto font-sora space-y-8">
 
     {{-- ===== HERO HEADER ===== --}}
@@ -63,7 +24,7 @@
             </div>
 
             {{-- Badge summary --}}
-            <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="flex items-center gap-3 shrink-0">
                 <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-2xl text-sm font-semibold">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     Tersedia
@@ -83,7 +44,7 @@
         <div class="relative flex-1">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
             <input type="text" id="searchInput" placeholder="Cari nama ruangan, kode, atau gedung..."
-                   class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm transition">
         </div>
 
         {{-- Filter status --}}
@@ -112,7 +73,7 @@
                      class="room-img w-full h-full object-cover">
 
                 {{-- Overlay gradient --}}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
+                <div class="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent"></div>
 
                 {{-- Badge Status --}}
                 <span class="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold

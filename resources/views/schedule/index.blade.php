@@ -12,7 +12,7 @@
 
         <div>
             <label class="text-sm font-semibold text-slate-700">Pilih Ruang</label>
-            <select class="mt-2 w-full rounded-xl border-slate-300">
+            <select class="mt-2 w-full">
                 <option>Semua Ruang</option>
                 <option>R-201</option>
                 <option>R-105</option>
@@ -24,7 +24,7 @@
         <div>
             <label class="text-sm font-semibold text-slate-700">Tanggal</label>
             <input type="date"
-                class="mt-2 w-full rounded-xl border-slate-300">
+                class="mt-2 w-full">
         </div>
 
         <div class="flex items-end">

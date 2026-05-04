@@ -6,6 +6,8 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\HelpController;
+use App\Http\Controllers\RoomManageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,12 +77,30 @@ Route::prefix('reputation')->name('reputation.')->group(function () {
 */
 Route::prefix('admin')->name('admin.')->group(function () {
 
+    // ===== ADMIN - Approvals =====
     Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
 
+    // ===== ADMIN - Manage Rooms =====
+    Route::get('/rooms',                    [RoomManageController::class, 'index'])->name('rooms.index');
+    Route::post('/rooms',                   [RoomManageController::class, 'store'])->name('rooms.store');
+    Route::put('/rooms/{id}',               [RoomManageController::class, 'update'])->name('rooms.update');
+    Route::delete('/rooms/{id}',            [RoomManageController::class, 'destroy'])->name('rooms.destroy');
+    Route::post('/rooms/{id}/toggle',       [RoomManageController::class, 'toggleStatus'])->name('rooms.toggleStatus');
+    Route::post('/rooms/reset',             [RoomManageController::class, 'reset'])->name('rooms.reset');
+
+    // ===== ADMIN - Manage Users =====
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', fn() => view('admin.users.index'))->name('index');
     });
 
 });
+
+/*
+|--------------------------------------------------------------------------
+| PANDUAN & FAQ
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/help', [HelpController::class, 'index'])->name('help.index');

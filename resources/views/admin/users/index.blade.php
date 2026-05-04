@@ -51,10 +51,9 @@
             <div class="flex flex-col md:flex-row gap-3">
                 <input type="text"
                        id="searchUser"
-                       class="rounded-xl"
                        placeholder="Cari nama/email...">
 
-                <select id="filterRole" class="rounded-xl">
+                <select id="filterRole">
                     <option value="">Semua Role</option>
                     <option value="admin">Admin</option>
                     <option value="validator">Validator</option>
@@ -63,7 +62,7 @@
                     <option value="organisasi">Organisasi</option>
                 </select>
 
-                <select id="filterStatus" class="rounded-xl">
+                <select id="filterStatus">
                     <option value="">Semua Status</option>
                     <option value="active">Aktif</option>
                     <option value="pending">Menunggu</option>
@@ -72,7 +71,7 @@
                 </select>
 
                 <button id="btnOpenUserModal"
-                        class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                        class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                     + Tambah User
                 </button>
             </div>
@@ -385,7 +384,7 @@
 
 {{-- MODAL TAMBAH / EDIT USER --}}
 <div id="userModal"
-     class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+     class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
 
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
 
@@ -396,7 +395,7 @@
             </div>
 
             <button id="btnCloseUserModal"
-                    class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200">
+                    class="w-10 h-10 bg-slate-100 hover:bg-slate-200">
                 ✕
             </button>
         </div>
@@ -408,27 +407,27 @@
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Nama Lengkap</label>
-                    <input type="text" name="name" id="formName" class="mt-2 w-full rounded-xl" placeholder="Nama user">
+                    <input type="text" name="name" id="formName" class="mt-2 w-full" placeholder="Nama user">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Email</label>
-                    <input type="email" name="email" id="formEmail" class="mt-2 w-full rounded-xl" placeholder="email@kampus.ac.id">
+                    <input type="email" name="email" id="formEmail" class="mt-2 w-full" placeholder="email@kampus.ac.id">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">NIM / NIP / Kode</label>
-                    <input type="text" name="identity_number" id="formIdentity" class="mt-2 w-full rounded-xl" placeholder="Contoh: 20260001">
+                    <input type="text" name="identity_number" id="formIdentity" class="mt-2 w-full" placeholder="Contoh: 20260001">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">No. HP</label>
-                    <input type="text" name="phone" id="formPhone" class="mt-2 w-full rounded-xl" placeholder="08123456789">
+                    <input type="text" name="phone" id="formPhone" class="mt-2 w-full" placeholder="08123456789">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Role</label>
-                    <select name="role" id="formRole" class="mt-2 w-full rounded-xl">
+                    <select name="role" id="formRole" class="mt-2 w-full">
                         <option value="">Pilih role</option>
                         <option value="admin">Admin</option>
                         <option value="validator">Validator</option>
@@ -440,7 +439,7 @@
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Status</label>
-                    <select name="status" id="formStatus" class="mt-2 w-full rounded-xl">
+                    <select name="status" id="formStatus" class="mt-2 w-full">
                         <option value="active">Aktif</option>
                         <option value="pending">Menunggu Verifikasi</option>
                         <option value="inactive">Nonaktif</option>
@@ -450,17 +449,17 @@
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Password</label>
-                    <input type="password" name="password" class="mt-2 w-full rounded-xl" placeholder="Password">
+                    <input type="password" name="password" class="mt-2 w-full" placeholder="Password">
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" class="mt-2 w-full rounded-xl" placeholder="Ulangi password">
+                    <input type="password" name="password_confirmation" class="mt-2 w-full" placeholder="Ulangi password">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Catatan Admin</label>
-                    <textarea name="note" rows="3" class="mt-2 w-full rounded-xl" placeholder="Catatan tambahan jika diperlukan"></textarea>
+                    <textarea name="note" rows="3" class="mt-2 w-full" placeholder="Catatan tambahan jika diperlukan"></textarea>
                 </div>
 
             </div>
@@ -468,12 +467,12 @@
             <div class="mt-6 flex flex-col md:flex-row gap-3 md:justify-end">
                 <button type="button"
                         id="btnCancelUserModal"
-                        class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold">
+                        class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold">
                     Batal
                 </button>
 
                 <button type="submit"
-                        class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                        class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                     Simpan User
                 </button>
             </div>

@@ -13,7 +13,7 @@
         <p class="text-sm text-slate-500 mb-6">Status kepercayaan pengguna</p>
 
         <div class="flex items-center justify-center">
-            <div class="w-44 h-44 rounded-full border-[14px] border-blue-600 flex items-center justify-center">
+            <div class="w-44 h-44 rounded-full border-10 border-emerald-600 flex items-center justify-center">
                 <div class="text-center">
                     <p class="text-5xl font-extrabold">85</p>
                     <p class="text-xs text-slate-500">Point</p>
