@@ -115,7 +115,7 @@ class ApprovalController extends Controller
         return back()->with('success', "Booking {$id} berhasil disetujui.");
     }
 
-    public function reject(Request $request, $id = null )
+    public function reject(Request $request, $id = null)
     {
         $request->validate(['reason' => 'required|string|max:255']);
         // Nanti disambungkan ke database

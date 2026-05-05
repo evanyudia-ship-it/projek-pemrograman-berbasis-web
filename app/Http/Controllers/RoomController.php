@@ -20,6 +20,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '21:00',
                 'max_durasi' => '8 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung B (FIP), Lantai 1',
                 'deskripsi'  => 'Ruang seminar luas dengan panggung dan sistem audio premium. Ideal untuk seminar, kuliah umum, dan acara besar kampus.',
                 'jadwal'     => [
                     '2026-05-05' => ['label' => 'Seminar Nasional IT 2026',  'waktu' => '08:00 - 16:00', 'tipe' => 'penuh'],
@@ -41,6 +42,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '17:00',
                 'max_durasi' => '4 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung C (FTK), Lantai 2',
                 'deskripsi'  => 'Ruang rapat eksekutif dengan meja oval dan TV layar besar. Cocok untuk rapat dosen, diskusi tim, dan pertemuan pimpinan.',
                 'jadwal'     => [
                     '2026-05-03' => ['label' => 'Rapat Pimpinan', 'waktu' => '09:00 - 14:00', 'tipe' => 'penuh'],
@@ -59,6 +61,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '20:00',
                 'max_durasi' => '6 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung D , Lantai 1',
                 'deskripsi'  => 'Ruang kuliah standar dengan kursi ergonomis dan proyektor. Lengkap untuk kegiatan belajar mengajar sehari-hari.',
                 'jadwal'     => [],
             ],
@@ -75,6 +78,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '20:00',
                 'max_durasi' => '6 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung A (Rektorat), Lantai 1',
                 'deskripsi'  => 'Laboratorium komputer lengkap dengan 40 unit PC. Ideal untuk praktikum pemrograman, ujian online, dan workshop teknologi.',
                 'jadwal'     => [],
             ],
@@ -91,6 +95,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '22:00',
                 'max_durasi' => '10 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung E (Auditorium), Lantai 1',
                 'deskripsi'  => 'Aula terbesar kampus dengan kapasitas 500 orang. Digunakan untuk wisuda, seminar besar, konser, dan acara kampus skala nasional.',
                 'jadwal'     => [
                     '2026-05-03' => ['label' => 'Acara Dies Natalis', 'waktu' => '08:00 - 22:00', 'tipe' => 'penuh'],
@@ -109,6 +114,7 @@ class RoomController extends Controller
                 'jam_tutup'  => '17:00',
                 'max_durasi' => '4 jam/hari',
                 'foto'       => 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&q=80',
+                'alamat'     => 'Kampus Tengah Undiksha, Gedung F (Gedung Kuliah Umum),',
                 'deskripsi'  => 'Ruang meeting kecil dan nyaman dengan sofa. Ideal untuk diskusi tim kecil, interview, dan coaching session.',
                 'jadwal'     => [],
             ],

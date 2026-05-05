@@ -141,6 +141,16 @@
                     </div>
                 </div>
 
+                {{-- Alamat --}}
+                <div class="flex items-start gap-2 mb-4">
+                    <span class="text-base mt-0.5">📍</span>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat']) }}"
+                    target="_blank"
+                    class="text-xs text-slate-600 leading-relaxed hover:text-slate-900 transition line-clamp-2">
+                        {{ $room['alamat'] }}
+                    </a>
+                </div>
+
                 {{-- Deskripsi --}}
                 <p class="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4 border-l-2 border-slate-200 pl-3 italic">
                     {{ $room['deskripsi'] }}

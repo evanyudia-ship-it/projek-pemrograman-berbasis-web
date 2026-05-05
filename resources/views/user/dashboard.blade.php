@@ -44,7 +44,7 @@
         <div class="stat-card bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-11 h-11 bg-red-50 rounded-2xl flex items-center justify-center text-xl mb-4">⚠️</div>
             <p class="text-3xl font-bold text-slate-900">{{ $booking_no_show ?? 0 }}</p>
-            <p class="text-xs text-slate-500 mt-1">No Show</p>
+            <p class="text-xs text-slate-500 mt-1">No Show (Perlu Validasi Check-in)</p>
             <p class="text-xs text-red-500 mt-3 font-medium">Pengaruhi reputasi</p>
         </div>
 

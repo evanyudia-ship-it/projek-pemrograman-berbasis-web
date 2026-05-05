@@ -18,13 +18,33 @@ class RegisterController extends Controller
 
     public function process(Request $request)
     {
-        $request->validate([
-            'name'      => 'required|min:3|max:100',
-            'email'     => 'required|email',
-            'role'      => 'required|in:mahasiswa,dosen',
-            'nim_nip'   => 'required|string|max:30',
-            'password'  => 'required|min:6|confirmed',
-        ]);
+        $request->validate(
+            [
+                'name'      => 'required|min:3|max:100',
+                'email'     => ['required', 'email', 'regex:/^[a-zA-Z0-9._%+-]+@student.undiksha.ac.id$/'],
+                'role'      => 'required|in:mahasiswa,dosen',
+                'nim_nip'   => 'required|string|max:30',
+                'password'  => 'required|min:6|confirmed',
+            ],
+            [
+                'name.required'      => 'Nama wajib diisi.',
+                'name.min'           => 'Nama minimal 3 karakter.',
+    
+                'email.required'     => 'Email wajib diisi.',
+                'email.email'        => 'Format email tidak valid.',
+                'email.regex'        => 'Gunakan email kampus (@student.undiksha.ac.id).',
+    
+                'role.required'      => 'Role wajib dipilih.',
+                'role.in'            => 'Role tidak valid.',
+    
+                'nim_nip.required'   => 'NIM/NIP wajib diisi.',
+    
+                'password.required'  => 'Password wajib diisi.',
+                'password.min'       => 'Password minimal 6 karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            ]
+        );
+
 
         $loginCtrl = new LoginController();
         $existingUsers = $loginCtrl->getUsers();

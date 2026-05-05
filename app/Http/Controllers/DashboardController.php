@@ -23,7 +23,7 @@ class DashboardController extends Controller
             'notifikasi'        => $this->dummyNotifikasi(),
         ];
 
-        return view('dashboard', $data);
+        return view('admin.SuperAdminDashboard', $data);
     }
 
     // Admin Dashboard
@@ -42,7 +42,7 @@ class DashboardController extends Controller
             'notifikasi'         => $this->dummyNotifikasi(),
         ];
 
-        return view('admin.dashboard', $data);
+        return view('admin.AdminDashboard', $data);
     }
 
     public function userDashboard()
