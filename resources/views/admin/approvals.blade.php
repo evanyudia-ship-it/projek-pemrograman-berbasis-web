@@ -172,7 +172,7 @@
                             </span>
                         @endif
                     </td>
-                    <td class="px-6 py-4 text-slate-500 text-xs max-w-[160px]">
+                    <td class="px-6 py-4 text-slate-500 text-xs max-w-40">
                         {{ $bk['catatan'] }}
                     </td>
                 </tr>
@@ -189,7 +189,7 @@
 </div>
 
 {{-- Modal Reject --}}
-<div id="modal-reject" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+<div id="modal-reject" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
         <h3 class="font-bold text-lg mb-1">Tolak Booking</h3>
         <p class="text-sm text-slate-500 mb-5">Masukkan alasan penolakan yang jelas untuk pemohon.</p>

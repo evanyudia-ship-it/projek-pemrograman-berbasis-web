@@ -65,7 +65,7 @@
         <p class="text-4xl font-bold text-white mt-3">{{ $rp }}</p>
         <p class="text-xs text-slate-400 mt-1">Reputation Points</p>
         <div class="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r {{ $rpColor }} rounded-full" style="width:{{ $rp }}%"></div>
+            <div class="h-full bg-linear-to-r {{ $rpColor }} rounded-full" style="width:{{ $rp }}%"></div>
         </div>
         <p class="text-xs text-slate-400 mt-2">{{ $rp }}/100</p>
     </a>
@@ -98,7 +98,7 @@
             <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
                 <div class="relative h-36 overflow-hidden">
                     <img src="{{ $jadwal['foto'] }}" alt="{{ $jadwal['ruangan'] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                    <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent"></div>
                     <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-sm
                         {{ $jadwal['status'] === 'Confirmed' ? 'bg-emerald-400/90 text-emerald-900' : 'bg-amber-400/90 text-amber-900' }}">
                         {{ $jadwal['status'] }}

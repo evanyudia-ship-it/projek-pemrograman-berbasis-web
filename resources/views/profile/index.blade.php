@@ -22,13 +22,16 @@
             <p class="text-sm text-slate-500">{{ $user->email }}</p>
 
             {{-- Badge role --}}
-            <span class="mt-3 px-3 py-1 rounded-full text-xs font-bold
-                @switch(session('user_role'))
-                    @case('superadmin') bg-purple-100 text-purple-700 @break
-                    @case('admin')      bg-blue-200 text-blue-700     @break
-                    @case('dosen')      bg-teal-300 text-teal-700     @break
-                    @default            bg-emerald-100 text-emerald-700
-                @endswitch">
+            @php
+                $badgeClass = match(session('user_role')) {
+                    'superadmin' => 'bg-purple-100 text-purple-700',
+                    'admin' => 'bg-blue-200 text-blue-700',
+                    'dosen' => 'bg-teal-300 text-teal-700',
+                    default => 'bg-emerald-100 text-emerald-700',
+                };
+            @endphp
+
+            <span class="mt-3 px-3 py-1 rounded-full text-xs font-bold {{ $badgeClass }}">
                 {{ $profileData->badge }} {{ $user->role }}
             </span>
 
@@ -161,12 +164,13 @@
             <h3 class="font-bold text-lg mb-1">Status Validator</h3>
             <p class="text-sm text-slate-500 mb-5">Ringkasan aktivitas sebagai {{ $user->role }}</p>
 
-            <div class="p-4 rounded-xl border text-sm
-                @if(session('user_role') === 'superadmin') bg-purple-50 border-purple-100 text-purple-700
-                @else bg-blue-50 border-blue-100 text-blue-700 @endif">
-                <p class="font-bold mb-1">{{ $profileData->badge }} Akses {{ $user->role }}</p>
-                <p>{{ $profileData->description }}</p>
-            </div>
+            @php
+                $panelClass = session('user_role') === 'superadmin'
+                    ? 'bg-purple-50 border-purple-100 text-purple-700'
+                    : 'bg-blue-50 border-blue-100 text-blue-700';
+            @endphp
+
+            <div class="p-4 rounded-xl border text-sm {{ $panelClass }}">
         </div>
         @endif
 
@@ -178,7 +182,7 @@
             <div class="space-y-3">
                 @foreach($activities as $act)
                 <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition">
-                    <span class="text-xl flex-shrink-0 mt-0.5">{{ $act['icon'] }}</span>
+                    <span class="text-xl shrink-0 mt-0.5">{{ $act['icon'] }}</span>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-slate-700">{{ $act['text'] }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">{{ $act['waktu'] }}</p>
