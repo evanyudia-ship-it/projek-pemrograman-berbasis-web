@@ -30,11 +30,7 @@
 <div class="max-w-7xl mx-auto space-y-8 font-sora">
 
     {{-- ===== GREETING ===== --}}
-    <div class="fade-up">
-        <p class="text-sm text-slate-500 mb-1">{{ now()->translatedFormat('l, d F Y') }}</p>
-        <h1 class="text-3xl font-bold text-slate-900">Halo, I Made Syaeful Gahar 👋</h1>
-        <p class="text-slate-500 mt-1 text-sm">Berikut ringkasan aktivitas kampus hari ini.</p>
-    </div>
+    @section('page_subtitle', 'Selamat datang kembali, ' . session('user_name', 'Guest'))
 
     {{-- ===== STAT CARDS ===== --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up delay-1">
@@ -114,7 +110,7 @@
             <p class="text-3xl font-bold text-white">{{ $rp }}</p>
             <p class="text-xs text-slate-400 mt-1">Reputation Points</p>
             <div class="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r {{ $rpColor }} rounded-full transition-all duration-700"
+                <div class="h-full bg-linear-to-r {{ $rpColor }} rounded-full transition-all duration-700"
                      style="width: {{ $rp }}%"></div>
             </div>
             <div class="mt-2.5 flex justify-between items-center">

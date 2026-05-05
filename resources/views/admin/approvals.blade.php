@@ -10,7 +10,7 @@
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Menunggu Approval</p>
-        <h3 class="text-3xl font-extrabold mt-2">7</h3>
+        <h3 class="text-3xl font-extrabold mt-2">2</h3>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">

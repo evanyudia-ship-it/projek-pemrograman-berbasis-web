@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Smart Classroom')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    {{-- Tailwind CDN --}}
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- jQuery CDN --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 </head>
 
 <body class="bg-slate-100 text-slate-800">
@@ -18,7 +14,7 @@
 <div class="min-h-screen flex">
 
     {{-- ══════════════════════════════
-         SIDEBAR — Light Theme
+         SIDEBAR
     ══════════════════════════════ --}}
     <aside id="sidebar"
            class="fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-slate-200 flex flex-col
@@ -38,32 +34,51 @@
         {{-- NAVIGATION --}}
         <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
 
-            {{-- Main Menu --}}
+            @php $role = session('user_role', 'mahasiswa'); @endphp
+
             <p class="admin-section-label px-2 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menu</p>
 
-            <a href="{{ route('dashboard') }}"
-               class="nav-item {{ request()->is('dashboard') ? 'active' : '' }}">
+            @php
+                $dashRoute = match($role) {
+                    'superadmin' => route('dashboard'),
+                    'admin'      => route('admin.dashboard'),
+                    default      => route('user.dashboard'),
+                };
+                $dashActive = request()->is('dashboard')
+                           || request()->is('admin/dashboard')
+                           || request()->is('user/dashboard');
+            @endphp
+
+            <a href="{{ $dashRoute }}" class="nav-item {{ $dashActive ? 'active' : '' }}">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-label">Dashboard</span>
             </a>
 
-            <a href="{{ route('rooms.index') }}"
-               class="nav-item {{ request()->is('rooms') ? 'active' : '' }}">
-                <span class="nav-icon">🏫</span>
-                <span class="nav-label">Ketersediaan Ruang</span>
-            </a>
+            @if(in_array($role, ['mahasiswa', 'dosen', 'superadmin']))
+                <a href="{{ route('rooms.index') }}"
+                   class="nav-item {{ request()->is('rooms') ? 'active' : '' }}">
+                    <span class="nav-icon">🏫</span>
+                    <span class="nav-label">Ketersediaan Ruang</span>
+                </a>
 
-            <a href="{{ route('bookings.create') }}"
-               class="nav-item {{ request()->is('bookings/create') ? 'active' : '' }}">
-                <span class="nav-icon">➕</span>
-                <span class="nav-label">Ajukan Booking</span>
-            </a>
+                <a href="{{ route('bookings.create') }}"
+                   class="nav-item {{ request()->is('bookings/create') ? 'active' : '' }}">
+                    <span class="nav-icon">➕</span>
+                    <span class="nav-label">Ajukan Booking</span>
+                </a>
 
-            <a href="{{ route('bookings.index') }}"
-               class="nav-item {{ request()->is('bookings') ? 'active' : '' }}">
-                <span class="nav-icon">📅</span>
-                <span class="nav-label">Data Booking</span>
-            </a>
+                <a href="{{ route('bookings.index') }}"
+                   class="nav-item {{ request()->is('bookings') ? 'active' : '' }}">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Data Booking</span>
+                </a>
+
+                <a href="{{ route('reputation.index') }}"
+                   class="nav-item {{ request()->is('reputation') ? 'active' : '' }}">
+                    <span class="nav-icon">⭐</span>
+                    <span class="nav-label">Reputation Point</span>
+                </a>
+            @endif
 
             <a href="{{ route('schedule.index') }}"
                class="nav-item {{ request()->is('schedule') ? 'active' : '' }}">
@@ -77,21 +92,15 @@
                 <span class="nav-label">Profil Saya</span>
             </a>
 
-            <a href="{{ route('reputation.index') }}"
-               class="nav-item {{ request()->is('reputation') ? 'active' : '' }}">
-                <span class="nav-icon">⭐</span>
-                <span class="nav-label">Reputation Point</span>
-            </a>
-
             <a href="{{ route('help.index') }}"
-                class="nav-item {{ request()->is('help') ? 'active' : '' }}">
+               class="nav-item {{ request()->is('help') ? 'active' : '' }}">
                 <span class="nav-icon">❓</span>
                 <span class="nav-label">Bantuan</span>
             </a>
 
-            {{-- Admin Section --}}
+            @if(in_array($role, ['admin', 'superadmin']))
             <div class="pt-3">
-                <p class="admin-section-label px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest overflow-hidden">Admin</p>
+                <p class="admin-section-label px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Admin</p>
 
                 <a href="{{ route('admin.approvals') }}"
                    class="nav-item {{ request()->is('admin/approvals') ? 'active' : '' }}">
@@ -99,8 +108,9 @@
                     <span class="nav-label">Approval Admin</span>
                 </a>
 
+                @if($role === 'superadmin')
                 <a href="{{ route('admin.rooms.index') }}"
-                    class="nav-item {{ request()->is('admin/rooms') ? 'active' : '' }}">
+                   class="nav-item {{ request()->is('admin/rooms') ? 'active' : '' }}">
                     <span class="nav-icon">🏗️</span>
                     <span class="nav-label">Manajemen Ruang</span>
                 </a>
@@ -110,30 +120,40 @@
                     <span class="nav-icon">👥</span>
                     <span class="nav-label">Kelola User</span>
                 </a>
+                @endif
             </div>
-
+            @endif
 
         </nav>
 
         {{-- USER BOX + LOGOUT --}}
         <div class="p-3 border-t border-slate-100 shrink-0">
+
             <div class="user-box flex items-center gap-3 px-2 py-2 mb-2 overflow-hidden">
                 <div class="user-avatar w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                    A
+                    {{ strtoupper(substr(session('user_name', 'G'), 0, 1)) }}
                 </div>
                 <div class="user-info overflow-hidden">
-                    <p class="text-sm font-semibold text-slate-800 whitespace-nowrap">Admin Kampus</p>
-                    <p class="text-[11px] text-slate-400 whitespace-nowrap">Role: Admin</p>
+                    <p class="text-sm font-semibold text-slate-800 whitespace-nowrap">
+                        {{ session('user_name', 'Guest') }}
+                    </p>
+                    <p class="text-[11px] text-slate-400 whitespace-nowrap">
+                        Role: {{ ucfirst(session('user_role', '-')) }}
+                    </p>
                 </div>
             </div>
 
-            <a href="{{ route('login') }}"
-               class="logout-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
-                      bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-500
-                      text-sm font-semibold transition">
-                <span class="shrink-0">🚪</span>
-                <span class="logout-label whitespace-nowrap">Logout</span>
-            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                        class="logout-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
+                               bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-500
+                               text-sm font-semibold transition">
+                    <span class="shrink-0">🚪</span>
+                    <span class="logout-label whitespace-nowrap">Logout</span>
+                </button>
+            </form>
+
         </div>
 
     </aside>
@@ -150,8 +170,6 @@
         <header class="h-17 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 shrink-0">
 
             <div class="flex items-center gap-3 min-w-0">
-
-                {{-- Toggle Sidebar (Desktop: minimize/expand | Mobile: open) --}}
                 <button id="btnToggleSidebar"
                         class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition shrink-0"
                         title="Toggle Sidebar">
@@ -174,20 +192,20 @@
             </div>
 
             <div class="flex items-center gap-3">
-                {{-- Notif bell --}}
                 <button class="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition relative">
                     🔔
                     <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full"></span>
                 </button>
 
-                {{-- Avatar --}}
                 <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-slate-200">
                     <div class="text-right">
-                        <p class="text-sm font-semibold text-slate-800 leading-tight">Admin Kampus</p>
+                        <p class="text-sm font-semibold text-slate-800 leading-tight">
+                            {{ session('user_name', 'Guest') }}
+                        </p>
                         <p class="text-[11px] text-slate-400">Online</p>
                     </div>
                     <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-                        A
+                        {{ strtoupper(substr(session('user_name', 'G'), 0, 1)) }}
                     </div>
                 </div>
             </div>
@@ -200,6 +218,7 @@
         </section>
 
     </main>
+
 </div>
 
 <script>
@@ -208,10 +227,8 @@ $(document).ready(function () {
     const $overlay = $('#overlay');
     const isMobile = () => window.innerWidth < 768;
 
-    // ── Restore state TANPA animasi (fix: tidak ada transisi saat load halaman) ──
     if (!isMobile() && localStorage.getItem('sidebar_minimized') === '1') {
         $sidebar.addClass('sidebar-no-transition minimized');
-        // Aktifkan kembali transisi setelah 1 frame render selesai
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 $sidebar.removeClass('sidebar-no-transition');
@@ -219,7 +236,6 @@ $(document).ready(function () {
         });
     }
 
-    // ── TOGGLE (Desktop: minimize/expand | Mobile: open drawer) ──
     $('#btnToggleSidebar').on('click', function (e) {
         e.stopPropagation();
         if (isMobile()) {
@@ -231,7 +247,6 @@ $(document).ready(function () {
         }
     });
 
-    // ── CLOSE on overlay click (mobile) ──
     $overlay.on('click', function () {
         $sidebar.addClass('-translate-x-full');
         $overlay.removeClass('show');

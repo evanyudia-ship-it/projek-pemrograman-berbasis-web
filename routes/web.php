@@ -8,32 +8,57 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\RoomManageController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\VerifyController;
 
 /*
 |--------------------------------------------------------------------------
 | Auth Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn() => redirect()->route('login'));
+Route::get('/',       fn() => redirect()->route('login'));
+Route::get('/login',  fn() => view('auth.login'))->name('login');
+Route::post('/login', [LoginController::class, 'process'])->name('login.process');
+Route::post('/logout',[LoginController::class, 'logout'])->name('logout');
 
-Route::get('/login', fn() => view('auth.login'))->name('login');
-Route::post('/login', fn() => redirect()->route('dashboard'))->name('login.process');
-Route::get('/logout', fn() => redirect()->route('login'))->name('logout');
+// Register
+Route::get('/register',  [RegisterController::class, 'showForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'process'])->name('register.process');
+
+// Verify OTP
+Route::get('/verify',        [VerifyController::class, 'show'])->name('verify.show');
+Route::post('/verify',       [VerifyController::class, 'process'])->name('verify.process');
+Route::post('/verify/resend',[VerifyController::class, 'resend'])->name('verify.resend');
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard
+| SuperAdmin Dashboard
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
+| Admin Dashboard
+|--------------------------------------------------------------------------
+*/
+Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+
+/*
+|--------------------------------------------------------------------------
+| User Dashboard (Mahasiswa & Dosen)
+|--------------------------------------------------------------------------
+*/
+Route::get('/user/dashboard', [DashboardController::class, 'userDashboard'])->name('user.dashboard');
+
+/*
+|--------------------------------------------------------------------------
 | Rooms
 |--------------------------------------------------------------------------
 */
-Route::get('/rooms',       [RoomController::class, 'index'])->name('rooms.index');
-Route::get('/rooms/{id}',  [RoomController::class, 'show'])->name('rooms.show');
+Route::get('/rooms',      [RoomController::class, 'index'])->name('rooms.index');
+Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -48,16 +73,14 @@ Route::get('/bookings/create', fn() => view('bookings.create'))->name('bookings.
 | Schedule
 |--------------------------------------------------------------------------
 */
-Route::get('/schedule', [ScheduleController::class, 'index'])
-    ->name('schedule.index');
-    
+Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
+
 /*
 |--------------------------------------------------------------------------
 | Profile
 |--------------------------------------------------------------------------
 */
-Route::get('/profile', [ProfileController::class, 'index'])
-    ->name('profile.index');
+Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 
 /*
 |--------------------------------------------------------------------------
@@ -65,42 +88,39 @@ Route::get('/profile', [ProfileController::class, 'index'])
 |--------------------------------------------------------------------------
 */
 Route::prefix('reputation')->name('reputation.')->group(function () {
-    Route::get('/', function () {
-        return view('reputation.index', ['reputation_point' => 85]);
-    })->name('index');
+    Route::get('/', fn() => view('reputation.index', ['reputation_point' => 85]))->name('index');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin
+| Help
+|--------------------------------------------------------------------------
+*/
+Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+
+/*
+|--------------------------------------------------------------------------
+| Admin Section
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // ===== ADMIN - Approvals =====
-    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals');
-    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
-    Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    // Approvals
+    Route::get('/approvals',                   [ApprovalController::class, 'index'])->name('approvals');
+    Route::post('/approvals/{id}/approve',     [ApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::post('/approvals/{id}/reject',      [ApprovalController::class, 'reject'])->name('approvals.reject');
 
-    // ===== ADMIN - Manage Rooms =====
-    Route::get('/rooms',                    [RoomManageController::class, 'index'])->name('rooms.index');
-    Route::post('/rooms',                   [RoomManageController::class, 'store'])->name('rooms.store');
-    Route::put('/rooms/{id}',               [RoomManageController::class, 'update'])->name('rooms.update');
-    Route::delete('/rooms/{id}',            [RoomManageController::class, 'destroy'])->name('rooms.destroy');
-    Route::post('/rooms/{id}/toggle',       [RoomManageController::class, 'toggleStatus'])->name('rooms.toggleStatus');
-    Route::post('/rooms/reset',             [RoomManageController::class, 'reset'])->name('rooms.reset');
+    // Manage Rooms
+    Route::get('/rooms',              [RoomManageController::class, 'index'])->name('rooms.index');
+    Route::post('/rooms',             [RoomManageController::class, 'store'])->name('rooms.store');
+    Route::put('/rooms/{id}',         [RoomManageController::class, 'update'])->name('rooms.update');
+    Route::delete('/rooms/{id}',      [RoomManageController::class, 'destroy'])->name('rooms.destroy');
+    Route::post('/rooms/{id}/toggle', [RoomManageController::class, 'toggleStatus'])->name('rooms.toggleStatus');
+    Route::post('/rooms/reset',       [RoomManageController::class, 'reset'])->name('rooms.reset');
 
-    // ===== ADMIN - Manage Users =====
+    // Manage Users
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', fn() => view('admin.users.index'))->name('index');
     });
 
 });
-
-/*
-|--------------------------------------------------------------------------
-| PANDUAN & FAQ
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/help', [HelpController::class, 'index'])->name('help.index');

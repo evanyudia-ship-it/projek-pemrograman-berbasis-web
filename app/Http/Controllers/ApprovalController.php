@@ -35,7 +35,7 @@ class ApprovalController extends Controller
 
         // statistik dummy
         $stats = [
-            'pending' => 7,
+            'pending' => 2,
             'approved_today' => 5,
             'expired' => 1,
         ];

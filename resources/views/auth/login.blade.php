@@ -78,6 +78,12 @@
                     Gunakan email dan password terdaftar. Role akan terbaca otomatis setelah login.
                 </p>
             </div>
+            
+            @if ($errors->any())
+                <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    {{ $errors->first('email') }}
+                </div>
+            @endif
 
             <form action="{{ route('login.process') }}" method="POST" id="loginForm">
                 @csrf
@@ -141,10 +147,17 @@
                 <div class="h-px bg-slate-200 flex-1"></div>
             </div>
 
+            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                 <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold"
+                        data-email="superadmin@kampus.ac.id">
+                    SuperAdmin
+                </button>
+
+                <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold"
                         data-email="admin@kampus.ac.id">
-                    Admin
+                    Admin (Validator)
                 </button>
 
                 <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold"
@@ -153,15 +166,18 @@
                 </button>
 
                 <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold"
-                        data-email="mahasiswa@kampus.ac.id">
+                        data-email="syaefuldarmawan02@gmail.com">
                     Mahasiswa
                 </button>
+
+                
+
             </div>
 
             <p class="text-center text-sm text-slate-500 mt-8">
                 Belum punya akun?
-                <a href="#" class="text-blue-600 font-semibold hover:underline">
-                    Hubungi admin kampus
+                <a href="{{ route('register') }}" class="text-blue-600 font-semibold hover:underline">
+                    Daftar sekarang
                 </a>
             </p>
 
