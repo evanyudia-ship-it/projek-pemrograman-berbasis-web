@@ -8,7 +8,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100"
+<body class="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-100"
       style="font-family: 'Inter', sans-serif;">
 
 <div class="min-h-screen flex items-center justify-center p-4">

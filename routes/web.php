@@ -11,6 +11,7 @@ use App\Http\Controllers\RoomManageController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\VerifyController;
+use App\Http\Controllers\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,8 +66,10 @@ Route::get('/rooms/{id}', [RoomController::class, 'show'])->name('rooms.show');
 | Bookings
 |--------------------------------------------------------------------------
 */
-Route::get('/bookings',        fn() => view('bookings.index'))->name('bookings.index');
-Route::get('/bookings/create', fn() => view('bookings.create'))->name('bookings.create');
+Route::get('/bookings',              [BookingController::class, 'index'])->name('bookings.index');
+Route::get('/bookings/create',       [BookingController::class, 'create'])->name('bookings.create');
+Route::post('/bookings',             [BookingController::class, 'store'])->name('bookings.store');
+Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
 
 /*
 |--------------------------------------------------------------------------

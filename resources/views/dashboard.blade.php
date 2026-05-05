@@ -6,26 +6,6 @@
 
 @section('content')
 
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-    .font-sora { font-family: 'Sora', sans-serif; }
-    .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12); }
-    .room-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .room-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px -10px rgba(0,0,0,0.15); }
-    .room-img { transition: transform 0.4s ease; }
-    .room-card:hover .room-img { transform: scale(1.05); }
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(16px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up  { animation: fadeUp 0.4s ease both; }
-    .delay-1  { animation-delay: 0.05s; }
-    .delay-2  { animation-delay: 0.1s; }
-    .delay-3  { animation-delay: 0.15s; }
-    .delay-4  { animation-delay: 0.2s; }
-</style>
 
 <div class="max-w-7xl mx-auto space-y-8 font-sora">
 
@@ -140,7 +120,7 @@
                     <img src="{{ $jadwal['foto'] }}"
                          alt="{{ $jadwal['ruangan'] }}"
                          class="room-img w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                    <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent"></div>
 
                     <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5
                         {{ $jadwal['status'] == 'Confirmed'
@@ -199,7 +179,7 @@
                 <div class="space-y-3">
                     @foreach($notifikasi as $notif)
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex gap-3">
-                        <span class="text-xl flex-shrink-0 mt-0.5">{{ $notif['icon'] }}</span>
+                        <span class="text-xl shrink-0 mt-0.5">{{ $notif['icon'] }}</span>
                         <div>
                             <p class="text-xs text-slate-700 leading-relaxed font-medium">{{ $notif['pesan'] }}</p>
                             <p class="text-xs text-slate-400 mt-1">{{ $notif['waktu'] }}</p>

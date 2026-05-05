@@ -5,16 +5,6 @@
 @section('page_subtitle', 'Panel validator & approval booking')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-    .font-sora { font-family: 'Sora', sans-serif; }
-    .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12); }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-    .fade-up  { animation: fadeUp 0.4s ease both; }
-    .delay-1  { animation-delay: 0.05s; }
-    .delay-2  { animation-delay: 0.1s; }
-</style>
 
 <div class="max-w-7xl mx-auto space-y-8 font-sora">
 
@@ -89,7 +79,7 @@
                 <div class="space-y-3">
                     @foreach($notifikasi as $notif)
                     <div class="flex gap-3">
-                        <span class="text-lg flex-shrink-0">{{ $notif['icon'] }}</span>
+                        <span class="text-lg shrink-0">{{ $notif['icon'] }}</span>
                         <div>
                             <p class="text-xs text-slate-700 font-medium">{{ $notif['pesan'] }}</p>
                             <p class="text-xs text-slate-400 mt-0.5">{{ $notif['waktu'] }}</p>

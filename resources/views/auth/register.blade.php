@@ -8,14 +8,14 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100"
+<body class="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-100"
       style="font-family: 'Inter', sans-serif;">
 
 <div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
 
         {{-- LEFT PANEL --}}
-        <div class="hidden lg:flex relative bg-gradient-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
+        <div class="hidden lg:flex relative bg-linear-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
             <div>
                 <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl mb-6">🏫</div>
                 <h1 class="text-4xl font-extrabold leading-tight">Buat Akun Baru</h1>

@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 class DashboardController extends Controller
 {
-    // SuperAdmin Dashboard (existing)
     public function index()
     {
-        // Cek role
         if (session('user_role') !== 'superadmin') {
             return $this->redirectByRole();
         }
@@ -47,23 +45,23 @@ class DashboardController extends Controller
         return view('admin.dashboard', $data);
     }
 
-    // User Dashboard (Mahasiswa & Dosen)
     public function userDashboard()
     {
         $role = session('user_role');
         if (!in_array($role, ['mahasiswa', 'dosen'])) {
             return $this->redirectByRole();
         }
+        $booking_no_show = 0; 
 
         $data = [
-            'booking_aktif'     => 2,
+            'booking_aktif'     => 1,
             'booking_selesai'   => 10,
             'booking_pending'   => 1,
+            'booking_no_show'   => $booking_no_show, 
             'reputation_point'  => 85,
             'jadwal_hari_ini'   => $this->dummyJadwal(),
             'notifikasi'        => $this->dummyNotifikasi(),
         ];
-
         return view('user.dashboard', $data);
     }
 

@@ -25,8 +25,8 @@
             <span class="mt-3 px-3 py-1 rounded-full text-xs font-bold
                 @switch(session('user_role'))
                     @case('superadmin') bg-purple-100 text-purple-700 @break
-                    @case('admin')      bg-blue-100 text-blue-700     @break
-                    @case('dosen')      bg-teal-100 text-teal-700     @break
+                    @case('admin')      bg-blue-200 text-blue-700     @break
+                    @case('dosen')      bg-teal-300 text-teal-700     @break
                     @default            bg-emerald-100 text-emerald-700
                 @endswitch">
                 {{ $profileData->badge }} {{ $user->role }}

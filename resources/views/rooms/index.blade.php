@@ -40,12 +40,22 @@
     {{-- ===== FILTER & SEARCH ===== --}}
     <div class="fade-up flex flex-col sm:flex-row gap-3">
 
-        {{-- Search --}}
-        <div class="relative flex-1">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-            <input type="text" id="searchInput" placeholder="Cari nama ruangan, kode, atau gedung..."
-                class="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm transition">
-        </div>
+    {{-- Search --}}
+    <div class="relative w-full max-w-xl">
+
+        <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="🔍 Cari nama ruangan, kode, atau gedung..."
+            class="w-full pl-14 pr-4 py-3 rounded-2xl 
+                border border-slate-200 
+                bg-white 
+                text-sm text-slate-700 
+                placeholder:text-slate-400
+                focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
+                transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+    </div>
 
         {{-- Filter status --}}
         <div class="flex gap-2">
