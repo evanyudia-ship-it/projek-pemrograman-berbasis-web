@@ -15,23 +15,20 @@
     <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
 
         {{-- LEFT PANEL --}}
-        <div class="hidden lg:flex relative bg-linear-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
+        <div class="hidden lg:flex relative bg-linear-to-br bg-slate-800 to-indigo-900 text-white p-12 flex-col justify-between">
             <div>
-                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl mb-6">🏫</div>
+                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6 overflow-hidden">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Logo_undiksha.png" 
+                         alt="Logo Undiksha"
+                         class="w-10 h-10 object-contain">
+                </div>            
                 <h1 class="text-4xl font-extrabold leading-tight">Buat Akun Baru</h1>
                 <p class="text-blue-100 mt-5 text-lg leading-relaxed">
-                    Daftarkan diri Anda untuk mengakses sistem booking ruang kelas Smart Classroom.
+                    Silakan daftarkan diri Anda untuk mendapatkan akses ke sistem Smart Classroom Booking, sehingga Anda dapat melakukan pemesanan ruang kelas dengan mudah, cepat, dan terorganisir sesuai kebutuhan.
                 </p>
             </div>
 
             <div class="space-y-4 mt-10">
-                <div class="flex items-center gap-3 bg-white/10 rounded-2xl p-4 backdrop-blur">
-                    <span class="text-2xl">✉️</span>
-                    <div>
-                        <p class="font-bold text-sm">Verifikasi Email</p>
-                        <p class="text-blue-100 text-xs">Kode OTP dikirim ke email Anda</p>
-                    </div>
-                </div>
                 <div class="flex items-center gap-3 bg-white/10 rounded-2xl p-4 backdrop-blur">
                     <span class="text-2xl">🔒</span>
                     <div>
@@ -86,7 +83,7 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email Kampus</label>
                     <input type="email" name="email" value="{{ old('email') }}"
                            class="w-full rounded-xl @error('email') border-red-400 @enderror"
-                           placeholder="contoh: nama@kampus.ac.id" required>
+                           placeholder="contoh: nama@student.undiksha.ac.id" required>
                 </div>
 
                 {{-- Role --}}
@@ -137,7 +134,7 @@
 
                 {{-- Submit --}}
                 <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition mt-2">
+                        class="w-full bg-blue-500 hover:bg-slate-800 text-white py-3 rounded-xl font-bold transition mt-2">
                     Daftar
                 </button>
 

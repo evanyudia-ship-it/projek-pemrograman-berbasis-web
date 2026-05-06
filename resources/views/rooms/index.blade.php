@@ -12,7 +12,7 @@
     <div class="fade-up">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-2">
+                <p class="text-xs font-semibold text-green-600 uppercase tracking-widest mb-2">
                     ⊞ Koleksi Ruangan
                 </p>
                 <h1 class="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">

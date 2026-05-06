@@ -78,11 +78,11 @@
             {{-- Countdown --}}
             <div class="text-center text-sm text-slate-500 mb-5">
                 Kode berlaku selama
-                <span id="countdown" class="font-bold text-blue-600">10:00</span>
+                <span id="countdown" class="font-bold text-red-600">10:00</span>
             </div>
 
             <button type="submit" id="btn-verify"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition">
+                    class="w-full bg-slate-800 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition">
                 Verifikasi Sekarang
             </button>
 

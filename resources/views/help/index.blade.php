@@ -247,13 +247,17 @@
                     <p class="text-xs text-blue-600 mt-0.5 font-medium">syaefuldarmawan02@gmail.com</p>
                 </div>
             </a>
-            <div class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat'] ?? '') }}"
+            class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
                 <span class="text-2xl shrink-0">📍</span>
                 <div>
                     <p class="text-sm font-bold text-slate-800">Datang Langsung</p>
                     <p class="text-xs text-slate-500">Ruang Admin Gedung A Lt. 1</p>
+                    @if(!empty($room['alamat']))
+                        <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ $room['alamat'] }}</p>
+                    @endif
                 </div>
-            </div>
+            </a>
             <a href="https://wa.me/6285797279169" target="_blank" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition">
                 <span class="text-2xl shrink-0">💬</span>
                 <div>

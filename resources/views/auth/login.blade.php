@@ -21,12 +21,15 @@
     <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
 
         {{-- LEFT SECTION --}}
-        <div class="hidden lg:flex relative bg-linear-to-br from-blue-700 to-indigo-900 text-white p-12 flex-col justify-between">
+        <div class="hidden lg:flex relative bg-linear-to-br bg-slate-800 to-indigo-900 text-white p-12 flex-col justify-between">
 
             <div>
-                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl mb-6">
-                    🏫
+                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6 overflow-hidden">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Logo_undiksha.png" 
+                         alt="Logo Undiksha"
+                         class="w-10 h-10 object-contain">
                 </div>
+            
 
                 <h1 class="text-4xl font-extrabold leading-tight">
                     Smart Classroom Booking System
@@ -66,11 +69,7 @@
         {{-- RIGHT LOGIN FORM --}}
         <div class="p-8 md:p-12">
 
-            <div class="mb-8">
-                <div class="lg:hidden w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-3xl mb-5">
-                    🏫
-                </div>
-
+            <div class="mb-8">           
                 <h2 class="text-3xl font-extrabold text-slate-900">
                     Masuk ke Sistem
                 </h2>
@@ -134,7 +133,7 @@
                     </div>
 
                     <button type="submit"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition">
+                            class="w-full bg-blue-500 hover:bg-slate-800 text-white py-3 rounded-xl font-bold transition">
                         Login
                     </button>
 

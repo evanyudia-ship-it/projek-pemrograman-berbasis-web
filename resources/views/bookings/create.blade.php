@@ -74,7 +74,7 @@
                 <a href="{{ route('rooms.index') }}" class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-center">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                <button type="submit" class="px-5 py-3 rounded-xl bg-blue-400 hover:bg-slate-800 text-white font-semibold">
                     Ajukan Booking
                 </button>
             </div>

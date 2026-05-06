@@ -21,13 +21,22 @@
                   transform -translate-x-full md:translate-x-0 transition-transform duration-300 h-screen">
 
         {{-- LOGO --}}
-        <div class="h-17 flex items-center px-4 border-b border-slate-100 logo-wrap shrink-0">
-            <div class="logo-icon w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-lg shrink-0 mr-3">
-                🏫
+        <div class="h-20 flex items-center px-5 border-b border-slate-100 shrink-0 logo-wrap">
+            <!-- Logo Container -->
+            <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 overflow-hidden">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Logo_undiksha.png" 
+                     alt="Logo Undiksha"
+                     class="w-11 h-11 object-contain">
             </div>
-            <div class="sidebar-brand-text overflow-hidden">
-                <h1 class="text-base font-extrabold tracking-tight text-slate-900 whitespace-nowrap">Smart Classroom</h1>
-                <p class="sidebar-subtitle text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Booking & Availability</p>
+        
+            <!-- Text -->
+            <div class="ml-3 overflow-hidden">
+                <h1 class="text-base font-extrabold tracking-tight text-slate-900 whitespace-nowrap">
+                    Smart Classroom
+                </h1>
+                <p class="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
+                    Booking & Availability
+                </p>
             </div>
         </div>
 
@@ -130,7 +139,7 @@
         <div class="p-3 border-t border-slate-100 shrink-0">
 
             <div class="user-box flex items-center gap-3 px-2 py-2 mb-2 overflow-hidden">
-                <div class="user-avatar w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                <div class="user-avatar w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shrink-0">
                     {{ strtoupper(substr(session('user_name', 'G'), 0, 1)) }}
                 </div>
                 <div class="user-info overflow-hidden">
@@ -194,7 +203,7 @@
             <div class="flex items-center gap-3">
                 <button class="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition relative">
                     🔔
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full"></span>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full"></span>
                 </button>
 
                 <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-slate-200">
@@ -204,7 +213,7 @@
                         </p>
                         <p class="text-[11px] text-slate-400">Online</p>
                     </div>
-                    <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                    <div class="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm">
                         {{ strtoupper(substr(session('user_name', 'G'), 0, 1)) }}
                     </div>
                 </div>

@@ -60,7 +60,7 @@
                 <input type="date" id="filterDate" class="rounded-xl">
 
                 <a href="{{ route('bookings.create') }}"
-                   class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-center whitespace-nowrap">
+                   class="px-5 py-3 rounded-xl bg-blue-500 hover:bg-slate-800 text-white font-semibold text-center whitespace-nowrap">
                     + Ajukan Booking
                 </a>
             </div>

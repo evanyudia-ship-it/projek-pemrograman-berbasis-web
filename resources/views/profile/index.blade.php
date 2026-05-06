@@ -242,7 +242,7 @@
             </div>
 
             <div class="mt-6 flex justify-end">
-                <button class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">
+                <button class="px-5 py-3 rounded-xl bg-blue-500 hover:bg-slate-800 text-white font-semibold transition">
                     Simpan Perubahan
                 </button>
             </div>

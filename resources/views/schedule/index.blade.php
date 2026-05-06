@@ -28,7 +28,7 @@
         </div>
 
         <div class="flex items-end">
-            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl">
+            <button class="w-full bg-blue-500 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl">
                 Filter
             </button>
         </div>
