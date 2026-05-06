@@ -119,10 +119,13 @@ class RoomController extends Controller
                 'jadwal'     => [],
             ],
         ]);
+        
     }
 
     public function index()
     {
+        session()->forget('rooms_data'); // FUNGSI RESET SESSION (KARENA BELUM MEMAKAI DATABASE)
+
         $rooms = $this->getRooms();
 
         // Hitung total tersedia untuk header
