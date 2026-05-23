@@ -1,0 +1,322 @@
+@startuml Smart_Classroom_Database
+
+!define TABLE(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define PK(x) <b><color:#b8860b>PK</color> x</b>
+!define FK(x) <color:#blue>FK</color> x
+!define COL(x) x
+
+skinparam class {
+  BackgroundColor White
+  BorderColor #333333
+  ArrowColor #333333
+  FontName Arial
+  FontSize 11
+}
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+skinparam linetype ortho
+hide circle
+hide methods
+
+' ══════════════════════════════════════════
+'  USERS
+' ══════════════════════════════════════════
+TABLE(users, "users") {
+  PK(id : bigint)
+  --
+  COL(name : varchar(100))
+  COL(email : varchar(150) UNIQUE)
+  COL(password : varchar(255))
+  COL(role : varchar)
+  COL(nim_nip : varchar(30))
+  COL(phone : varchar(20))
+  COL(avatar : varchar(255))
+  COL(departemen : varchar(100))
+  COL(reputation_point : int = 100)
+  FK(reputation_level_id : bigint NULL)
+  COL(is_verified : boolean = false)
+  COL(email_verified_at : timestamp)
+  COL(remember_token : varchar(100))
+  COL(last_reputation_change_at : timestamp)
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  ROOMS
+' ══════════════════════════════════════════
+TABLE(rooms, "rooms") {
+  PK(id : bigint)
+  --
+  COL(kode : varchar(20) UNIQUE)
+  COL(nama : varchar(150))
+  COL(gedung : varchar(100))
+  COL(lantai : tinyint)
+  COL(kapasitas : smallint)
+  COL(alamat : varchar(255))
+  COL(deskripsi : text)
+  COL(foto : varchar(255))
+  COL(jam_buka : time)
+  COL(jam_tutup : time)
+  COL(max_durasi_jam : tinyint = 4)
+  COL(status : varchar = 'Tersedia')
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  FACILITIES
+' ══════════════════════════════════════════
+TABLE(facilities, "facilities") {
+  PK(id : bigint)
+  --
+  COL(nama : varchar(100) UNIQUE)
+  COL(icon : varchar(10))
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  ROOM_FACILITIES (pivot)
+' ══════════════════════════════════════════
+TABLE(room_facilities, "room_facilities") {
+  PK(id : bigint)
+  --
+  FK(room_id : bigint)
+  FK(facility_id : bigint)
+  COL(status : varchar = 'tersedia')
+  COL(updated_at : timestamp)
+  --
+  UNIQUE(room_id, facility_id)
+}
+
+' ══════════════════════════════════════════
+'  ORGANIZATIONS
+' ══════════════════════════════════════════
+TABLE(organizations, "organizations") {
+  PK(id : bigint)
+  --
+  COL(nama : varchar(200))
+  COL(singkatan : varchar(30))
+  COL(email : varchar(150))
+  COL(instagram : varchar(60))
+  COL(whatsapp : varchar(20))
+  COL(status : varchar = 'aktif')
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  ORGANIZATION_SUBMISSIONS
+' ══════════════════════════════════════════
+TABLE(organization_submissions, "organization_submissions") {
+  PK(id : varchar(20))
+  --
+  FK(user_id : bigint)
+  FK(organization_id : bigint)
+  COL(jabatan : varchar(100))
+  COL(deskripsi : text)
+  COL(periode : varchar(20))
+  COL(jenis_bukti : json)
+  COL(file_bukti_nama : varchar(255))
+  COL(file_bukti_path : varchar(255))
+  COL(status : varchar = 'pending')
+  COL(catatan : text)
+  COL(diproses_at : timestamp)
+  FK(diproses_oleh : bigint NULL)
+  COL(tgl_ajuan : timestamp)
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  BOOKINGS
+' ══════════════════════════════════════════
+TABLE(bookings, "bookings") {
+  PK(id : bigint)
+  --
+  COL(booking_code : varchar(20) UNIQUE)
+  FK(user_id : bigint)
+  FK(room_id : bigint)
+  FK(organization_id : bigint NULL)
+  COL(kegiatan : varchar(150))
+  COL(tujuan : text)
+  COL(tanggal : date)
+  COL(jam_mulai : time)
+  COL(jam_selesai : time)
+  COL(durasi_menit : int)
+  COL(status : varchar = 'pending')
+  COL(catatan_admin : text)
+  FK(disetujui_oleh : bigint NULL)
+  COL(disetujui_at : timestamp)
+  COL(check_in_at : timestamp)
+  COL(checkin_deadline : timestamp)
+  COL(check_in_status : varchar = 'belum_checkin')
+  COL(is_penalty_applied : boolean = false)
+  FK(cancelled_by : bigint NULL)
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  BOOKING_HISTORIES
+' ══════════════════════════════════════════
+TABLE(booking_histories, "booking_histories") {
+  PK(id : bigint)
+  --
+  FK(booking_id : bigint)
+  FK(user_id : bigint NULL)
+  COL(actor_type : varchar = 'user')
+  COL(status_sebelumnya : varchar)
+  COL(status_baru : varchar)
+  COL(keterangan : text)
+  COL(created_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  ROOM_SCHEDULES
+' ══════════════════════════════════════════
+TABLE(room_schedules, "room_schedules") {
+  PK(id : bigint)
+  --
+  FK(room_id : bigint)
+  FK(booking_id : bigint NULL)
+  COL(label : varchar(200))
+  COL(tanggal : date)
+  COL(waktu_mulai : time)
+  COL(waktu_selesai : time)
+  COL(jenis_jadwal : varchar = 'booking')
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  RIWAYAT
+' ══════════════════════════════════════════
+TABLE(riwayat, "riwayat") {
+  PK(id : bigint)
+  --
+  FK(user_id : bigint)
+  COL(jenis_aktivitas : varchar)
+  COL(deskripsi : text)
+  COL(entitas_terkait : varchar)
+  COL(entitas_id : varchar)
+  COL(created_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  NOTIFIKASI
+' ══════════════════════════════════════════
+TABLE(notifikasi, "notifikasi") {
+  PK(id : bigint)
+  --
+  FK(user_id : bigint)
+  COL(judul : varchar)
+  COL(pesan : text)
+  COL(tipe : varchar = 'info')
+  COL(status : varchar = 'belum_dibaca')
+  COL(entitas_terkait : varchar)
+  COL(entitas_id : varchar)
+  COL(created_at : timestamp)
+  COL(dibaca_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  REPUTATION_LOGS
+' ══════════════════════════════════════════
+TABLE(reputation_logs, "reputation_logs") {
+  PK(id : bigint)
+  --
+  FK(user_id : bigint)
+  FK(booking_id : bigint NULL)
+  FK(setting_id : bigint)
+  COL(perubahan : int)
+  COL(point_sebelum : int)
+  COL(point_sesudah : int)
+  COL(deskripsi : text)
+  COL(created_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  REPUTATION_SETTINGS
+' ══════════════════════════════════════════
+TABLE(reputation_settings, "reputation_settings") {
+  PK(id : bigint)
+  --
+  COL(kode : varchar(50) UNIQUE)
+  COL(nama : varchar(100))
+  COL(perubahan_point : int)
+  COL(is_active : boolean = true)
+  COL(deskripsi : text)
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  REPUTATION_LEVELS
+' ══════════════════════════════════════════
+TABLE(reputation_levels, "reputation_levels") {
+  PK(id : bigint)
+  --
+  COL(nama_level : varchar(50))
+  COL(min_point : int)
+  COL(max_point : int)
+  COL(boleh_booking : boolean = true)
+  COL(max_durasi_booking_jam : int NULL)
+  COL(max_booking_per_hari : int NULL)
+  COL(prioritas : tinyint = 0)
+  COL(warna : varchar(20) = 'gray')
+  COL(created_at : timestamp)
+  COL(updated_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  BOOKING_CANCELLATIONS
+' ══════════════════════════════════════════
+TABLE(booking_cancellations, "booking_cancellations") {
+  PK(id : bigint)
+  --
+  FK(booking_id : bigint)
+  FK(cancelled_by : bigint)
+  COL(alasan : text)
+  COL(created_at : timestamp)
+}
+
+' ══════════════════════════════════════════
+'  RELASI
+' ══════════════════════════════════════════
+
+' users
+users "1" -- "0..*" bookings : user_id
+users "1" -- "0..*" bookings : disetujui_oleh
+users "1" -- "0..*" bookings : cancelled_by
+users "1" -- "0..*" organization_submissions : user_id
+users "1" -- "0..*" organization_submissions : diproses_oleh
+users "1" -- "0..*" booking_histories : user_id
+users "1" -- "0..*" riwayat : user_id
+users "1" -- "0..*" notifikasi : user_id
+users "1" -- "0..*" reputation_logs : user_id
+users "*" -- "1" reputation_levels : reputation_level_id
+
+' rooms
+rooms "1" -- "0..*" bookings : room_id
+rooms "1" -- "0..*" room_schedules : room_id
+rooms "1" -- "0..*" room_facilities : room_id
+
+' facilities
+facilities "1" -- "0..*" room_facilities : facility_id
+
+' organizations
+organizations "1" -- "0..*" organization_submissions : organization_id
+organizations "1" -- "0..*" bookings : organization_id
+
+' bookings
+bookings "1" -- "0..*" booking_histories : booking_id
+bookings "1" -- "0..*" room_schedules : booking_id
+bookings "1" -- "0..*" reputation_logs : booking_id
+bookings "1" -- "0..1" booking_cancellations : booking_id
+
+' reputation
+reputation_settings "1" -- "0..*" reputation_logs : setting_id
+
+@enduml

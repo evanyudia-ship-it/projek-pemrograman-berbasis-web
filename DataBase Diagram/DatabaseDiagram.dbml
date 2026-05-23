@@ -1,0 +1,308 @@
+// ============================================================
+//  SMART CLASSROOM BOOKING SYSTEM — FULL DATABASE DIAGRAM
+//  Versi: Setelah Review & Perbaikan
+// ============================================================
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  email varchar(150) [unique, not null]
+  password varchar(255) [not null]
+  role varchar [note: 'superadmin, admin, dosen, mahasiswa']
+  nim_nip varchar(30)
+  phone varchar(20)
+  avatar varchar(255)
+  departemen varchar(100)
+  reputation_point int [default: 100, note: 'Range 0-100, CHECK reputation_point BETWEEN 0 AND 100']
+  reputation_level_id bigint [null, note: 'FK ke reputation_levels, di-update tiap reputation_point berubah']
+  is_verified boolean [default: false]
+  email_verified_at timestamp
+  remember_token varchar(100)
+  last_reputation_change_at timestamp [null, note: 'Auto-update via trigger saat reputation_point berubah']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table rooms {
+  id bigint [pk, increment]
+  kode varchar(20) [unique, not null]
+  nama varchar(150) [not null]
+  gedung varchar(100) [not null]
+  lantai tinyint [not null]
+  kapasitas smallint [not null]
+  alamat varchar(255)
+  deskripsi text
+  foto varchar(255)
+  jam_buka time [not null]
+  jam_tutup time [not null]
+  max_durasi_jam tinyint [default: 4]
+  status varchar [default: 'Tersedia', note: 'Tersedia, Dipakai, Maintenance']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table facilities {
+  id bigint [pk, increment]
+  nama varchar(100) [unique, not null]
+  icon varchar(10)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ── Pivot rooms <-> facilities
+// Ditambah kolom status untuk menandai fasilitas rusak/maintenance
+Table room_facilities {
+  id bigint [pk, increment]
+  room_id bigint [not null]
+  facility_id bigint [not null]
+  status varchar [default: 'tersedia', note: 'tersedia, rusak, maintenance']
+  updated_at timestamp
+
+  indexes {
+    (room_id, facility_id) [unique]
+  }
+}
+
+Table organizations {
+  id bigint [pk, increment]
+  nama varchar(200) [not null]
+  singkatan varchar(30)
+  email varchar(150)
+  instagram varchar(60)
+  whatsapp varchar(20)
+  status varchar [default: 'aktif', note: 'aktif, nonaktif']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table organization_submissions {
+  id varchar(20) [pk, note: 'format: ORG-XXXXX']
+  user_id bigint [not null]
+  organization_id bigint [not null]
+  jabatan varchar(100) [not null]
+  deskripsi text [not null]
+  periode varchar(20) [not null]
+  jenis_bukti json [not null, note: 'Harus array JSON, CHECK json_typeof(jenis_bukti) = array']
+  file_bukti_nama varchar(255)
+  file_bukti_path varchar(255)
+  status varchar [default: 'pending', note: 'pending, approved, rejected']
+  catatan text
+  diproses_at timestamp
+  diproses_oleh bigint
+  tgl_ajuan timestamp [default: `now()`]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ── Tabel bookings
+// PERUBAHAN:
+// 1. id ganti jadi bigint auto-increment, tambah booking_code untuk kode user-friendly
+// 2. durasi diganti durasi_menit int (bukan varchar)
+// 3. tipe_pemohon DIHAPUS (sudah ada di users.role)
+// 4. Tambah checkin_deadline untuk keperluan cron job no_show
+// 5. Tambah cancellation_reason & cancelled_by
+// 6. Tambah actor_type di booking_histories (lihat tabel booking_histories)
+// NOTE: Validasi jam_selesai > jam_mulai & no-overlap harus di application layer / trigger
+Table bookings {
+  id bigint [pk, increment]
+  booking_code varchar(20) [unique, not null, note: 'Kode user-friendly, format: BK-001']
+  user_id bigint [not null]
+  room_id bigint [not null]
+  organization_id bigint [null, note: 'Nullable: diisi jika booking atas nama organisasi']
+  kegiatan varchar(150) [not null]
+  tujuan text [not null]
+  tanggal date [not null]
+  jam_mulai time [not null]
+  jam_selesai time [not null, note: 'Harus > jam_mulai, validasi di app/trigger']
+  durasi_menit int [not null, note: 'Durasi dalam menit, dihitung otomatis saat insert']
+  status varchar [default: 'pending', note: 'pending, approved, rejected, completed, cancelled, no_show']
+  catatan_admin text
+  disetujui_oleh bigint [null]
+  disetujui_at timestamp [null]
+  check_in_status varchar [default: 'belum_checkin', note: 'belum_checkin, checkin_tepat_waktu, checkin_terlambat, no_show']
+  check_in_at timestamp [null]
+  checkin_deadline timestamp [null, note: 'Dihitung dari tanggal+jam_mulai+30 menit toleransi, untuk cron job no_show']
+  is_penalty_applied boolean [default: false]
+  cancellation_reason varchar(255) [null, note: 'Wajib diisi di app layer jika status = cancelled/rejected']
+  cancelled_by bigint [null, note: 'FK ke users.id, siapa yang membatalkan']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (room_id, tanggal, jam_mulai)
+    (user_id, status)
+    (status, created_at) [name: 'idx_bookings_status_created']
+    (room_id, tanggal, status) [name: 'idx_bookings_room_date_status']
+  }
+}
+
+// ── Riwayat perubahan status booking (audit trail)
+// PERUBAHAN: Tambah actor_type untuk membedakan perubahan oleh user/admin/sistem
+Table booking_histories {
+  id bigint [pk, increment]
+  booking_id bigint [not null]
+  user_id bigint [null, note: 'NULL jika perubahan dilakukan oleh sistem (cron/otomatis)']
+  actor_type varchar [default: 'user', note: 'user, admin, system']
+  status_sebelumnya varchar
+  status_baru varchar [not null]
+  keterangan text [null, note: 'Wajib diisi di app layer jika status_baru = rejected']
+  created_at timestamp [default: `now()`]
+}
+
+// ── Jadwal ruangan
+// NOTE: Tabel ini digunakan untuk jadwal tetap/non-booking (maintenance, akademik rutin)
+// Jika booking dihapus/cancel: booking_id di-SET NULL (ON DELETE SET NULL)
+// jenis_jadwal menggantikan kolom tipe lama yang ambigu
+Table room_schedules {
+  id bigint [pk, increment]
+  room_id bigint [not null]
+  booking_id bigint [null, note: 'Nullable, ON DELETE SET NULL. NULL = jadwal non-booking (maintenance/akademik)']
+  label varchar(200) [not null]
+  tanggal date [not null]
+  waktu_mulai time [not null]
+  waktu_selesai time [not null]
+  jenis_jadwal varchar [default: 'booking', note: 'booking, maintenance, academic_schedule, private_event']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (room_id, tanggal) [name: 'room_schedules_room_tanggal_index']
+  }
+}
+
+// ── Log aktivitas umum user
+// PERUBAHAN: entitas_id tetap varchar agar konsisten (semua ID dikonversi ke string saat insert)
+// entitas_terkait dibatasi nilai-nilainya via note (ENUM di app layer)
+Table riwayat {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  jenis_aktivitas varchar [not null, note: 'peminjaman_ruangan, update_profil, pengajuan_organisasi, checkin, pembatalan, dsb']
+  deskripsi text
+  entitas_terkait varchar [null, note: 'ENUM di app: bookings, organizations, users, rooms']
+  entitas_id varchar [null, note: 'Selalu disimpan sebagai string. Integer ID dikonversi eksplisit saat insert']
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    user_id
+    created_at
+  }
+}
+
+Table notifikasi {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  judul varchar [not null]
+  pesan text
+  tipe varchar [default: 'info', note: 'info, warning, success, approval']
+  status varchar [default: 'belum_dibaca', note: 'belum_dibaca, sudah_dibaca']
+  entitas_terkait varchar [null, note: 'ENUM di app: bookings, organizations, users, rooms']
+  entitas_id varchar [null, note: 'Selalu disimpan sebagai string. Integer ID dikonversi eksplisit saat insert']
+  created_at timestamp [default: `now()`]
+  dibaca_at timestamp
+
+  indexes {
+    user_id
+    status
+    created_at
+  }
+}
+
+// ── Riwayat perubahan reputasi
+// PERUBAHAN: alasan diganti setting_id (FK ke reputation_settings) agar tervalidasi
+Table reputation_logs {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  booking_id bigint [null, note: 'Nullable, terkait booking tertentu']
+  setting_id bigint [not null, note: 'FK ke reputation_settings.id, menggantikan kolom alasan varchar']
+  perubahan int [not null, note: 'Positif (+10, +5) atau negatif (-15, -20)']
+  point_sebelum int [not null]
+  point_sesudah int [not null]
+  deskripsi text [null]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    user_id [name: 'reputation_logs_user_id_index']
+    booking_id [name: 'reputation_logs_booking_id_index']
+    created_at [name: 'reputation_logs_created_at_index']
+    (user_id, created_at) [name: 'reputation_logs_user_created_index']
+  }
+}
+
+Table reputation_settings {
+  id bigint [pk, increment]
+  kode varchar(50) [unique, not null, note: 'checkin_tepat_waktu, no_show, pembatalan_mendadak, dsb']
+  nama varchar(100) [not null]
+  perubahan_point int [not null, note: 'Nilai perubahan point (+/-)']
+  is_active boolean [default: true]
+  deskripsi text
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table reputation_levels {
+  id bigint [pk, increment]
+  nama_level varchar(50) [not null, note: 'Suspended, Terbatas, Normal, Prioritas Tinggi']
+  min_point int [not null]
+  max_point int [not null]
+  boleh_booking boolean [default: true]
+  max_durasi_booking_jam int [null, note: 'NULL = ikuti max_durasi_jam ruangan. Berlaku MIN(rooms, level)']
+  max_booking_per_hari int [null, note: 'NULL = tidak dibatasi. Dicek di app layer saat insert booking']
+  prioritas tinyint [default: 0, note: '0=normal, 1=prioritas, -1=diblokir']
+  warna varchar(20) [default: 'gray']
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (min_point, max_point) [name: 'reputation_levels_point_range_index']
+  }
+}
+
+// ── Tabel pembatalan booking (opsional, untuk analitik)
+// Mencatat detail pembatalan: siapa, alasan, apakah kena penalti reputasi
+Table booking_cancellations {
+  id bigint [pk, increment]
+  booking_id bigint [not null]
+  cancelled_by bigint [not null, note: 'FK ke users.id']
+  actor_type varchar [default: 'user', note: 'user, admin, system']
+  alasan text [not null]
+  kena_penalti boolean [default: false]
+  penalti_point int [default: 0, note: 'Jumlah poin yang dikurangi akibat pembatalan']
+  created_at timestamp [default: `now()`]
+}
+
+// ============================================================
+//  SEMUA RELASI
+// ============================================================
+
+// users
+Ref: users.reputation_level_id > reputation_levels.id
+
+Ref: bookings.user_id > users.id
+Ref: bookings.disetujui_oleh > users.id
+Ref: bookings.cancelled_by > users.id
+Ref: bookings.room_id > rooms.id
+Ref: bookings.organization_id > organizations.id
+
+Ref: organization_submissions.user_id > users.id
+Ref: organization_submissions.diproses_oleh > users.id
+Ref: organization_submissions.organization_id > organizations.id
+
+Ref: booking_histories.user_id > users.id
+Ref: booking_histories.booking_id > bookings.id
+
+// room_schedules: booking_id ON DELETE SET NULL (dicatat di note, diterapkan di migration)
+Ref: room_schedules.room_id > rooms.id
+Ref: room_schedules.booking_id > bookings.id
+
+Ref: room_facilities.room_id > rooms.id
+Ref: room_facilities.facility_id > facilities.id
+
+Ref: riwayat.user_id > users.id
+Ref: notifikasi.user_id > users.id
+
+Ref: reputation_logs.user_id > users.id
+Ref: reputation_logs.booking_id > bookings.id
+Ref: reputation_logs.setting_id > reputation_settings.id
+
+Ref: booking_cancellations.booking_id > bookings.id
+Ref: booking_cancellations.cancelled_by > users.id
