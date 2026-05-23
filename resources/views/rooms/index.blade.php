@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Daftar Ruang - Smart Classroom')
-@section('page_title', 'Ketersediaan Ruang')
+@section('page_title', 'Daftar Ruangan')
 @section('page_subtitle', 'Temukan dan booking ruangan kampus')
 
 @section('content')
@@ -71,7 +71,7 @@
     {{-- ===== GRID RUANGAN ===== --}}
     <div id="roomGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
 
-        @foreach($rooms as $i => $room)
+        @foreach(($rooms ?? []) as $i => $room)
         <div class="room-card fade-up bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
              data-status="{{ $room['status'] }}"
              data-nama="{{ strtolower($room['nama']) }} {{ strtolower($room['kode']) }} {{ strtolower($room['gedung']) }}">
@@ -79,7 +79,7 @@
             {{-- ===== FOTO ===== --}}
             <div class="relative h-48 overflow-hidden bg-slate-200">
                 <img src="{{ $room['foto'] }}"
-                     alt="{{ $room['nama'] }}"
+                     alt="{{ $room['nama'] ?? 'Ruangan' }}"
                      class="room-img w-full h-full object-cover">
 
                 {{-- Overlay gradient --}}
@@ -128,14 +128,14 @@
                 <div class="mb-4">
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fasilitas</p>
                     <div class="flex flex-wrap gap-1.5">
-                        @foreach(array_slice($room['fasilitas'], 0, 4) as $f)
+                        @foreach(array_slice($room['fasilitas'] ?? [], 0, 4) as $f)
                         <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-xl font-medium">
                             {{ $f }}
                         </span>
                         @endforeach
-                        @if(count($room['fasilitas']) > 4)
+                        @if(count($room['fasilitas'] ?? []) > 4)
                         <span class="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-xl font-medium">
-                            +{{ count($room['fasilitas']) - 4 }} lainnya
+                            +{{ count($room['fasilitas'] ?? []) - 4 }} lainnya
                         </span>
                         @endif
                     </div>
@@ -144,8 +144,9 @@
                 {{-- Alamat --}}
                 <div class="flex items-start gap-2 mb-4">
                     <span class="text-base mt-0.5">📍</span>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat']) }}"
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat'] ?? '') }}"
                     target="_blank"
+                    rel="noopener noreferrer"
                     class="text-xs text-slate-600 leading-relaxed hover:text-slate-900 transition line-clamp-2">
                         {{ $room['alamat'] }}
                     </a>
@@ -156,7 +157,7 @@
                     {{ $room['deskripsi'] }}
                 </p>
 
-                {{-- Footer Meta --}}
+                {{-- Footer Meta --}} {{-- TODO: tampilkan berdasarkan $room['fasilitas'] saat DB aktif --}}
                 <div class="flex items-center gap-3 text-xs text-slate-400 pb-1">
                     <span>🪑 kursi terstandar</span>
                     <span>•</span>
@@ -182,7 +183,7 @@
                 @else
                 <span class="text-xs font-semibold text-red-500 flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                    Sedang digunakan
+                    Saat ini Sedang digunakan
                 </span>
                 @endif
             </div>

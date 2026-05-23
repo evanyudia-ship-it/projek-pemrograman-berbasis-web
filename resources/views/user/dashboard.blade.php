@@ -11,7 +11,7 @@
     {{-- Greeting --}}
     <div class="fade-up">
         <p class="text-sm text-slate-500 mb-1">{{ now()->translatedFormat('l, d F Y') }}</p>
-        <h1 class="text-3xl font-bold text-slate-900">Halo, {{ session('user_name') }} 👋</h1>
+        <h1 class="text-3xl font-bold text-slate-900">Halo, {{ session('user_name', 'Pengunjung') }} 👋</h1>
         <p class="text-slate-500 mt-1 text-sm">
             {{ session('user_role') === 'dosen' ? 'Selamat mengajar hari ini.' : 'Semangat kuliah hari ini!' }}
         </p>
@@ -65,7 +65,7 @@
         <p class="text-4xl font-bold text-white mt-3">{{ $rp }}</p>
         <p class="text-xs text-slate-400 mt-1">Reputation Points</p>
         <div class="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div class="h-full bg-linear-to-r {{ $rpColor }} rounded-full" style="width:{{ $rp }}%"></div>
+            <div class="h-full bg-linear-to-r {{ $rpColor }} rounded-full" style="width:{{ min(100, $rp) }}%"></div>
         </div>
         <p class="text-xs text-slate-400 mt-2">{{ $rp }}/100</p>
     </a>

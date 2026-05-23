@@ -44,10 +44,11 @@
             </div>
 
             <div class="flex flex-col md:flex-row gap-3">
-                <input type="text" id="searchBooking" class="rounded-xl"
-                       placeholder="Cari kode, ruang, kegiatan...">
+                <input type="text" id="searchBooking" 
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
+                        placeholder="Cari kode, ruang, kegiatan...">
 
-                <select id="filterStatus" class="rounded-xl">
+                <select id="filterStatus" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
                     <option value="">Semua Status</option>
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
@@ -57,7 +58,7 @@
                     <option value="no_show">No Show</option>
                 </select>
 
-                <input type="date" id="filterDate" class="rounded-xl">
+                <input type="date" id="filterDate" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400">
 
                 <a href="{{ route('bookings.create') }}"
                    class="px-5 py-3 rounded-xl bg-blue-500 hover:bg-slate-800 text-white font-semibold text-center whitespace-nowrap">
@@ -149,9 +150,10 @@
                             @if($bk['status'] === 'pending')
                             <form method="POST" action="{{ route('bookings.cancel', $bk['id']) }}" class="inline">
                                 @csrf
-                                <button type="submit"
-                                        onclick="return confirm('Batalkan booking {{ $bk['id'] }}?')"
-                                        class="px-3 py-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs transition">
+                                <button type="button" 
+                                        class="btn-cancel px-3 py-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs transition"
+                                        data-id="{{ $bk['id'] }}"
+                                        data-action="{{ route('bookings.cancel', $bk['id']) }}">
                                     Cancel
                                 </button>
                             </form>
@@ -189,8 +191,7 @@
 </div>
 
 {{-- MODAL DETAIL --}}
-<div id="bookingModal"
-     class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+<div id="bookingModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
 
         <div class="p-6 border-b border-slate-200 flex items-center justify-between">
@@ -227,6 +228,21 @@ $(document).ready(function () {
 
             $(this).toggle(matchKeyword && matchStatus && matchDate);
         });
+
+        let visible = $('.booking-row:visible').length;
+        if (visible === 0) {
+            if ($('#no-result-row').length === 0) {
+                $('#bookingTable').append(`
+                    <tr id="no-result-row">
+                        <td colspan="7" class="text-center py-10 text-slate-400">
+                            Tidak ada booking yang sesuai filter.
+                        </td>
+                    </tr>
+                `);
+            }
+        } else {
+            $('#no-result-row').remove();
+        }
     }
 
     $('#searchBooking').on('keyup', filterBookings);
@@ -283,17 +299,18 @@ $(document).ready(function () {
             </div>
             <div>
                 <p class="text-slate-500 mb-2">Tujuan Penggunaan</p>
-                <div class="bg-slate-50 rounded-xl p-4 text-slate-700">${d.tujuan}</div>
+                <div class="bg-slate-50 rounded-xl p-4 text-slate-700" id="modal-tujuan"></div>
             </div>
         `);
 
-        $('#bookingModal').removeClass('hidden');
+        $('#modal-tujuan').text(d.tujuan);
+        $('#bookingModal').removeClass('hidden').addClass('flex');
     });
 
     // ── Tutup Modal ──
     $('#btnCloseModal, #bookingModal').on('click', function (e) {
         if (e.target.id === 'btnCloseModal' || e.target.id === 'bookingModal') {
-            $('#bookingModal').addClass('hidden');
+            $('#bookingModal').removeClass('flex').addClass('hidden');
         }
     });
 
@@ -302,6 +319,14 @@ $(document).ready(function () {
         const id = $(this).data('id');
         if (confirm(`Lakukan check-in untuk booking ${id}?`)) {
             alert('Check-in berhasil! (Belum terhubung database)');
+        }
+    });
+
+    // ── Cancel ──
+    $('.btn-cancel').on('click', function () {
+        const id = $(this).data('id');
+        if (confirm(`Batalkan booking ${id}?`)) {
+            $(this).closest('form').submit();
         }
     });
 

@@ -188,7 +188,7 @@
                                 👁 Lihat
                             </a>
                             <button class="btn-edit px-3 py-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold text-xs transition"
-                                    data-room="{{ json_encode($room) }}">
+                                data-room="{{ htmlspecialchars(json_encode($room, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') }}">
                                 ✏️ Edit
                             </button>
                             <form action="{{ route('admin.rooms.destroy', $room['id']) }}" method="POST"
@@ -285,7 +285,8 @@
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Kapasitas (orang) <span class="text-red-500">*</span></label>
                     <input type="number" name="kapasitas" id="fKapasitas"
-                           class="mt-2 w-full" min="1" placeholder="Contoh: 40" required>
+                           class="mt-2 w-full" min="1" max="9999" 
+                           placeholder="Contoh: 40" required>
                 </div>
 
                 {{-- Max Durasi --}}
@@ -312,7 +313,7 @@
                 {{-- Fasilitas --}}
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Fasilitas</label>
-                    <input type="text" name="fasilitas" id="fFasilitas"
+                    <input type="text" name="fasilitas_string" id="fFasilitas"
                            class="mt-2 w-full"
                            placeholder="Pisahkan dengan koma: AC, Proyektor, WiFi">
                     <p class="text-xs text-slate-400 mt-1">Contoh: AC, Proyektor, WiFi, Whiteboard</p>
@@ -378,6 +379,80 @@ $(document).ready(function () {
     $('#searchRoom').on('input', filterRooms);
     $('#filterStatus').on('change', filterRooms);
 
+    // ── Validasi Global Form ─────────────────────────────────────────────
+    function setupFormValidation() {
+        $('#roomForm').off('submit');
+        $('#roomForm').on('submit', function(e) {
+
+            const jamBuka = $('#fJamBuka').val();
+            const jamTutup = $('#fJamTutup').val();    
+            if (jamBuka && jamTutup && jamBuka >= jamTutup) {
+                e.preventDefault();
+                alert('Jam buka harus lebih awal dari jam tutup');
+                return false;
+            }
+
+            if (jamBuka && jamTutup) {
+                const jamBukaInt = parseInt(jamBuka.replace(':', ''));
+                const jamTutupInt = parseInt(jamTutup.replace(':', ''));
+                
+                if (jamTutupInt - jamBukaInt < 100) { // Minimal 1 jam (contoh: 09:00 - 10:00 = 100)
+                    if (!confirm('Jam operasional kurang dari 1 jam? Apakah ini benar?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+            
+            const lantai = parseInt($('#fLantai').val());
+            const kapasitas = parseInt($('#fKapasitas').val());
+            
+            if (isNaN(lantai) || lantai < 1) {
+                e.preventDefault();
+                alert('Lantai minimal adalah 1');
+                return false;
+            }
+            
+            if (isNaN(kapasitas) || kapasitas < 1) {
+                e.preventDefault();
+                alert('Kapasitas minimal adalah 1 orang');
+                return false;
+            }
+            
+            if (kapasitas > 1000) {
+                if (!confirm('Kapasitas lebih dari 1000 orang? Apakah ini benar?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            const fasilitasInput = $('#fFasilitas').val();
+            if (fasilitasInput && fasilitasInput.trim()) {
+                const fasilitasArray = fasilitasInput.split(',').map(f => f.trim()).filter(f => f);
+                $(this).find('input[name="fasilitas"], input[name="fasilitas[]"]').remove();
+                fasilitasArray.forEach(f => {
+                    $(this).append(`<input type="hidden" name="fasilitas[]" value="${escapeHtml(f)}">`);
+                });
+            }
+            
+            // Loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<span class="inline-block animate-spin mr-2">⏳</span> Menyimpan...').prop('disabled', true);
+            
+            $(this).data('original-text', originalText);
+        });
+    }
+    
+    // Helper function untuk escape HTML
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
     // ── Buka modal TAMBAH ────────────────────────────────────────────────
     $('#btnTambah').on('click', function () {
         $('#modalTitle').text('Tambah Ruang Baru');
@@ -385,6 +460,7 @@ $(document).ready(function () {
         $('#methodField').html('');
         $('#roomForm').attr('action', '{{ route("admin.rooms.store") }}');
         $('#fotoPreviewWrap').addClass('hidden');
+        setupFormValidation(); // Setup ulang validasi
         openModal();
     });
 
@@ -394,7 +470,7 @@ $(document).ready(function () {
 
         $('#modalTitle').text('Edit Ruang');
         $('#methodField').html('<input type="hidden" name="_method" value="PUT">');
-        $('#roomForm').attr('action', '/admin/rooms/' + room.id);
+        $('#roomForm').attr('action', '{{ route("admin.rooms.update", ":id") }}'.replace(':id', room.id));
 
         // Isi form
         $('#fNama').val(room.nama);
@@ -406,35 +482,60 @@ $(document).ready(function () {
         $('#fMaxDurasi').val(room.max_durasi);
         $('#fJamBuka').val(room.jam_buka);
         $('#fJamTutup').val(room.jam_tutup);
-        $('#fFasilitas').val(Array.isArray(room.fasilitas) ? room.fasilitas.join(', ') : '');
+        
+        let fasilitasStr = '';
+        if (Array.isArray(room.fasilitas)) fasilitasStr = room.fasilitas.join(', ');
+        else if (typeof room.fasilitas === 'string') fasilitasStr = room.fasilitas;
+        $('#fFasilitas').val(fasilitasStr);
+        
         $('#fDeskripsi').val(room.deskripsi);
         $('#fFoto').val(room.foto);
-
+        
         // Tampilkan preview foto
-        if (room.foto) {
+        if (room.foto && room.foto.trim()) {
             $('#fotoPreview').attr('src', room.foto);
             $('#fotoPreviewWrap').removeClass('hidden');
         } else {
             $('#fotoPreviewWrap').addClass('hidden');
         }
-
+        
+        setupFormValidation(); // Setup ulang validasi
         openModal();
     });
 
     // ── Preview foto saat URL diketik ────────────────────────────────────
     $('#fFoto').on('input', function () {
         const url = $(this).val().trim();
-        if (url) {
+        if (url && isValidUrl(url)) {
             $('#fotoPreview').attr('src', url);
             $('#fotoPreviewWrap').removeClass('hidden');
         } else {
             $('#fotoPreviewWrap').addClass('hidden');
         }
     });
+    
+    // Validasi URL sederhana
+    function isValidUrl(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
 
     // ── Tutup modal ──────────────────────────────────────────────────────
-    function openModal()  { $('#roomModal').removeClass('hidden'); }
-    function closeModal() { $('#roomModal').addClass('hidden'); }
+    function openModal()  { 
+        $('#roomModal').removeClass('hidden');
+        $('body').css('overflow', 'hidden'); // Prevent scroll
+    }
+    
+    function closeModal() { 
+        $('#roomModal').addClass('hidden');
+        $('body').css('overflow', '');
+        $('#roomForm')[0].reset(); // Reset form saat tutup
+        $('#fotoPreviewWrap').addClass('hidden');
+    }
 
     $('#btnCloseModal, #btnBatal').on('click', closeModal);
     $('#roomModal').on('click', function (e) {
@@ -442,7 +543,16 @@ $(document).ready(function () {
     });
 
     // ── Auto-dismiss flash message ───────────────────────────────────────
-    setTimeout(() => $('#flashMsg').fadeOut(400, function () { $(this).remove(); }), 4000);
+    const flashMsg = $('#flashMsg');
+    if (flashMsg.length) {
+        setTimeout(() => {
+            flashMsg.fadeOut(400, function () { 
+                $(this).remove(); 
+            });
+        }, 4000);
+    }
+    
+    setupFormValidation();
 });
 </script>
 @endpush

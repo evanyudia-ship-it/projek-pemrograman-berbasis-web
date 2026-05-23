@@ -1,17 +1,21 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\RoomManageController;
+use App\Http\Controllers\Admin\ApprovalController;
+use App\Http\Controllers\Admin\OrganizationApprovalController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\HelpController;
-use App\Http\Controllers\RoomManageController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\VerifyController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\OrganizationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -96,6 +100,18 @@ Route::prefix('reputation')->name('reputation.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Organization (Perwakilan Organisasi)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('organization')->name('organization.')->group(function () {
+    Route::get('/',                 [OrganizationController::class, 'index'])->name('index');
+    Route::get('/create',           [OrganizationController::class, 'create'])->name('create');
+    Route::post('/',                [OrganizationController::class, 'store'])->name('store');
+    Route::delete('/{id}/cancel',   [OrganizationController::class, 'cancel'])->name('cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Help
 |--------------------------------------------------------------------------
 */
@@ -113,6 +129,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/approvals/{id}/approve',     [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject',      [ApprovalController::class, 'reject'])->name('approvals.reject');
 
+    Route::prefix('organization-approvals')->name('organization-approvals.')->group(function () {
+        Route::get('/', [OrganizationApprovalController::class, 'index'])->name('index');
+        Route::get('/{id}', [OrganizationApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [OrganizationApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [OrganizationApprovalController::class, 'reject'])->name('reject');
+        Route::get('/{id}/download', [OrganizationApprovalController::class, 'downloadFile'])->name('download');
+    });
+
     // Manage Rooms
     Route::get('/rooms',              [RoomManageController::class, 'index'])->name('rooms.index');
     Route::post('/rooms',             [RoomManageController::class, 'store'])->name('rooms.store');
@@ -122,8 +146,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/rooms/reset',       [RoomManageController::class, 'reset'])->name('rooms.reset');
 
     // Manage Users
-    Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/', fn() => view('admin.users.index'))->name('index');
-    });
+    Route::resource('users', UserController::class);
 
 });

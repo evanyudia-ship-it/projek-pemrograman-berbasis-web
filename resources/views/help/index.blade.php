@@ -221,14 +221,14 @@
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">Pertanyaan yang Sering Diajukan</p>
         <!-- FAQ tetap sama atau bisa ditambah -->
         <div class="space-y-3" id="faqList">
-            @foreach($faqs as $i => $faq)
+            @foreach(($faqs ?? []) as $i => $faq)
             <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden">
-                <button class="faq-toggle w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition" data-index="{{ $i }}">
-                    <span class="text-sm font-semibold text-slate-800 pr-4">{{ $faq['pertanyaan'] }}</span>
+                <button class="faq-toggle w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition">
+                    <span class="text-sm font-semibold text-slate-800 pr-4">{{ $faq['pertanyaan'] ?? '-' }}</span>
                     <span class="faq-icon shrink-0 w-7 h-7 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-bold transition-transform">+</span>
                 </button>
                 <div class="faq-answer hidden px-5 pb-4">
-                    <p class="text-sm text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-4">{{ $faq['jawaban'] }}</p>
+                    <p class="text-sm text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-4">{{ $faq['jawaban'] ?? '-' }}</p>
                 </div>
             </div>
             @endforeach

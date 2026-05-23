@@ -11,7 +11,7 @@
     {{-- Greeting --}}
     <div class="fade-up">
         <p class="text-sm text-slate-500 mb-1">{{ now()->translatedFormat('l, d F Y') }}</p>
-        <h1 class="text-3xl font-bold text-slate-900">Halo, {{ session('user_name') }} 👋</h1>
+        <h1 class="text-3xl font-bold text-slate-900">Halo, {{ session('user_name', 'Admin') }} 👋</h1>
         <p class="text-slate-500 mt-1 text-sm">Berikut ringkasan tugas approval hari ini.</p>
     </div>
 
@@ -49,25 +49,29 @@
     </div>
 
     {{-- Main Grid --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up delay-2">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Jadwal Hari Ini --}}
         <div class="lg:col-span-2 space-y-4">
             <div class="flex items-center justify-between">
                 <h2 class="text-base font-bold text-slate-800">Jadwal Hari Ini</h2>
             </div>
-            @foreach($jadwal_hari_ini as $jadwal)
+            @forelse($jadwal_hari_ini as $jadwal)
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 flex items-center justify-between">
                 <div>
                     <p class="font-bold text-slate-800">{{ $jadwal['ruangan'] }}</p>
                     <p class="text-xs text-slate-500 mt-0.5">{{ $jadwal['waktu'] }} · {{ $jadwal['keperluan'] }}</p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-bold
-                    {{ $jadwal['status'] === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
+                    {{ strtolower(trim($jadwal['status'])) === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
                     {{ $jadwal['status'] }}
                 </span>
             </div>
-            @endforeach
+            @empty
+            <div class="bg-slate-50 rounded-3xl border border-dashed border-slate-200 p-8 text-center">
+                <p class="text-slate-400 text-sm">Tidak ada jadwal hari ini</p>
+            </div>
+            @endforelse
         </div>
 
         {{-- Sidebar --}}
@@ -77,7 +81,7 @@
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-800 mb-3">Notifikasi</h2>
                 <div class="space-y-3">
-                    @foreach($notifikasi as $notif)
+                    @forelse($notifikasi as $notif)
                     <div class="flex gap-3">
                         <span class="text-lg shrink-0">{{ $notif['icon'] }}</span>
                         <div>
@@ -85,7 +89,9 @@
                             <p class="text-xs text-slate-400 mt-0.5">{{ $notif['waktu'] }}</p>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                   <p class="text-xs text-slate-400 text-center py-2">Tidak ada notifikasi baru</p>
+                    @endforelse
                 </div>
             </div>
 

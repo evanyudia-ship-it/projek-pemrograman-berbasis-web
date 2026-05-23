@@ -12,19 +12,37 @@
         <h3 class="font-bold text-lg mb-1">Point Saya</h3>
         <p class="text-sm text-slate-500 mb-6">Status kepercayaan pengguna</p>
 
-        <div class="flex items-center justify-center">
-            <div class="w-44 h-44 rounded-full border-10 border-emerald-600 flex items-center justify-center">
-                <div class="text-center">
-                    <p class="text-5xl font-extrabold">85</p>
-                    <p class="text-xs text-slate-500">Point</p>
-                </div>
+        @php
+        // TODO: hapus ini setelah database reputation terisi
+        $rp = $profileData->point ?? 85; // dummy 85 untuk test
+ 
+    
+        // Tentukan warna berdasarkan range
+        if ($rp >= 80) {
+            $rpColor = '#10b981'; // hijau
+        } elseif ($rp >= 50) {
+            $rpColor = '#3b82f6'; // biru
+        } elseif ($rp >= 30) {
+            $rpColor = '#f59e0b'; // kuning
+        } else {
+            $rpColor = '#ef4444'; // merah
+        }
+    @endphp
+    
+    <div class="flex items-center justify-center">
+        <div class="w-44 h-44 rounded-full flex items-center justify-center"
+             style="border: 8px solid {{ $rpColor }}">
+            <div class="text-center">
+                <p class="text-5xl font-extrabold" style="color: {{ $rpColor }}">{{ $rp }}</p>
+                <p class="text-xs text-slate-500">Point</p>
             </div>
         </div>
+    </div>
 
         <div class="mt-6 text-center">
             <span class="px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
                 Trusted User
-            </span>
+            </span> {{-- TODO: ganti $reputation->status --}}
         </div>
 
         <div class="mt-6 space-y-3 text-sm">
@@ -40,7 +58,7 @@
 
             <div class="flex justify-between">
                 <span class="text-slate-500">Pelanggaran</span>
-                <span class="font-bold text-red-600">0</span>
+                <span class="font-bold text-red-600">0</span> {{-- TODO: ganti $reputation->violation --}}
             </div>
         </div>
     </div>

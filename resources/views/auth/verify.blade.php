@@ -22,12 +22,14 @@
             <h2 class="text-2xl font-extrabold text-slate-900">Verifikasi Email</h2>
             <p class="text-slate-500 mt-2 text-sm leading-relaxed">
                 Kode OTP telah dikirim ke<br>
-                <span class="font-semibold text-slate-700">{{ session('reg_email') }}</span>
+                <span class="font-semibold text-slate-700">
+                    {{ session('reg_email', 'email Anda') }}
+                </span>
             </p>
         </div>
 
         {{-- OTP Demo Banner (development only) --}}
-        @if(session('otp_demo'))
+        @if(session('otp_demo') && app()->environment('local', 'development'))
         <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center">
             <p class="text-xs text-amber-600 font-semibold mb-1">🔧 Mode Development — Kode OTP Anda:</p>
             <p class="text-3xl font-extrabold text-amber-700 tracking-widest">
@@ -64,7 +66,6 @@
                 <div class="flex gap-2 justify-center" id="otp-boxes">
                     @for($i = 0; $i < 6; $i++)
                     <input type="text"
-                           maxlength="1"
                            class="otp-digit w-12 h-14 text-center text-xl font-extrabold rounded-xl border-2 border-slate-200 focus:border-blue-500 outline-none transition"
                            inputmode="numeric"
                            pattern="[0-9]">
@@ -76,7 +77,8 @@
             </div>
 
             {{-- Countdown --}}
-            <div class="text-center text-sm text-slate-500 mb-5">
+            <div class="text-center text-sm text-slate-500 mb-5"
+                data-expires="{{ session('otp_expires_at') ? \Carbon\Carbon::parse(session('otp_expires_at'))->diffInSeconds(now()) : 600 }}">
                 Kode berlaku selama
                 <span id="countdown" class="font-bold text-red-600">10:00</span>
             </div>
@@ -128,21 +130,39 @@ $(document).ready(function () {
     });
 
     digits.on('keydown', function (e) {
+        const allowed = ['Backspace','Tab','ArrowLeft','ArrowRight'];
+        if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+            e.preventDefault();
+        }
         if (e.key === 'Backspace' && $(this).val() === '') {
             $(this).prev('.otp-digit').focus();
         }
     });
 
-    // Paste: sebar ke semua kotak
-    digits.first().on('paste', function (e) {
-        let pasted = (e.originalEvent.clipboardData || window.clipboardData)
-                        .getData('text').replace(/\D/g, '').slice(0, 6);
-        digits.each(function (i) {
-            $(this).val(pasted[i] || '');
+    $('#otp-boxes').on('paste', function(e) {
+        let pastedData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+        let cleaned = pastedData.replace(/\D/g, '').slice(0, 6);
+        
+        if (cleaned.length === 0) return;
+        
+        digits.each(function(idx) {
+            if (idx < cleaned.length) {
+                $(this).val(cleaned[idx]);
+            } else {
+                $(this).val(''); 
+            }
         });
-        collectOtp();
-        digits.last().focus();
+        
+        let lastFilledIndex = Math.min(cleaned.length, digits.length) - 1;
+        if (lastFilledIndex >= 0) {
+            digits.eq(lastFilledIndex).focus();
+        } else {
+            digits.first().focus();
+        }
+        
+        collectOtp();     
         e.preventDefault();
+        return false;
     });
 
     function collectOtp() {
@@ -151,24 +171,36 @@ $(document).ready(function () {
         $('#otp-combined').val(combined);
     }
 
-    // ── Countdown 10 menit ──
-    let seconds = 600;
+    $('form').first().on('submit', function (e) {
+        if ($('#otp-combined').val().length < 6) {
+            e.preventDefault();
+            alert('Harap isi semua 6 digit kode OTP.');
+        }
+    });
+
+    // ── Countdown Timer ──
+    let seconds = parseInt($('[data-expires]').data('expires')) || 600;
     const $countdown = $('#countdown');
     const $btn = $('#btn-verify');
 
-    let timer = setInterval(function () {
-        seconds--;
-        let m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        let s = (seconds % 60).toString().padStart(2, '0');
-        $countdown.text(m + ':' + s);
+    if (seconds <= 0) {
+        $countdown.text('Kadaluarsa').addClass('text-red-500');
+        $btn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+    } else {
+        let timer = setInterval(function () {
+            seconds--;
+            
+            let m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            let s = (seconds % 60).toString().padStart(2, '0');
+            $countdown.text(m + ':' + s);
 
-        if (seconds <= 0) {
-            clearInterval(timer);
-            $countdown.text('Kadaluarsa').addClass('text-red-500').removeClass('text-blue-600');
-            $btn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
-        }
-    }, 1000);
-
+            if (seconds <= 0) {
+                clearInterval(timer);
+                $countdown.text('Kadaluarsa').addClass('text-red-500');
+                $btn.prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+            }
+        }, 1000);
+    }
 });
 </script>
 

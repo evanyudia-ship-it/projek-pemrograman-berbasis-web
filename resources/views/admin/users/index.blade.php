@@ -10,27 +10,27 @@
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Total User</p>
-        <h3 class="text-3xl font-extrabold mt-2">128</h3>
+        <h3 class="text-3xl font-extrabold mt-2">{{ $totalUsers }}</h3>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Admin</p>
-        <h3 class="text-3xl font-extrabold mt-2 text-slate-700">3</h3>
+        <h3 class="text-3xl font-extrabold mt-2">{{ $totalAdmin }}</h3>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Dosen</p>
-        <h3 class="text-3xl font-extrabold mt-2 text-indigo-600">18</h3>
+        <h3 class="text-3xl font-extrabold mt-2">{{ $totalDosen }}</h3>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Mahasiswa</p>
-        <h3 class="text-3xl font-extrabold mt-2 text-blue-600">96</h3>
+        <h3 class="text-3xl font-extrabold mt-2">{{ $totalMahasiswa }}</h3>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
         <p class="text-sm text-slate-500">Organisasi</p>
-        <h3 class="text-3xl font-extrabold mt-2 text-emerald-600">11</h3>
+        <h3 class="text-3xl font-extrabold mt-2">{{ $totalOrganisasi }}</h3>
     </div>
 
 </div>
@@ -69,6 +69,10 @@
                     <option value="inactive">Nonaktif</option>
                     <option value="banned">Banned</option>
                 </select>
+
+                <button id="resetFilter" class="px-4 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl">
+                    ↺ Reset Filter
+                </button>
 
                 <button id="btnOpenUserModal"
                         class="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
@@ -209,7 +213,7 @@
                 </tr>
 
                 <tr class="user-row"
-                    data-search="mahasiswa demo mahasiswa@kampus.ac.id 20260001"
+                    data-search="mahasiswa demo mahasiswa@kampus.ac.id 2415051068"
                     data-role="mahasiswa"
                     data-status="active">
 
@@ -225,7 +229,7 @@
                         </div>
                     </td>
 
-                    <td class="px-6 py-4">20260001</td>
+                    <td class="px-6 py-4">2415051068</td>
 
                     <td class="px-6 py-4">
                         <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">
@@ -400,8 +404,10 @@
             </button>
         </div>
 
-        <form action="#" method="POST" id="userForm" class="p-6">
+        <form action="{{ route('admin.users.store') }}" method="POST" id="userForm" class="p-6">
             @csrf
+            <input type="hidden" name="_method" id="formMethod" value="POST">
+            <input type="hidden" name="user_id" id="userId">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
@@ -483,6 +489,7 @@
 
 @push('scripts')
 <script>
+$(document).ready(function () {
     function filterUsers() {
         let keyword = $('#searchUser').val().toLowerCase();
         let role = $('#filterRole').val();
@@ -497,83 +504,148 @@
             let matchRole = role === '' || rowRole === role;
             let matchStatus = status === '' || rowStatus === status;
 
-            if (matchKeyword && matchRole && matchStatus) {
-                $(this).show();
-            } else {
-                $(this).hide();
-            }
+            $(this).toggle(matchKeyword && matchRole && matchStatus);
         });
     }
 
-    $('#searchUser').on('keyup', filterUsers);
-    $('#filterRole').on('change', filterUsers);
-    $('#filterStatus').on('change', filterUsers);
+    $('#searchUser').on('input', filterUsers);
+    $('#filterRole, #filterStatus').on('change', filterUsers);
 
+    $('#resetFilter').on('click', function() {
+        $('#searchUser').val('');
+        $('#filterRole').val('');
+        $('#filterStatus').val('');
+        filterUsers();
+    });
+
+    // Buka modal tambah
     $('#btnOpenUserModal').on('click', function () {
+        alert('Fitur Masih dikembangkan');
+        /*
         $('#modalTitle').text('Tambah User');
         $('#userForm')[0].reset();
+        $('#formMethod').val('POST');
+        $('#userForm').attr('action', '{{ route("admin.users.store") }}');
+        $('#userId').val('');
+        $('input[name="password"], input[name="password_confirmation"]').prop('required', true);
         $('#userModal').removeClass('hidden');
+        */
     });
 
-    $('#btnCloseUserModal, #btnCancelUserModal').on('click', function () {
-        $('#userModal').addClass('hidden');
-    });
+    $(document).on('click', '.btn-edit', function () {
+        const row = $(this).closest('.user-row');
+        const userId = row.data('id');
+        const name = row.find('td:first p.font-bold').text();
+        const email = row.find('td:first p.text-xs').text();
+        const identity = row.find('td:eq(1)').text().trim();
+        const role = row.data('role');
+        const status = row.data('status');
 
-    $('#userModal').on('click', function (e) {
-        if (e.target.id === 'userModal') {
-            $('#userModal').addClass('hidden');
-        }
-    });
-
-    $('.btn-edit').on('click', function () {
         $('#modalTitle').text('Edit User');
-
-        let row = $(this).closest('tr');
-        let name = row.find('td:first p.font-bold').text();
-        let email = row.find('td:first p.text-xs').text();
-        let identity = row.find('td:eq(1)').text().trim();
-        let role = row.data('role');
-        let status = row.data('status');
-
         $('#formName').val(name);
         $('#formEmail').val(email);
         $('#formIdentity').val(identity);
         $('#formRole').val(role);
         $('#formStatus').val(status);
-
+        $('#userId').val(userId);
+        $('#formMethod').val('PUT');
+        $('#userForm').attr('action', '/admin/users/' + userId);
+        $('input[name="password"], input[name="password_confirmation"]').prop('required', false).val('');
         $('#userModal').removeClass('hidden');
+    });
+
+    function submitUserForm(form, submitBtn, originalText) {
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                alert(response.message || 'User berhasil disimpan');
+                location.reload();
+            },
+            error: function(xhr) {
+                let errorMsg = 'Terjadi kesalahan';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                } else if (xhr.status === 422) {
+                    errorMsg = 'Validasi gagal: ' + JSON.stringify(xhr.responseJSON.errors);
+                }
+                alert(errorMsg);
+            },
+            complete: function() {
+                submitBtn.html(originalText).prop('disabled', false);
+            }
+        });
+    }
+
+    $('#userForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const isEdit = $('#formMethod').val() === 'PUT';
+        
+        // Ambil nilai
+        const name = $('#formName').val().trim();
+        const email = $('#formEmail').val().trim();
+        const identity = $('#formIdentity').val().trim();
+        const role = $('#formRole').val();
+        const password = $('input[name="password"]').val();
+        const passwordConf = $('input[name="password_confirmation"]').val();
+
+        // Validasi
+        if (!name) return alert('Nama lengkap wajib diisi');
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) return alert('Email tidak valid');
+        if (!identity) return alert('NIM/NIP/Kode wajib diisi');
+        if (!role) return alert('Role wajib dipilih');
+
+        if (!isEdit) {
+            if (!password) return alert('Password wajib diisi untuk user baru');
+            if (password !== passwordConf) return alert('Password dan konfirmasi password tidak cocok');
+            if (password.length < 6) return alert('Password minimal 6 karakter');
+        } else {
+            if (password && password !== passwordConf) return alert('Password dan konfirmasi password tidak cocok');
+        }
+
+        if (!confirm(`Anda yakin ingin ${isEdit ? 'mengedit' : 'menambah'} user ini?`)) return;
+
+        const submitBtn = form.find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.html('⏳ Menyimpan...').prop('disabled', true);
+
+        submitUserForm(form, submitBtn, originalText);
+    });
+
+    $('#btnCloseUserModal, #btnCancelUserModal').on('click', function () {
+        $('#userModal').addClass('hidden');
+    });
+    $('#userModal').on('click', function (e) {
+        if (e.target.id === 'userModal') $('#userModal').addClass('hidden');
     });
 
     $('.btn-disable').on('click', function () {
         if (confirm('Nonaktifkan user ini?')) {
-            alert('User dinonaktifkan. Ini masih GUI, belum terhubung database.');
+            alert('User dinonaktifkan. (Integrasi backend diperlukan)');
         }
     });
 
     $('.btn-activate').on('click', function () {
         if (confirm('Aktifkan kembali user ini?')) {
-            alert('User berhasil diaktifkan. Ini masih GUI, belum terhubung database.');
+            alert('User berhasil diaktifkan. (Integrasi backend diperlukan)');
         }
     });
 
     $('.btn-reset').on('click', function () {
         if (confirm('Reset password user ini?')) {
-            alert('Password berhasil di-reset. Ini masih GUI.');
+            alert('Password berhasil di-reset. (Integrasi backend diperlukan)');
         }
     });
 
     $('.btn-verify').on('click', function () {
         if (confirm('Verifikasi user/organisasi ini?')) {
-            alert('User berhasil diverifikasi. Ini masih GUI.');
+            alert('User berhasil diverifikasi. (Integrasi backend diperlukan)');
         }
     });
-
-    $('#userForm').on('submit', function (e) {
-        e.preventDefault();
-
-        alert('Data user berhasil disimpan. Ini masih GUI, belum masuk database.');
-        $('#userModal').addClass('hidden');
-    });
+});
 </script>
 @endpush
 

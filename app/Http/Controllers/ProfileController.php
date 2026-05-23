@@ -2,9 +2,40 @@
 
 namespace App\Http\Controllers;
 
-
 class ProfileController extends Controller
 {
+    /**
+     * Ambil data pengajuan organisasi dari session
+     * Sama seperti di OrganizationController
+     */
+    private function getUserOrganizationSubmission(): ?array
+    {
+        $userId = session('user_id');
+        if (!$userId) {
+            return null;
+        }  
+        $key = "org_submissions_{$userId}";
+        $submissions = session($key, []);
+    
+        foreach ($submissions as $submission) {
+            if (in_array($submission['status'] ?? null, ['pending', 'approved', 'rejected'])) {
+                $defaults = [
+                    'periode' => '-',
+                    'email_organisasi' => null,
+                    'instagram' => null,
+                    'whatsapp' => null,
+                    'jenis_bukti' => [],
+                    'file_bukti_nama' => null,
+                    'file_bukti_path' => null,
+                ];
+            
+                return array_merge($defaults, $submission);
+            }
+        }
+    
+        return null;
+    }
+
     public function index()
     {
         $role = session('user_role', 'mahasiswa');
@@ -18,6 +49,17 @@ class ProfileController extends Controller
             'role'  => ucfirst($role),
             'nim_nip'  => session('user_nim_nip', 'Belum diisi'),
         ];
+
+        // ========== AMBIL DATA PENGAJUAN ORGANISASI (KHUSUS MAHASISWA) ==========
+        $organizationSubmission = null;
+        $orgStatus = null;
+        
+        if ($role === 'mahasiswa') {
+            $organizationSubmission = $this->getUserOrganizationSubmission();
+            if ($organizationSubmission) {
+                $orgStatus = $organizationSubmission['status'];
+            }
+        }
 
         // Data spesifik per role
         $profileData = match($role) {
@@ -70,15 +112,17 @@ class ProfileController extends Controller
                 ],
             ],
 
-            // mahasiswa (default)
+            // mahasiswa (default) dengan data organisasi
             default => (object) [
                 'point'          => 85,
-                'status'         => 'Trusted User',
-                'status_color'   => 'emerald',
+                'status'         => $orgStatus === 'approved' ? 'Perwakilan Organisasi Aktif' : 'Trusted User',
+                'status_color'   => $orgStatus === 'approved' ? 'emerald' : 'emerald',
                 'booking_active' => 3,
                 'violation'      => 0,
-                'badge'          => '🎒',
-                'description'    => 'Mahasiswa dapat mengajukan booking ruang untuk kegiatan akademik dan organisasi.',
+                'badge'          => $orgStatus === 'approved' ? '🏢' : '🎒',
+                'description'    => $orgStatus === 'approved' 
+                    ? 'Anda terdaftar sebagai perwakilan resmi organisasi kampus.' 
+                    : 'Mahasiswa dapat mengajukan booking ruang untuk kegiatan akademik dan organisasi.',
                 'stats' => [
                     ['label' => 'Booking Aktif',  'value' => 3,   'icon' => '📅', 'color' => 'blue'],
                     ['label' => 'Booking Selesai','value' => 10,  'icon' => '✅', 'color' => 'emerald'],
@@ -112,6 +156,6 @@ class ProfileController extends Controller
             ],
         };
 
-        return view('profile.index', compact('user', 'profileData', 'activities'));
+        return view('profile.index', compact('user', 'profileData', 'activities', 'organizationSubmission', 'orgStatus'));
     }
 }

@@ -7,6 +7,8 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
 </head>
 
 <body class="bg-slate-100 text-slate-800">
@@ -17,8 +19,9 @@
          SIDEBAR
     ══════════════════════════════ --}}
     <aside id="sidebar"
-           class="fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-slate-200 flex flex-col
-                  transform -translate-x-full md:translate-x-0 transition-transform duration-300 h-screen">
+       class="fixed md:sticky md:top-0 inset-y-0 left-0 z-40 bg-white border-r border-slate-200 flex flex-col
+              transform -translate-x-full md:translate-x-0 transition-transform duration-300 
+              h-screen md:h-auto md:max-h-screen md:overflow-y-auto">
 
         {{-- LOGO --}}
         <div class="h-20 flex items-center px-5 border-b border-slate-100 shrink-0 logo-wrap">
@@ -53,9 +56,7 @@
                     'admin'      => route('admin.dashboard'),
                     default      => route('user.dashboard'),
                 };
-                $dashActive = request()->is('dashboard')
-                           || request()->is('admin/dashboard')
-                           || request()->is('user/dashboard');
+                $dashActive = request()->routeIs('dashboard', 'admin.dashboard', 'user.dashboard');
             @endphp
 
             <a href="{{ $dashRoute }}" class="nav-item {{ $dashActive ? 'active' : '' }}">
@@ -67,7 +68,7 @@
                 <a href="{{ route('rooms.index') }}"
                    class="nav-item {{ request()->is('rooms') ? 'active' : '' }}">
                     <span class="nav-icon">🏫</span>
-                    <span class="nav-label">Ketersediaan Ruang</span>
+                    <span class="nav-label">Daftar Ruangan</span>
                 </a>
 
                 <a href="{{ route('bookings.create') }}"
@@ -80,6 +81,12 @@
                    class="nav-item {{ request()->is('bookings') ? 'active' : '' }}">
                     <span class="nav-icon">📅</span>
                     <span class="nav-label">Data Booking</span>
+                </a>
+
+                <a href="{{ route('organization.index') }}"
+                   class="nav-item {{ request()->is('organization') || request()->is('organization/*') ? 'active' : '' }}">
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-label">Perwakilan Organisasi</span>
                 </a>
 
                 <a href="{{ route('reputation.index') }}"
@@ -116,6 +123,15 @@
                     <span class="nav-icon">✅</span>
                     <span class="nav-label">Approval Admin</span>
                 </a>
+            
+                @if($role === 'superadmin')
+                {{-- Approval Organisasi (Hanya Super Admin) --}}
+                <a href="{{ route('admin.organization-approvals.index') }}"
+                   class="nav-item {{ request()->is('admin/organization-approvals*') ? 'active' : '' }}">
+                    <span class="nav-icon">🏢</span>
+                    <span class="nav-label">Approval Organisasi</span>
+                </a>
+            @endif
 
                 @if($role === 'superadmin')
                 <a href="{{ route('admin.rooms.index') }}"
@@ -140,7 +156,7 @@
 
             <div class="user-box flex items-center gap-3 px-2 py-2 mb-2 overflow-hidden">
                 <div class="user-avatar w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                    {{ strtoupper(substr(session('user_name', 'G'), 0, 1)) }}
+                    {{ strtoupper(substr(session('user_name') ?? 'G', 0, 1)) }}
                 </div>
                 <div class="user-info overflow-hidden">
                     <p class="text-sm font-semibold text-slate-800 whitespace-nowrap">
@@ -168,7 +184,7 @@
     </aside>
 
     {{-- OVERLAY MOBILE --}}
-    <div id="overlay" class="fixed inset-0 bg-black/30 z-30 md:hidden"></div>
+    <div id="overlay" class="fixed inset-0 bg-black/30 z-30 md:hidden hidden"></div>
 
     {{-- ══════════════════════════════
          MAIN CONTENT
@@ -235,6 +251,20 @@ $(document).ready(function () {
     const $sidebar = $('#sidebar');
     const $overlay = $('#overlay');
     const isMobile = () => window.innerWidth < 768;
+    
+    $(window).on('resize', function() {
+        if (window.innerWidth >= 768) {
+            $sidebar.removeClass('-translate-x-full');
+            $overlay.addClass('hidden').removeClass('show');
+            $sidebar.removeClass('minimized');
+            localStorage.setItem('sidebar_minimized', '0');
+        } else {
+            $sidebar.addClass('-translate-x-full');
+            $overlay.addClass('hidden').removeClass('show');
+            $sidebar.removeClass('minimized');
+            localStorage.setItem('sidebar_minimized', '0');
+        }
+    });
 
     if (!isMobile() && localStorage.getItem('sidebar_minimized') === '1') {
         $sidebar.addClass('sidebar-no-transition minimized');
@@ -249,7 +279,7 @@ $(document).ready(function () {
         e.stopPropagation();
         if (isMobile()) {
             $sidebar.removeClass('-translate-x-full');
-            $overlay.addClass('show');
+            $overlay.removeClass('hidden').addClass('show');
         } else {
             $sidebar.toggleClass('minimized');
             localStorage.setItem('sidebar_minimized', $sidebar.hasClass('minimized') ? '1' : '0');
@@ -258,7 +288,7 @@ $(document).ready(function () {
 
     $overlay.on('click', function () {
         $sidebar.addClass('-translate-x-full');
-        $overlay.removeClass('show');
+        $overlay.removeClass('show').addClass('hidden');
     });
 });
 </script>

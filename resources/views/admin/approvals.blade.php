@@ -132,6 +132,9 @@
             <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-filter="rejected">
                 Ditolak
             </button>
+            <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition" data-filter="expired">
+                Expired
+            </button>
         </div>
     </div>
 
@@ -166,9 +169,13 @@
                             <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
                                 ✓ Disetujui
                             </span>
-                        @else
+                        @elseif($bk['status'] === 'rejected')
                             <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
                                 ✕ Ditolak
+                            </span>
+                        @elseif($bk['status'] === 'expired')
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                                ⏰ Expired
                             </span>
                         @endif
                     </td>
@@ -196,7 +203,8 @@
 
         <form id="form-reject" method="POST">
             @csrf
-            @method('POST')
+            <input type="hidden" id="booking-id-input" name="booking_id">
+
             <textarea name="reason" id="reject-reason" rows="3"
                 class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-blue-400 outline-none resize-none"
                 placeholder="contoh: Konflik jadwal dengan kelas reguler..."></textarea>
@@ -238,14 +246,21 @@ $(document).ready(function () {
         const action = $(this).data('action');
 
         $('#form-reject').attr('action', action);
+        $('#booking-id-input').val(id);
         $('#reject-reason').val('');
         $('#reason-error').addClass('hidden');
-        $('#modal-reject').removeClass('hidden');
+        $('#modal-reject').removeClass('hidden').addClass('flex');
     });
 
     // ── Reject: tutup modal ──
     $('#btn-cancel-reject').on('click', function () {
-        $('#modal-reject').addClass('hidden');
+        $('#modal-reject').removeClass('flex').addClass('hidden');
+    });
+
+    $('#modal-reject').on('click', function (e) {
+        if ($(e.target).is('#modal-reject')) {
+            $(this).removeClass('flex').addClass('hidden');
+        }
     });
 
     // ── Reject: validasi sebelum submit ──

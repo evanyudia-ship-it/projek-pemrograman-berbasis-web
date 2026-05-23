@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $room['nama'] . ' - Smart Classroom')
+@section('title', ($room['nama'] ?? 'Ruangan') . ' - Smart Classroom')
 @section('page_title', 'Detail Ruangan')
-@section('page_subtitle', $room['kode'] . ' · ' . $room['gedung'])
+@section('page_subtitle', ($room['kode'] ?? '-') . ' · ' . ($room['gedung'] ?? '-'))
 
 @section('content')
 
@@ -16,7 +16,7 @@
     $hariAwal      = (int) $kalender->copy()->startOfMonth()->dayOfWeek;
     $totalHari     = (int) $kalender->daysInMonth;
 
-    $jadwalBulanIni = collect($room['jadwal'])->filter(
+    $jadwalBulanIni = collect($room['jadwal'] ?? [])->filter(
         fn($v, $tgl) => str_starts_with($tgl, $kalender->format('Y-m'))
     );
 @endphp
@@ -48,6 +48,7 @@
             <span class="w-2 h-2 rounded-full
                 {{ $room['status'] == 'Tersedia' ? 'bg-emerald-800 animate-pulse' : 'bg-red-800' }}"></span>
             {{ $room['status'] }}
+            <span class="text-xs font-normal opacity-75">· saat ini</span>
         </span>
 
         {{-- Kode ruangan --}}
@@ -86,7 +87,7 @@
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
                     <p class="text-xs text-slate-400 mb-1">Booking Bulan Ini</p>
-                    <p class="text-3xl font-bold text-slate-900">{{ $totalBooking }}</p>
+                    <p class="text-3xl font-bold text-slate-900">{{ $totalBooking ?? 0 }}</p>
                     <p class="text-xs text-slate-400 mt-0.5">sesi</p>
                 </div>
             </div>
@@ -105,7 +106,7 @@
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Fasilitas</p>
                 <div class="flex flex-wrap gap-2">
-                    @foreach($room['fasilitas'] as $f)
+                    @foreach(($room['fasilitas'] ?? []) as $f)
                     <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-medium">
                         {{ $f }}
                     </span>
@@ -135,6 +136,7 @@
                         <span class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-base">📶</span>
                         <div>
                             <p class="text-xs text-slate-400">Koneksi</p>
+                            {{-- TODO: cek dari $room['fasilitas'] saat DB aktif --}}
                             <p class="font-semibold text-slate-800">WiFi Tersedia</p>
                         </div>
                     </div>
@@ -167,6 +169,7 @@
                     <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                     Ruangan Sedang Dipakai
                 </div>
+                <p class="text-xs text-slate-400 text-center">Cek kalender untuk waktu lain</p>
                 @endif
 
                 <a href="{{ route('rooms.index') }}"
@@ -206,9 +209,9 @@
             <div class="bg-slate-950 rounded-3xl p-6 text-white">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Utilisasi Bulan Ini</p>
                 @php
-                    $pctBooking = $totalBooking > 0 ? min($totalBooking / 10 * 100, 100) : 0;
+                    $pctBooking = ($totalBooking ?? 0) > 0 ? min(($totalBooking ?? 0) / 10 * 100, 100) : 0;
                 @endphp
-                <div class="text-3xl font-bold mb-1">{{ $totalBooking }}
+                <div class="text-3xl font-bold mb-1">{{ $totalBooking ?? 0 }}
                     <span class="text-base font-normal text-slate-400">sesi</span>
                 </div>
                 <div class="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
@@ -259,9 +262,9 @@
                     $isToday = $tglStr === $today->format('Y-m-d');
                     $isPast  = Carbon::parse($tglStr)->lt($today);
 
-                    if ($jadwal && $jadwal['tipe'] === 'penuh') {
+                    if ($jadwal && ($jadwal['tipe'] ?? '') === 'penuh') {
                         $bg = 'bg-red-100 text-red-700 hover:bg-red-200';
-                    } elseif ($jadwal && $jadwal['tipe'] === 'sebagian') {
+                    } elseif ($jadwal && ($jadwal['tipe'] ?? '') === 'sebagian') {
                         $bg = 'bg-amber-100 text-amber-700 hover:bg-amber-200';
                     } elseif ($isPast) {
                         $bg = 'bg-slate-50 text-slate-300 cursor-default';
@@ -271,7 +274,7 @@
 
                     $ring    = $isToday ? 'ring-2 ring-blue-500 ring-offset-1' : '';
                     $tooltip = $jadwal
-                        ? $jadwal['label'] . ' · ' . $jadwal['waktu']
+                        ? ($jadwal['label'] ?? '-') . ' · ' . ($jadwal['waktu'] ?? '-')
                         : ($isPast ? 'Sudah lewat' : 'Tersedia');
                 @endphp
 
@@ -317,10 +320,10 @@
             @php
                 $tanggal    = Carbon::parse($tgl);
                 $isPastItem = $tanggal->lt($today);
-                $badgeCls   = $j['tipe'] === 'penuh'
+                $badgeCls   = ($j['tipe'] ?? '') === 'penuh'
                     ? 'bg-red-100 text-red-700'
                     : 'bg-amber-100 text-amber-700';
-                $badgeLabel = $j['tipe'] === 'penuh' ? 'Penuh' : 'Sebagian';
+                $badgeLabel = ($j['tipe'] ?? '') === 'penuh' ? 'Penuh' : 'Sebagian';
             @endphp
             <div class="py-4 flex items-center gap-4 {{ $isPastItem ? 'opacity-50' : '' }}">
 
@@ -337,9 +340,9 @@
 
                 {{-- Info --}}
                 <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate">{{ $j['label'] }}</p>
+                    <p class="font-semibold text-slate-800 text-sm truncate">{{ $j['label'] ?? '-' }}</p>
                     <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                        <span>🕐</span> {{ $j['waktu'] }}
+                        <span>🕐</span> {{ $j['waktu'] ?? '-' }}
                         @if($isPastItem)
                         <span class="ml-2 text-slate-300">· Sudah selesai</span>
                         @endif

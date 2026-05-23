@@ -15,7 +15,7 @@
     <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
 
         {{-- LEFT PANEL --}}
-        <div class="hidden lg:flex relative bg-linear-to-br bg-slate-800 to-indigo-900 text-white p-12 flex-col justify-between">
+        <div class="hidden lg:flex relative bg-linear-to-br from-slate-800 to-indigo-900 text-white p-12 flex-col justify-between">
             <div>
                 <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6 overflow-hidden">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Logo_undiksha.png" 
@@ -24,7 +24,7 @@
                 </div>            
                 <h1 class="text-4xl font-extrabold leading-tight">Buat Akun Baru</h1>
                 <p class="text-blue-100 mt-5 text-lg leading-relaxed">
-                    Silakan daftarkan diri Anda untuk mendapatkan akses ke sistem Smart Classroom Booking, sehingga Anda dapat melakukan pemesanan ruang kelas dengan mudah, cepat, dan terorganisir sesuai kebutuhan.
+                    Silakan daftarkan diri Anda untuk mendapatkan akses ke sistem Smart Classroom Booking.
                 </p>
             </div>
 
@@ -67,32 +67,44 @@
             </div>
             @endif
 
-            <form action="{{ route('register.process') }}" method="POST" class="space-y-4">
+            @php
+                $borderClass = function ($field) {
+                    return $errors->has($field) ? 'border-red-500' : 'border-slate-200';
+                };
+            @endphp
+            <form id="registerForm" action="{{ route('register.process') }}" method="POST" class="space-y-5">
                 @csrf
 
-                {{-- Nama --}}
+                {{-- Nama Lengkap --}}
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
                     <input type="text" name="name" value="{{ old('name') }}"
-                           class="w-full rounded-xl @error('name') border-red-400 @enderror"
-                           placeholder="contoh: I Made Syaeful Gahar" required>
+                            class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}"
+                           placeholder="contoh: I Made Syaeful Gahar" required> 
                 </div>
 
                 {{-- Email --}}
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email Kampus</label>
                     <input type="email" name="email" value="{{ old('email') }}"
-                           class="w-full rounded-xl @error('email') border-red-400 @enderror"
+                            class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}"
                            placeholder="contoh: nama@student.undiksha.ac.id" required>
                 </div>
 
                 {{-- Role --}}
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Role / Jabatan</label>
-                    <select name="role" class="w-full rounded-xl @error('role') border-red-400 @enderror" required>
-                        <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- Pilih Role --</option>
+                    <select name="role" id="role" 
+                            class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}">
+                        <option value="" disabled {{ !old('role') ? 'selected' : '' }}>-- Pilih Role --</option>
                         <option value="mahasiswa" {{ old('role') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
-                        <option value="dosen"     {{ old('role') === 'dosen'     ? 'selected' : '' }}>Dosen</option>
+                        <option value="dosen"     {{ old('role') === 'dosen' ? 'selected' : '' }}>Dosen</option>
                     </select>
                 </div>
 
@@ -100,7 +112,9 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5" id="nim-label">NIM / NIP</label>
                     <input type="text" name="nim_nip" value="{{ old('nim_nip') }}"
-                           class="w-full rounded-xl @error('nim_nip') border-red-400 @enderror"
+                           class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}"
                            placeholder="Nomor Induk Mahasiswa / Pegawai" required>
                 </div>
 
@@ -109,10 +123,12 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                     <div class="relative">
                         <input type="password" name="password" id="password"
-                               class="w-full rounded-xl pr-12 @error('password') border-red-400 @enderror"
+                               class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                    focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                    {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}"
                                placeholder="Minimal 6 karakter" required>
                         <button type="button" id="togglePass"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-semibold">
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 text-sm font-medium">
                             Lihat
                         </button>
                     </div>
@@ -123,10 +139,12 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Konfirmasi Password</label>
                     <div class="relative">
                         <input type="password" name="password_confirmation" id="passwordConf"
-                               class="w-full rounded-xl pr-12 @error('password_confirmation') border-red-400 @enderror"
+                               class="w-full rounded-xl border px-4 py-3 text-sm outline-none 
+                                    focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                    {{ $errors->has('name') ? 'border-red-500' : 'border-slate-200' }}"
                                placeholder="Ulangi password" required>
                         <button type="button" id="togglePassConf"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-semibold">
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 text-sm font-medium">
                             Lihat
                         </button>
                     </div>
@@ -134,14 +152,14 @@
 
                 {{-- Submit --}}
                 <button type="submit"
-                        class="w-full bg-blue-500 hover:bg-slate-800 text-white py-3 rounded-xl font-bold transition mt-2">
-                    Daftar
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold text-base transition mt-4">
+                    Daftar Sekarang
                 </button>
 
             </form>
 
-            <p class="text-center text-sm text-slate-500 mt-6">
-                Sudah punya akun?
+            <p class="text-center text-sm text-slate-500 mt-8">
+                Sudah punya akun? 
                 <a href="{{ route('login') }}" class="text-blue-600 font-semibold hover:underline">Masuk di sini</a>
             </p>
 
@@ -150,25 +168,52 @@
 </div>
 
 <script>
-    // Toggle password
+$(document).ready(function () {
+
+    // Toggle Password
     $('#togglePass').on('click', function () {
         let input = $('#password');
-        let show = input.attr('type') === 'password';
-        input.attr('type', show ? 'text' : 'password');
-        $(this).text(show ? 'Sembunyikan' : 'Lihat');
-    });
-    $('#togglePassConf').on('click', function () {
-        let input = $('#passwordConf');
-        let show = input.attr('type') === 'password';
-        input.attr('type', show ? 'text' : 'password');
-        $(this).text(show ? 'Sembunyikan' : 'Lihat');
+        let isPassword = input.attr('type') === 'password';
+        input.attr('type', isPassword ? 'text' : 'password');
+        $(this).text(isPassword ? 'Sembunyikan' : 'Lihat');
     });
 
-    // Update label NIM/NIP sesuai role
-    $('select[name="role"]').on('change', function () {
-        let label = $(this).val() === 'dosen' ? 'NIP (Nomor Induk Pegawai)' : 'NIM (Nomor Induk Mahasiswa)';
-        $('#nim-label').text(label);
+    $('#togglePassConf').on('click', function () {
+        let input = $('#passwordConf');
+        let isPassword = input.attr('type') === 'password';
+        input.attr('type', isPassword ? 'text' : 'password');
+        $(this).text(isPassword ? 'Sembunyikan' : 'Lihat');
     });
+
+    // Update Label NIM/NIP
+    function updateNimLabel(val) {
+        let label = (val === 'dosen') 
+            ? 'NIP (Nomor Induk Pegawai)' 
+            : 'NIM (Nomor Induk Mahasiswa)';
+        $('#nim-label').text(label);
+    }
+
+    $('#role').on('change', function () {
+        updateNimLabel($(this).val());
+    });
+
+    // Trigger on page load (untuk old input)
+    let initialRole = $('#role').val();
+    if (initialRole) updateNimLabel(initialRole);
+
+    // Validasi Password Match sebelum submit
+    $('#registerForm').on('submit', function (e) {
+        const pass = $('#password').val();
+        const passConf = $('#passwordConf').val();
+
+        if (pass !== passConf) {
+            e.preventDefault();
+            alert('❌ Password dan Konfirmasi Password tidak cocok!');
+            $('#passwordConf').focus().addClass('!border-red-500');
+        }
+    });
+
+});
 </script>
 
 </body>

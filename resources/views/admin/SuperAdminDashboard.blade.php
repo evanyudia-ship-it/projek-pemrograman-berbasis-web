@@ -2,15 +2,12 @@
 
 @section('title', 'Dashboard - Smart Classroom')
 @section('page_title', 'Dashboard')
-@section('page_subtitle', 'Selamat datang kembali, I Made Syaeful Gahar')
+@section('page_subtitle')
+    Selamat datang kembali, {{ session('user_name', 'Guest') }}
+@endsection
 
 @section('content')
-
-
 <div class="max-w-7xl mx-auto space-y-8 font-sora">
-
-    {{-- ===== GREETING ===== --}}
-    @section('page_subtitle', 'Selamat datang kembali, ' . session('user_name', 'Guest'))
 
     {{-- ===== STAT CARDS ===== --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up delay-1">
@@ -20,7 +17,7 @@
             <div class="flex items-start justify-between mb-4">
                 <div class="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl">🏠</div>
                 <span class="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
-                    {{ round($ruang_tersedia / $total_ruang * 100) }}%
+                    {{ $total_ruang > 0 ? round($ruang_tersedia / $total_ruang * 100) : 0 }}%
                 </span>
             </div>
             <p class="text-3xl font-bold text-slate-900">{{ $ruang_tersedia }}</p>
@@ -172,20 +169,25 @@
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-base font-bold text-slate-800">Notifikasi</h2>
+                    @if(count($notifikasi) > 0)
                     <span class="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">
                         {{ count($notifikasi) }} baru
                     </span>
+                    @endif
                 </div>
+
                 <div class="space-y-3">
-                    @foreach($notifikasi as $notif)
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex gap-3">
-                        <span class="text-xl shrink-0 mt-0.5">{{ $notif['icon'] }}</span>
-                        <div>
-                            <p class="text-xs text-slate-700 leading-relaxed font-medium">{{ $notif['pesan'] }}</p>
-                            <p class="text-xs text-slate-400 mt-1">{{ $notif['waktu'] }}</p>
+                    @forelse($notifikasi as $notif)   {{-- Ubah ke @forelse biar konsisten --}}
+                        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex gap-3">
+                            <span class="text-xl shrink-0 mt-0.5">{{ $notif['icon'] }}</span>
+                            <div>
+                                <p class="text-xs text-slate-700 leading-relaxed font-medium">{{ $notif['pesan'] }}</p>
+                                <p class="text-xs text-slate-400 mt-1">{{ $notif['waktu'] }}</p>
+                            </div>
                         </div>
-                    </div>
-                    @endforeach
+                    @empty
+                        <p class="text-xs text-slate-400 text-center py-3">Tidak ada notifikasi baru.</p>
+                    @endforelse
                 </div>
             </div>
 
@@ -200,7 +202,7 @@
                         </div>
                         <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div class="h-full bg-emerald-400 rounded-full"
-                                 style="width:{{ round($ruang_tersedia / $total_ruang * 100) }}%"></div>
+                                 style="width:{{ $total_ruang > 0 ? round($ruang_tersedia / $total_ruang * 100) : 0 }}%"></div>
                         </div>
                     </div>
                     <div>
@@ -210,7 +212,7 @@
                         </div>
                         <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div class="h-full bg-red-400 rounded-full"
-                                 style="width:{{ round(($total_ruang - $ruang_tersedia) / $total_ruang * 100) }}%"></div>
+                                style="width: {{ $total_ruang > 0 ? round(($total_ruang - $ruang_tersedia) / $total_ruang * 100) : 0 }}%"></div>
                         </div>
                     </div>
                     <p class="text-xs text-slate-400 pt-1 text-right">Total: {{ $total_ruang }} ruang kampus</p>

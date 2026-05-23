@@ -10,7 +10,7 @@
 
     <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
 
-        <form action="#" method="POST" id="bookingForm">
+        <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -38,12 +38,13 @@
 
                 <div class="md:col-span-2">
                     <label class="text-sm font-semibold text-slate-700">Judul Kegiatan</label>
-                    <input type="text" name="title" class="mt-2 w-full" placeholder="Contoh: Diskusi Tugas Kelompok">
+                    <input type="text" name="title" class="mt-2 w-full" placeholder="Contoh: Diskusi Tugas Kelompok" required>
                 </div>
 
                 <div>
                     <label class="text-sm font-semibold text-slate-700">Tanggal</label>
-                    <input type="date" name="date" id="date" class="mt-2 w-full">
+                    <input type="date" name="date" id="date" class="mt-2 w-full"
+                        min="{{ now()->toDateString() }}" required>
                 </div>
 
                 <div>
@@ -139,7 +140,6 @@
 
 @push('scripts')
 <script>
-    // Script tetap sama (tidak diubah)
     function calculateDuration() {
         let start = $('#start_time').val();
         let end = $('#end_time').val();
@@ -160,8 +160,12 @@
         }
 
         let hours = diff / 60;
-        $('#durationInfo').removeClass('text-red-600').addClass('text-emerald-600')
-            .text('Durasi booking: ' + hours.toFixed(1) + ' jam.');
+        $('#durationInfo').removeClass('text-red-600').addClass('text-emerald-600');
+        let h = Math.floor(diff / 60);
+        let m = diff % 60;
+        let label = h > 0 ? h + ' jam ' : '';
+        label += m > 0 ? m + ' menit' : '';
+        $('#durationInfo').text('Durasi booking: ' + label.trim());
     }
 
     $('#start_time, #end_time').on('change', calculateDuration);
@@ -187,8 +191,15 @@
     });
 
     $('#bookingForm').on('submit', function (e) {
-        e.preventDefault();
-        alert('GUI berhasil. Nanti bagian ini disambungkan ke controller booking.');
+        let start = $('#start_time').val();
+        let end   = $('#end_time').val();
+        let room  = $('#room_id').val();
+        let date  = $('#date').val();
+
+        if (!room || !date || !start || !end) {
+            e.preventDefault();
+            alert('Harap lengkapi semua field sebelum mengajukan booking.');
+        }
     });
 </script>
 @endpush

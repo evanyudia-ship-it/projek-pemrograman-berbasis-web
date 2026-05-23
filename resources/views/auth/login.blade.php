@@ -80,7 +80,9 @@
             
             @if ($errors->any())
                 <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                    {{ $errors->first('email') }}
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
                 </div>
             @endif
 
@@ -123,7 +125,7 @@
 
                     <div class="flex items-center justify-between text-sm">
                         <label class="flex items-center gap-2 text-slate-600">
-                            <input type="checkbox" class="rounded border-slate-300">
+                            <input type="checkbox" name="remember" class="rounded border-slate-300">
                             Ingat saya
                         </label>
 

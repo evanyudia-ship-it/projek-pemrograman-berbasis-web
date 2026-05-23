@@ -68,6 +68,7 @@ class RegisterController extends Controller
             'logged_in'    => true,
             'is_verified'  => false,   // belum verified
 
+
             // Simpan reg_* untuk dipakai saat user klik verify nanti
             'reg_name'     => $request->name,
             'reg_email'    => strtolower($request->email),
@@ -78,6 +79,10 @@ class RegisterController extends Controller
         ]);
 
         session()->flash('otp_demo', $otp); // dev only
+
+        $newUserId = session('user_id');
+        $key = "org_submissions_{$newUserId}";
+        session([$key => []]);
 
         // Langsung ke dashboard, verifikasi bisa nanti dari profile
         return redirect()->route('user.dashboard')
