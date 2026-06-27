@@ -13,7 +13,26 @@ return new class extends Migration
     {
         Schema::create('booking_histories', function (Blueprint $table) {
             $table->id();
+
+            // Foreign Keys
+            $table->foreignId('booking_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null')->comment('NULL jika perubahan dilakukan oleh sistem (cron/otomatis)');
+
+            // Actor & Status
+            $table->enum('actor_type', ['user', 'admin', 'system'])->default('user');
+            $table->string('status_sebelumnya')->nullable();
+            $table->string('status_baru');
+            $table->text('keterangan')->nullable()->comment('Wajib diisi di app layer jika status_baru = rejected');
+
+            // Timestamps
             $table->timestamps();
+
+            // Indexes
+            $table->index('booking_id');
+            $table->index(['booking_id', 'created_at']);
+            $table->index('user_id');
+            $table->index('status_baru');
+            $table->index('created_at');
         });
     }
 
