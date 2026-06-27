@@ -158,7 +158,7 @@ class OrganizationApprovalController extends Controller
             'total'    => $pending->count() + $history->count(),
         ];
 
-        return view('admin.organization-approvals', compact('pending', 'history', 'stats'));
+        return view('admin.organisasi.organization-approvals', compact('pending', 'history', 'stats'));
     }
 
     public function show(string $id)
@@ -174,14 +174,14 @@ class OrganizationApprovalController extends Controller
         // Simulasi file URL (dalam production pakai Storage::url())
         $fileUrl = asset('storage/' . $submission['file_bukti_path']);
 
-        return view('admin.organization-approval-detail', compact('submission', 'fileUrl'));
+        return view('admin.organisasi.organization-approval-detail', compact('submission', 'fileUrl'));
     }
 
     public function approve(string $id)
     {
         // Dummy logic: pindahkan dari pending ke history dengan status approved
         $pendingKey = array_search($id, array_column($this->pendingSubmissions, 'id'));
-        
+
         if ($pendingKey !== false) {
             // Simulasi approve (dalam production: update database)
             return redirect()
@@ -205,7 +205,7 @@ class OrganizationApprovalController extends Controller
 
         // Dummy logic: pindahkan ke history dengan status rejected
         $pendingKey = array_search($id, array_column($this->pendingSubmissions, 'id'));
-        
+
         if ($pendingKey !== false) {
             $reason = $request->input('reason');
             // Simulasi reject (dalam production: update database dengan catatan penolakan)
@@ -223,18 +223,18 @@ class OrganizationApprovalController extends Controller
     {
         $submission = collect(array_merge($this->pendingSubmissions, $this->historySubmissions))
             ->firstWhere('id', $id);
-    
+
         if (!$submission || !isset($submission['file_bukti_path'])) {
             abort(404, 'File tidak ditemukan.');
         }
-    
+
         // Simulasi download (karena masih dummy)
         $fileName = $submission['file_bukti_nama'] ?? 'document.pdf';
         $content = "Ini adalah konten dummy dari file: " . $fileName . "\n\n";
         $content .= "Data pengajuan:\n";
         $content .= "- Organisasi: " . ($submission['organisasi'] ?? '-') . "\n";
         $content .= "- Mahasiswa: " . ($submission['nama_mahasiswa'] ?? '-') . "\n";
-        
+
         return response($content)
             ->header('Content-Type', 'application/octet-stream')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');

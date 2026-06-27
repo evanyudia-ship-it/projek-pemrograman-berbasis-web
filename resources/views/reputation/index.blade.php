@@ -15,8 +15,8 @@
         @php
         // TODO: hapus ini setelah database reputation terisi
         $rp = $profileData->point ?? 85; // dummy 85 untuk test
- 
-    
+
+
         // Tentukan warna berdasarkan range
         if ($rp >= 80) {
             $rpColor = '#10b981'; // hijau
@@ -28,7 +28,7 @@
             $rpColor = '#ef4444'; // merah
         }
     @endphp
-    
+
     <div class="flex items-center justify-center">
         <div class="w-44 h-44 rounded-full flex items-center justify-center"
              style="border: 8px solid {{ $rpColor }}">
@@ -141,9 +141,9 @@
             <p class="text-slate-600 mt-1">Booking dibatasi sementara.</p>
         </div>
 
-        <div class="p-4 rounded-xl bg-red-50 border border-red-100">
+        <div class="p-4 rounded-xl bg-red-50 border border-red-200">
             <p class="font-bold text-red-700">&lt; 30</p>
-            <p class="text-slate-600 mt-1">Tidak bisa booking sementara.</p>
+            <p class="text-yellow-600 mt-1">Tidak bisa booking sementara.</p>
         </div>
     </div>
 </div>

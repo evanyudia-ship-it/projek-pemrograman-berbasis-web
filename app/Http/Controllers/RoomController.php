@@ -119,17 +119,43 @@ class RoomController extends Controller
                 'jadwal'     => [],
             ],
         ]);
-        
+
+    }
+
+    private function enrichRoomWithMeta($room)
+    {
+        $fasilitas = $room['fasilitas'] ?? [];
+        $fasilitasJson = json_encode($fasilitas); // Encode sekali saja
+        $displayedMeta = [];
+
+        if(str_contains($fasilitasJson, 'kursi')) $displayedMeta[] = 'kursi tersedia';
+        if(str_contains($fasilitasJson, 'WiFi')) $displayedMeta[] = 'WiFi siap';
+        if(str_contains($fasilitasJson, 'listrik') || str_contains($fasilitasJson, 'UPS')) $displayedMeta[] = 'listrik siap';
+        if(str_contains($fasilitasJson, 'AC')) $displayedMeta[] = 'AC aktif';
+
+        $room['search_keywords'] = addslashes(
+            strtolower($room['nama'] . ' ' . ($room['kode'] ?? '') . ' ' . ($room['gedung'] ?? ''))
+        );
+
+        return $room;
     }
 
     public function index()
     {
         session()->forget('rooms_data'); // FUNGSI RESET SESSION (KARENA BELUM MEMAKAI DATABASE)
-
         $rooms = $this->getRooms();
 
         // Hitung total tersedia untuk header
         $totalTersedia = collect($rooms)->where('status', 'Tersedia')->count();
+
+        $rooms = collect($this->getRooms())
+            ->map(fn($room) => $this->enrichRoomWithMeta($room))
+            ->toArray();
+
+        foreach ($rooms as &$room) {
+            $cleanAddress = strip_tags($room['alamat'] ?? '');
+            $room['maps_query'] = urlencode($cleanAddress);
+        }
 
         return view('rooms.index', compact('rooms', 'totalTersedia'));
     }
@@ -150,6 +176,12 @@ class RoomController extends Controller
 
         $tahun = request('tahun', now()->year);
         $bulan = request('bulan', now()->month);
+
+        $tahun = max(2020, min(2030, $tahun));
+        $bulan = max(1, min(12, $bulan));
+
+        $cleanAddress = strip_tags($room['alamat'] ?? '');
+        $mapsQuery = urlencode($cleanAddress);
 
         return view('rooms.show', compact('room', 'totalBooking', 'tahun', 'bulan'));
     }

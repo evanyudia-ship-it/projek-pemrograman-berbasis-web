@@ -1,74 +1,1273 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* ════════════════════════════════════════════════════════════
+   THEME LAYER - Custom theme variables (Tailwind v4 way)
+   ════════════════════════════════════════════════════════════ */
 @theme {
-    --font-sans: 'DM Sans', sans-serif;
-    --font-inter: 'Inter', sans-serif;  
-    --font-sora: 'Sora', sans-serif;
+    /* Fonts */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-sora: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Background colors - mapped ke CSS variables */
+    --color-bg-page: var(--bg-page);
+    --color-bg-surface: var(--bg-surface);
+    --color-bg-surface-alt: var(--bg-surface-alt);
+    --color-bg-muted: var(--bg-muted);
+    --color-bg-input: var(--bg-input);
+
+    /* Border colors */
+    --color-border-default: var(--border);
+    --color-border-light: var(--border-light);
+
+    /* Text colors */
+    --color-text-primary: var(--text-primary);
+    --color-text-secondary: var(--text-secondary);
+    --color-text-muted: var(--text-muted);
+    --color-text-on-dark: var(--text-on-dark);
+
+    /* Brand colors */
+    --color-brand: var(--brand);
+    --color-brand-dark: var(--brand-dark);
+    --color-brand-bg: var(--brand-bg);
+    --color-brand-text: var(--brand-text);
+
+    /* Nav active */
+    --color-nav-active-bg: var(--nav-active-bg);
+    --color-nav-active-txt: var(--nav-active-txt);
+    --color-nav-hover-bg: var(--nav-hover-bg);
+    --color-nav-hover-txt: var(--nav-hover-txt);
+
+    /* Danger colors */
+    --color-danger-bg: var(--danger-bg);
+    --color-danger-text: var(--danger-text);
+    --color-danger-hover-bg: var(--danger-hover-bg);
+    --color-danger-hover-text: var(--danger-hover-text);
+
+    /* Status backgrounds */
+    --color-success-bg: var(--success-bg);
+    --color-warning-bg: var(--warning-bg);
+    --color-info-bg: var(--info-bg);
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06);
+    --shadow-default: 0 1px 3px 0 rgba(0,0,0,0.08);
+    --shadow-hover: 0 20px 48px -12px rgba(0,0,0,0.18);
+    --shadow-lg: 0 12px 32px -8px rgba(0,0,0,0.12);
 }
 
-@layer utilities {
-    .font-sora {
-        font-family: var(--font-sora);
-    }
+/* ════════════════════════════════════════════════════════════
+   CSS VARIABLES (Design Tokens) — Light Mode (default)
+   ════════════════════════════════════════════════════════════ */
+:root {
+    /* Background layers */
+    --bg-page:        #f1f5f9;
+    --bg-surface:     #ffffff;
+    --bg-surface-alt: #f8fafc;
+    --bg-muted:       #f1f5f9;
+    --bg-input:       #ffffff;
+
+    /* Border */
+    --border:         #e2e8f0;
+    --border-light:   #f1f5f9;
+
+    /* Text */
+    --text-primary:   #0f172a;
+    --text-secondary: #475569;
+    --text-muted:     #94a3b8;
+    --text-on-dark:   #ffffff;
+    --text-on-light:  #0f172a;
+
+    /* Brand / accent */
+    --brand:          #22c55e;
+    --brand-dark:     #15803d;
+    --brand-bg:       #f0fdf4;
+    --brand-text:     #16a34a;
+
+    /* Nav active */
+    --nav-active-bg:  #22c55e;
+    --nav-active-txt: #ffffff;
+    --nav-hover-bg:   #f0fdf4;
+    --nav-hover-txt:  #16a34a;
+
+    /* Shadow */
+    --shadow-hover:         0 20px 48px -12px rgba(0,0,0,0.18);
+    --shadow-lg:            0 12px 32px -8px rgba(0,0,0,0.12);
+    --brand-focus-shadow:   rgba(34, 197, 94, 0.12);
+
+    --danger-bg:        #fef2f2;
+    --danger-text:      #b91c1c;
+    --danger-hover-bg:  #fee2e2;
+    --danger-hover-text:#991b1b;
+
+    /* Scrollbar */
+    --scrollbar-thumb: #d1d5db;
+    --scrollbar-thumb-hover: #9ca3af;
+    --scrollbar-track: #f3f4f6;
+
+    /* Warna lain */
+    --logout-bg: #1f2229;
+    --bg-slate-800: #1e293b;
+    --avatar-bg: #e2e8f0;
+
+    /* Sidebar dimensions */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 72px;
+
+    /* Transition */
+    --transition-theme: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+    /* Status backgrounds */
+    --success-bg: #f0fdf4;
+    --warning-bg: #fffbeb;
+    --info-bg:    #eff6ff;
+
+    /* Z-index layers */
+    --z-tooltip:  50;
+    --z-dropdown: 100;
+    --z-sticky:   200;
+    --z-modal:    300;
+    --z-toast:    400;
 }
 
-@layer components {
-    .stat-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
-    }
-
-    .room-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .room-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 40px -10px rgba(0,0,0,0.15);
-    }
-    .room-img {
-        transition: transform 0.4s ease;
-    }
-    .room-card:hover .room-img {
-        transform: scale(1.05);
-    }
-
-    .fade-up {
-        animation: fadeUp 0.4s ease both;
-    }
-    .delay-1 { animation-delay: 0.05s; }
-    .delay-2 { animation-delay: 0.1s; }
-    .delay-3 { animation-delay: 0.15s; }
-    .delay-4 { animation-delay: 0.2s; }
+/* ════════════════════════════════════════════════════════════
+   BASE RESET & BOX SIZING
+   ════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* ════════════════════════════════════════════════════════════
+   SINGLE TRANSITION SOURCE — FIX T1
+   ════════════════════════════════════════════════════════════ */
+/* Hanya elemen interaktif yang butuh transisi */
+button, a, input, select, textarea,
+.nav-item, .filter-btn, .action-btn,
+.stat-card, .room-card, .logout-btn,
+#darkModeToggle, #sidebar, #btnToggleSidebar {
+    transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+    transition-duration: 0.15s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-
-/* ── Sidebar transition ── */
+/* Sidebar punya durasi sendiri untuk width */
 #sidebar {
-    width: 260px;
+    transition-property: width;
+    transition-duration: 0.25s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Elemen yang TIDAK perlu transisi untuk performa */
+.no-transition,
+.no-transition *,
+.sidebar-no-transition,
+.sidebar-no-transition *,
+html.sidebar-will-minimize,
+html.sidebar-will-minimize * {
+    transition: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DARK MODE — CSS Variables Override (tanpa !important massal) — FIX T3
+   ════════════════════════════════════════════════════════════ */
+html.dark {
+    --bg-page:        #0f1117;
+    --bg-surface:     #1a1d24;
+    --bg-surface-alt: #22252e;
+    --bg-muted:       #252932;
+    --bg-input:       #13161c;
+
+    --border:         #2d313a;
+    --border-light:   #252932;
+
+    --text-primary:   #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted:     #7f8ea3;
+    --text-on-dark:   #f1f5f9;
+    --text-on-light:  #f1f5f9;
+
+    --brand:          #4ade80;
+    --brand-dark:     #22c55e;
+    --brand-bg:       rgba(74, 222, 128, 0.12);
+    --brand-text:     #4ade80;
+
+    --nav-active-bg:  #059669;
+    --nav-active-txt: #ffffff;
+    --nav-hover-bg:   rgba(52, 211, 153, 0.1);
+    --nav-hover-txt:  #34d399;
+
+    --shadow-card:    0 1px 3px 0 rgba(0,0,0,0.4);
+    --shadow-default: 0 1px 3px 0 rgba(0,0,0,0.4);
+    --shadow-hover:   0 12px 24px -8px rgba(0,0,0,0.6);
+    --shadow-lg:      0 8px 16px -6px rgba(0,0,0,0.4);
+    --brand-focus-shadow: rgba(74, 222, 128, 0.2);
+
+    --danger-bg:        rgba(239, 68, 68, 0.12);
+    --danger-text:      #f87171;
+    --danger-hover-bg:  rgba(239, 68, 68, 0.25);
+    --danger-hover-text:#fecaca;
+
+    --success-bg: rgba(34, 197, 94, 0.12);
+    --warning-bg: rgba(245, 158, 11, 0.12);
+    --info-bg:    rgba(59, 130, 246, 0.12);
+
+    --scrollbar-thumb: #4b5563;
+    --scrollbar-thumb-hover: #6b7280;
+    --scrollbar-track: #1f2229;
+
+    --logout-bg: #1f2229;
+    --bg-slate-800: #334155;
+    --avatar-bg: #334155;
+
+    color-scheme: dark;
+}
+
+/* ════════════════════════════════════════════════════════════
+   FIX B: Global konversi untuk komponen child dengan hardcoded class
+   ════════════════════════════════════════════════════════════ */
+/* Konversi bg-white global ke surface token di dark mode */
+html.dark .bg-white {
+    background-color: var(--bg-surface);
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/90 {
+    background-color: var(--bg-surface-alt);
+}
+
+html.dark .hover\:bg-slate-50:hover {
+    background-color: var(--bg-muted) !important;
+}
+
+/* Konversi border colors */
+html.dark .border-slate-200,
+html.dark .border-slate-100 {
+    border-color: var(--border);
+}
+
+/* Konversi text slate hardcoded */
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+    color: var(--text-primary);
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+    color: var(--text-secondary)!important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+    color: var(--text-muted)!important;
+}
+
+html.dark .text-slate-300 {
+    color: #475569;
+}
+
+html.dark .text-slate-200,
+html.dark .text-slate-100 {
+    color: #64748b;
+}
+
+/* ════════════════════════════════════════════════════
+   FIX C: Teks dalam colored cards di dark mode
+   Teks harus tetap terbaca di atas background transparan
+   ════════════════════════════════════════════════════ */
+
+/* === Main text colors === */
+html.dark [class*="bg-blue-50"]   .text-slate-600,
+html.dark [class*="bg-blue-50"]   .text-slate-500,
+html.dark [class*="bg-blue-50"]   p,
+html.dark [class*="bg-blue-50"]   li,{
+    color: #93c5fd !important;
+}
+
+html.dark [class*="bg-yellow-50"],
+html.dark [class*="bg-amber-50"] {
+    color: #fde68a !important;
+}
+
+html.dark [class*="bg-yellow-50"]   .text-slate-600,
+html.dark [class*="bg-yellow-50"]   .text-slate-500,
+html.dark [class*="bg-yellow-50"]   p,
+html.dark [class*="bg-yellow-50"]   li,
+html.dark [class*="bg-yellow-50"]   span,
+html.dark [class*="bg-amber-50"]    .text-slate-600,
+html.dark [class*="bg-amber-50"]    .text-slate-500,
+html.dark [class*="bg-amber-50"]    p,
+html.dark [class*="bg-amber-50"]    li,
+html.dark [class*="bg-amber-50"]    span {
+    color: #fde68a !important;
+}
+
+html.dark [class*="bg-green-50"],
+html.dark [class*="bg-emerald-50"] {
+    color: #6ee7b7 !important;
+}
+
+html.dark [class*="bg-green-50"]   .text-slate-600,
+html.dark [class*="bg-green-50"]   .text-slate-500,
+html.dark [class*="bg-green-50"]   p,
+html.dark [class*="bg-green-50"]   li,
+html.dark [class*="bg-green-50"]   span,
+html.dark [class*="bg-emerald-50"] .text-slate-600,
+html.dark [class*="bg-emerald-50"] .text-slate-500,
+html.dark [class*="bg-emerald-50"] p,
+html.dark [class*="bg-emerald-50"] li,
+html.dark [class*="bg-emerald-50"] span {
+    color: #6ee7b7 !important;
+}
+
+html.dark [class*="bg-red-50"],
+html.dark [class*="bg-rose-50"] {
+    color: #fca5a5 !important;
+}
+
+html.dark [class*="bg-red-50"]   .text-slate-600,
+html.dark [class*="bg-red-50"]   .text-slate-500,
+html.dark [class*="bg-red-50"]   p,
+html.dark [class*="bg-red-50"]   li,
+html.dark [class*="bg-red-50"]   span,
+html.dark [class*="bg-rose-50"]  .text-slate-600,
+html.dark [class*="bg-rose-50"]  .text-slate-500,
+html.dark [class*="bg-rose-50"]  p,
+html.dark [class*="bg-rose-50"]  li,
+html.dark [class*="bg-rose-50"]  span {
+    color: #fca5a5 !important;
+}
+
+/* === Strong / Bold text tetap tebal & inherit warna utama === */
+html.dark [class*="bg-blue-50"] strong,
+html.dark [class*="bg-yellow-50"] strong,
+html.dark [class*="bg-amber-50"] strong,
+html.dark [class*="bg-green-50"] strong,
+html.dark [class*="bg-emerald-50"] strong,
+html.dark [class*="bg-red-50"] strong,
+html.dark [class*="bg-rose-50"] strong {
+    color: inherit !important;
+    font-weight: 700;
+}
+
+/* === Heading / Angka besar (text-slate-900) === */
+html.dark [class*="bg-blue-50"]   .text-slate-900,
+html.dark [class*="bg-yellow-50"] .text-slate-900,
+html.dark [class*="bg-amber-50"]  .text-slate-900,
+html.dark [class*="bg-green-50"]  .text-slate-900,
+html.dark [class*="bg-emerald-50"].text-slate-900,
+html.dark [class*="bg-red-50"]    .text-slate-900,
+html.dark [class*="bg-rose-50"]   .text-slate-900,
+html.dark [class*="bg-violet-50"] .text-slate-900 {
+    color: #f1f5f9 !important;
+}
+
+/* === Muted / small text (text-slate-500) === */
+html.dark [class*="bg-blue-50"]   .text-slate-500,
+html.dark [class*="bg-yellow-50"] .text-slate-500,
+html.dark [class*="bg-amber-50"]  .text-slate-500,
+html.dark [class*="bg-green-50"]  .text-slate-500,
+html.dark [class*="bg-emerald-50"].text-slate-500,
+html.dark [class*="bg-red-50"]    .text-slate-500,
+html.dark [class*="bg-rose-50"]   .text-slate-500,
+html.dark [class*="bg-violet-50"] .text-slate-500 {
+    color: rgba(241, 245, 249, 0.75) !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   FIX D: Dark mode untuk HELP PAGE components
+   ════════════════════════════════════════════════════════════ */
+
+/* Cards dengan background berwarna (bg-red-50, bg-emerald-50, dll) */
+html.dark .bg-red-50,
+html.dark .bg-amber-50,
+html.dark .bg-emerald-50,
+html.dark .bg-violet-50,
+html.dark .bg-blue-50,
+html.dark .bg-yellow-50,
+html.dark .bg-green-50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Text dalam colored cards harus terang */
+html.dark .bg-red-50 .text-red-700,
+html.dark .bg-red-50 .text-red-600,
+html.dark .bg-amber-50 .text-amber-700,
+html.dark .bg-amber-50 .text-amber-600,
+html.dark .bg-emerald-50 .text-emerald-700,
+html.dark .bg-emerald-50 .text-emerald-600,
+html.dark .bg-violet-50 .text-violet-700,
+html.dark .bg-violet-50 .text-violet-600,
+html.dark .bg-blue-50 .text-blue-700,
+html.dark .bg-blue-50 .text-blue-600,
+html.dark .bg-yellow-50 .text-yellow-700,
+html.dark .bg-green-50 .text-green-700 {
+    color: #e2e8f0 !important;
+}
+
+/* Heading dalam colored cards */
+html.dark .bg-red-50 .text-slate-900,
+html.dark .bg-amber-50 .text-slate-900,
+html.dark .bg-emerald-50 .text-slate-900,
+html.dark .bg-violet-50 .text-slate-900,
+html.dark .bg-blue-50 .text-slate-900,
+html.dark .bg-yellow-50 .text-slate-900,
+html.dark .bg-green-50 .text-slate-900 {
+    color: #f1f5f9 !important;
+}
+
+/* Stat cards di booking page */
+/* Override semua bg-white dalam konteks dark — tidak bergantung pada rounded class */
+html.dark .bg-white {
+    background-color: var(--bg-surface) !important;
+}
+
+/* Teks di atas bg-white yang sudah diubah ke surface gelap */
+html.dark .bg-white .text-slate-900,
+html.dark .bg-white .text-slate-800 {
+    color: var(--text-primary) !important;
+}
+
+html.dark .bg-white .text-slate-600,
+html.dark .bg-white .text-slate-700 {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .bg-white .text-slate-500,
+html.dark .bg-white .text-slate-400 {
+    color: var(--text-muted) !important;
+}
+
+
+/* Stat card text colors */
+html.dark .bg-white.rounded-2xl .text-slate-500,
+html.dark div.bg-white.rounded-2xl .text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+html.dark div[class*="rounded-2xl"] .font-bold.text-red-700,
+html.dark div[class*="rounded-2xl"] .font-bold.text-amber-700,
+html.dark div[class*="rounded-2xl"] .font-bold.text-emerald-700 {
+    color: #e2e8f0 !important;
+}
+
+html.dark .bg-white.rounded-2xl .text-amber-500 {
+    color: #fbbf24 !important;
+}
+
+html.dark .bg-white.rounded-2xl .text-emerald-600 {
+    color: #34d399 !important;
+}
+
+html.dark .bg-white.rounded-2xl .text-red-500 {
+    color: #f87171 !important;
+}
+
+/* Hero section dark mode fix */
+html.dark .bg-slate-950 {
+    background-color: #0a0c10 !important;
+}
+
+/* Quick navigation sticky bar */
+html.dark .sticky.top-20 {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border) !important;
+}
+
+/* TABLES in booking page */
+
+html.dark table tbody td {
+    border-bottom-color: var(--border) !important;
+}
+
+/* Filter inputs in booking page */
+html.dark input#searchBooking,
+html.dark select#filterStatus,
+html.dark input#filterDate {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+
+html.dark input#searchBooking::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Modal dark mode */
+html.dark #bookingModal .bg-white {
+    background-color: var(--bg-surface) !important;
+}
+
+html.dark #bookingModal .border-slate-200 {
+    border-color: var(--border) !important;
+}
+
+html.dark #bookingModal .bg-slate-50 {
+    background-color: var(--bg-muted) !important;
+}
+
+html.dark #bookingModal .text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+html.dark #bookingModal .text-slate-700 {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .faq-toggle .text-slate-800 {
+    color: var(--text-primary) !important;
+}
+
+/* Contact cards */
+html.dark a.bg-slate-50 {
+    background-color: var(--bg-muted) !important;
+    border-color: var(--border) !important;
+}
+
+html.dark a.bg-slate-50:hover {
+    background-color: var(--bg-surface-alt) !important;
+}
+
+html.dark a.bg-slate-50 .text-slate-800 {
+    color: var(--text-primary) !important;
+}
+
+html.dark a.bg-slate-50 .text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+/* Red text for warnings */
+html.dark .text-red-600 {
+    color: #f87171 !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   CUSTOM VARIANTS (Tailwind v4 dark mode detection)
+   ════════════════════════════════════════════════════════════ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ════════════════════════════════════════════════════════════
+   UTILITY CLASSES YANG AMAN (tidak konflik dengan CSS variables) — FIX T5
+   ════════════════════════════════════════════════════════════ */
+@layer utilities {
+    .bg-page {
+        background-color: var(--bg-page);
+    }
+
+    .bg-surface {
+        background-color: var(--bg-surface);
+    }
+
+    .bg-surface-alt {
+        background-color: var(--bg-surface-alt);
+    }
+
+    .bg-muted {
+        background-color: var(--bg-muted);
+    }
+
+    .text-primary {
+        color: var(--text-primary);
+    }
+
+    .text-secondary {
+        color: var(--text-secondary);
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .border-default {
+        border-color: var(--border);
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+        @apply w-1.5 h-1.5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+        border-radius: 999px;
+    }
+
+    html.dark ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+    }
+
+    html.dark ::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+    }
+
+    /* Focus visible */
+    button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+        @apply outline-2 outline-green-500 outline-offset-2;
+    }
+
+    /* Card helpers */
+    .card-surface {
+        background-color: var(--bg-surface);
+        border-color: var(--border);
+    }
+
+    .card-muted {
+        background-color: var(--bg-muted);
+        border-color: var(--border);
+    }
+
+    /* Animation utilities */
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .fade-up {
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger > *:nth-child(2) { animation-delay: 0.10s; }
+        .stagger > *:nth-child(3) { animation-delay: 0.15s; }
+        .stagger > *:nth-child(4) { animation-delay: 0.20s; }
+        .stagger > *:nth-child(5) { animation-delay: 0.25s; }
+        .stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+        .delay-1 { animation-delay: 0.06s; }
+        .delay-2 { animation-delay: 0.12s; }
+        .delay-3 { animation-delay: 0.18s; }
+        .delay-4 { animation-delay: 0.24s; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fade-up {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+
+        .stagger > * {
+            animation-delay: 0s !important;
+            animation: none;
+        }
+
+        .delay-1, .delay-2, .delay-3, .delay-4 {
+            animation-delay: 0s !important;
+        }
+    }
+
+    /* Ring width utility */
+    .ring-3 {
+        --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+        --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+        box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    }
+
+    /* Rotate utility */
+    .rotate-20 {
+        transform: rotate(20deg);
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   BASE LAYER - Global styles
+   ════════════════════════════════════════════════════════════ */
+@layer base {
+    body {
+        background-color: var(--bg-page);
+        color: var(--text-primary);
+    }
+
+    aside#sidebar, header {
+        background-color: var(--bg-surface);
+    }
+
+    /* Global disabled styling */
+    button:disabled, .button-disabled, input:disabled, select:disabled, textarea:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    html.dark button:disabled,
+    html.dark input:disabled {
+        opacity: 0.4;
+        background-color: var(--bg-muted);
+        border-color: var(--border);
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   ════════════════════════════════════════════════════════════ */
+@layer components {
+    /* ========== CARD HOVER TRANSITIONS ========== */
+    .card-hover {
+        transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1.1),
+                    box-shadow 0.22s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    /* ========== STATUS BADGES ========== */
+    .status-badge {
+        @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold leading-none whitespace-nowrap;
+    }
+
+    .status-disetujui {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .status-menunggu {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .status-ditolak {
+        @apply bg-red-100 text-red-800;
+    }
+
+    /* Dark mode status badges — menggunakan CSS variables */
+
+    html.dark .faq-item,
+    html.dark .faq-toggle {
+        background-color: var(--bg-surface);
+        border-color: var(--border);
+    }
+
+    html.dark .faq-toggle:hover {
+        background-color: var(--bg-muted);
+    }
+
+    html.dark .faq-toggle .text-slate-800,
+    html.dark .faq-item .faq-answer p {
+        color: var(--text-primary);
+    }
+
+    .dark .status-disetujui {
+        background: #14532d;
+        color: #86efac;
+    }
+
+    .dark .status-menunggu {
+        background: #713f12;
+        color: #fde047;
+    }
+
+    .dark .status-ditolak {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    /* ========== TABLES ========== */
+    table {
+        @apply w-full shadow-sm;
+        background-color: var(--bg-surface);
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+
+    thead th:first-child {
+        border-top-left-radius: 0.75rem;
+    }
+
+    thead th:last-child {
+        border-top-right-radius: 0.75rem;
+    }
+
+    tbody tr:last-child td:first-child {
+        border-bottom-left-radius: 0.75rem;
+    }
+
+    tbody tr:last-child td:last-child {
+        border-bottom-right-radius: 0.75rem;
+    }
+
+    thead th {
+        @apply font-semibold text-sm px-4 py-3 border-b-2 text-left;
+        background-color: #f8fafc;
+        color: #1e293b;
+        border-bottom-color: var(--border);
+    }
+
+    tbody td {
+        @apply px-4 py-3 border-b;
+        border-bottom-color: var(--border-light);
+        color: var(--text-primary);
+        background-color: var(--bg-surface);
+    }
+
+    tbody tr {
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    tbody tr:hover td {
+        background-color: #f1f5f9;
+    }
+
+    tbody tr:nth-child(even) td {
+        background-color: #fafcff;
+    }
+
+    /* Dark mode tables — tanpa !important berlebihan */
+    .dark table {
+        background-color: var(--bg-surface);
+    }
+
+    .dark thead th {
+        background-color: #1e293b;
+        color: #e2e8f0;
+        border-color: #334155;
+    }
+
+    .dark td {
+        border-color: #2d313a;
+        color: var(--text-primary);
+        background-color: var(--bg-surface);
+    }
+
+    .dark tbody tr:hover td {
+        background-color: #252932;
+    }
+
+    .dark tbody tr:nth-child(even) td {
+        background-color: #161922;
+    }
+
+    /* ========== CARDS ========== */
+    .stat-card, .room-card {
+        @apply transition-all duration-200;
+    }
+
+    .stat-card:hover {
+        @apply -translate-y-0.5 shadow-xl;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .room-card:hover {
+        @apply -translate-y-1 shadow-2xl;
+        box-shadow: var(--shadow-hover);
+    }
+
+    .room-img {
+        @apply transition-transform duration-300;
+    }
+
+    .room-card:hover .room-img {
+        @apply scale-105;
+    }
+
+    /* Dark mode cards — menggunakan CSS variables */
+    .dark .room-card,
+    .dark .stat-card {
+        background-color: var(--bg-surface);
+        border-color: var(--border);
+        box-shadow: var(--shadow-card);
+    }
+
+    .dark .room-card .bg-slate-50,
+    .dark .room-card [class*="bg-slate-50"] {
+        background-color: var(--bg-surface-alt);
+    }
+
+    .dark .room-card .border-slate-100,
+    .dark .room-card .border-b {
+        border-color: var(--border);
+    }
+
+    .dark .room-card .text-slate-700,
+    .dark .room-card .text-slate-600 {
+        color: var(--text-secondary);
+    }
+
+    .dark .room-card .text-slate-400 {
+        color: var(--text-muted);
+    }
+
+    /* Badge fasilitas dalam room-card */
+    .dark .room-card .bg-slate-100,
+    .dark .room-card [class*="bg-slate-100"],
+    .dark td .bg-slate-100,
+    .dark td [class*="bg-slate-100"] {
+        background-color: var(--bg-muted) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* Badge "+N" lebih items — bg-blue-50 dalam td */
+    .dark td .bg-blue-50,
+    .dark td [class*="bg-blue-50"] {
+        background-color: rgba(96, 165, 250, 0.12) !important;
+        color: #60a5fa !important;
+    }
+
+    /* Border badge */
+    .dark td .border-slate-200,
+    .dark td .border {
+        border-color: var(--border) !important;
+    }
+
+    /* Teks dalam badge td */
+    .dark td .text-slate-600,
+    .dark td .text-slate-500 {
+        color: var(--text-secondary) !important;
+    }
+
+    /* ========== BUTTONS & FILTERS ========== */
+    .filter-btn {
+        @apply transition-all duration-150;
+        color: var(--text-secondary);
+        background-color: var(--bg-surface);
+        border-color: var(--border);
+    }
+
+    .filter-btn.active {
+        @apply text-white;
+        background: var(--brand);
+        border-color: var(--brand-dark);
+    }
+
+    /* Dark mode filter buttons — tanpa !important */
+    .dark .filter-btn {
+        background-color: var(--bg-muted);
+        color: var(--text-secondary);
+        border-color: var(--border);
+    }
+
+    .dark .filter-btn:hover:not(.active) {
+        background-color: var(--bg-surface-alt);
+        color: var(--text-primary);
+        border-color: var(--brand);
+    }
+
+    .dark .filter-btn.active {
+        background: var(--brand);
+        color: #ffffff;
+        border-color: var(--brand-dark);
+        box-shadow: 0 0 0 2px var(--brand-focus-shadow);
+    }
+
+    .dark .filter-btn.active:hover {
+        background: var(--brand-dark);
+        transform: translateY(-1px);
+    }
+
+    .action-btn {
+        @apply transition-all duration-150;
+    }
+
+    .action-btn:hover {
+        @apply -translate-y-0.5 shadow-xl;
+    }
+
+    /* ========== FORM INPUTS ========== */
+    input, select, textarea {
+        @apply border rounded-xl px-3 py-2.5 outline-none;
+        border-color: var(--border);
+        background-color: var(--bg-input);
+        color: var(--text-primary);
+    }
+
+    input:focus, select:focus, textarea:focus {
+        @apply ring-3 ring-green-500/20 border-green-500;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px var(--brand-focus-shadow);
+    }
+
+    /* Dark mode inputs — tanpa !important */
+    .dark input, .dark select, .dark textarea {
+        background-color: var(--bg-input);
+        border-color: var(--border);
+        color: var(--text-primary);
+    }
+
+    .dark input::placeholder,
+    .dark textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .dark input:focus, .dark select:focus, .dark textarea:focus {
+        border-color: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+    }
+
+    .dark select option {
+        background-color: var(--bg-input);
+        color: var(--text-primary);
+    }
+
+    /* ========== SIDEBAR COMPONENTS ========== */
+    .dark #sidebar {
+        background-color: var(--bg-surface-alt);
+        border-right-color: var(--border);
+    }
+
+    .dark #sidebar .border-b,
+    .dark #sidebar .border-t {
+        border-color: var(--border);
+    }
+
+    /* ========== CALENDAR CELL ========== */
+    .cal-cell {
+        @apply relative block transition-all duration-150;
+    }
+
+    .cal-cell:hover {
+        @apply -translate-y-0.5 shadow-lg z-10;
+    }
+
+    /* Dark mode untuk calendar cells */
+    .dark .cal-cell {
+        background-color: var(--bg-surface) !important;
+        border-color: var(--border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .dark .cal-cell:hover {
+        background-color: var(--bg-surface-alt) !important;
+    }
+
+    /* ========== DARK MODE TOGGLE ========== */
+    #darkModeToggle {
+        @apply transition-transform duration-200;
+    }
+
+    #darkModeToggle:hover {
+        @apply scale-110;
+    }
+
+    #darkModeToggle .toggle-icon {
+        @apply transition-transform duration-300 inline-block;
+    }
+
+    .dark #darkModeToggle .toggle-icon {
+        @apply rotate-20;
+    }
+
+    /* ========== DARK MODE OTHER COMPONENTS ========== */
+    .dark header {
+        background-color: var(--bg-surface);
+        border-color: var(--border);
+    }
+
+    /* ========== COLOR BADGES ========== */
+    .dark .bg-emerald-100 {
+        background-color: rgba(74, 222, 128, 0.15) !important;
+        color: #4ade80 !important;
+    }
+    .dark .bg-emerald-100 .text-green-800,
+    .dark .bg-emerald-100 .text-emerald-800,
+    .dark .bg-emerald-100 .text-green-700,
+    .dark .bg-emerald-100 .text-emerald-700 {
+        color: #4ade80 !important;
+    }
+
+    .dark .bg-yellow-100 {
+        background-color: rgba(250, 204, 21, 0.15) !important;
+        color: #facc15 !important;
+    }
+    .dark .bg-yellow-100 .text-yellow-800,
+    .dark .bg-yellow-100 .text-yellow-700 {
+        color: #facc15 !important;
+    }
+
+    .dark .bg-blue-100 {
+        background-color: rgba(96, 165, 250, 0.15) !important;
+        color: #60a5fa !important;
+    }
+    .dark .bg-blue-100 .text-blue-800,
+    .dark .bg-blue-100 .text-blue-700 {
+        color: #60a5fa !important;
+    }
+
+    .dark .bg-red-100 {
+        background-color: rgba(248, 113, 113, 0.15) !important;
+        color: #f87171 !important;
+    }
+    .dark .bg-red-100 .text-red-800,
+    .dark .bg-red-100 .text-red-700 {
+        color: #f87171 !important;
+    }
+
+    .dark .bg-purple-100 {
+        background-color: rgba(192, 132, 252, 0.15) !important;
+        color: #c084fc !important;
+    }
+    .dark .bg-purple-100 .text-purple-800,
+    .dark .bg-purple-100 .text-purple-700,
+    .dark .bg-purple-100 .text-violet-800,
+    .dark .bg-purple-100 .text-violet-700 {
+        color: #c084fc !important;
+    }
+
+    /* Badge status tambahan yang sering muncul di tabel */
+    .dark .bg-green-100 {
+        background-color: rgba(74, 222, 128, 0.15) !important;
+        color: #4ade80 !important;
+    }
+    .dark .bg-green-100 .text-green-800,
+    .dark .bg-green-100 .text-green-700 {
+        color: #4ade80 !important;
+    }
+
+    /* ===== TOMBOL AKSI DALAM TABEL ===== */
+    .dark td .bg-slate-100 {
+        background-color: var(--bg-muted) !important;
+        color: var(--text-secondary) !important;
+    }
+    .dark td .bg-slate-100:hover,
+    .dark td .hover\:bg-slate-200:hover {
+        background-color: var(--bg-surface-alt) !important;
+    }
+    .dark td .text-slate-600 {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Tombol Edit */
+    .dark td .bg-blue-100 {
+        background-color: rgba(96, 165, 250, 0.15) !important;
+        color: #60a5fa !important;
+    }
+    .dark td .bg-blue-100:hover,
+    .dark td .hover\:bg-blue-200:hover {
+        background-color: rgba(96, 165, 250, 0.25) !important;
+    }
+    .dark td .text-blue-700 {
+        color: #60a5fa !important;
+    }
+
+    /* Tombol Hapus */
+    .dark td .bg-red-100 {
+        background-color: rgba(248, 113, 113, 0.15) !important;
+        color: #f87171 !important;
+    }
+    .dark td .bg-red-100:hover,
+    .dark td .hover\:bg-red-200:hover {
+        background-color: rgba(248, 113, 113, 0.25) !important;
+    }
+    .dark td .text-red-700 {
+        color: #f87171 !important;
+    }
+
+    /* Status badge — text override langsung di elemen */
+    .dark td .text-emerald-700 {
+        color: #4ade80 !important;
+    }
+    .dark td .text-red-700 {
+        color: #f87171 !important;
+    }
+
+    /* ========== FAQ COMPONENTS ========== */
+
+    .dark .faq-item .faq-toggle {
+        background-color: var(--bg-surface);
+    }
+
+    .dark .faq-item .faq-toggle:hover {
+        background-color: var(--bg-muted);
+    }
+
+    .dark .faq-item .faq-toggle .faq-icon {
+        background-color: var(--bg-muted);
+        color: var(--text-secondary);
+    }
+
+    .dark .faq-item .faq-answer p {
+        color: var(--text-secondary);
+        border-left-color: var(--border);
+    }
+
+    /* ========== SWEETALERT2 ========== */
+    .dark .swal2-popup {
+        background-color: var(--bg-surface);
+        color: var(--text-primary);
+    }
+    .dark .swal2-title {
+        color: var(--text-primary);
+    }
+    .dark .swal2-content {
+        color: var(--text-secondary);
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SIDEBAR LAYOUT FIX — FIX T2
+   ════════════════════════════════════════════════════════════ */
+body > div.min-h-screen {
+    min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SIDEBAR STYLES (Minimize/Collapse)
+   ════════════════════════════════════════════════════════════ */
+html.sidebar-will-minimize #sidebar {
+    width: var(--sidebar-collapsed-width) !important;
+    transition: none !important;
+}
+
+html.sidebar-will-minimize #sidebar .nav-label,
+html.sidebar-will-minimize #sidebar .sidebar-section-label,
+html.sidebar-will-minimize #sidebar .sidebar-brand-text,
+html.sidebar-will-minimize #sidebar .sidebar-subtitle,
+html.sidebar-will-minimize #sidebar .user-info,
+html.sidebar-will-minimize #sidebar .logout-label {
+    opacity: 0 !important;
+    width: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    transition: none !important;
+}
+
+html.sidebar-will-minimize #sidebar .nav-item,
+html.sidebar-will-minimize #sidebar .logout-btn {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+#sidebar {
+    width: var(--sidebar-width);
     transition: width 0.25s cubic-bezier(.4,0,.2,1);
     overflow: hidden;
     flex-shrink: 0;
+    will-change: width;
 }
-#sidebar.minimized { width: 72px; }
 
-#sidebar.minimized .nav-label,
-#sidebar.minimized .sidebar-subtitle,
+#sidebar img {
+    display: block;
+    flex-shrink: 0;
+}
+
+.sidebar-no-transition,
+.sidebar-no-transition * {
+    transition: none;
+}
+
+#sidebar.minimized {
+    width: var(--sidebar-collapsed-width);
+}
+
 #sidebar.minimized .sidebar-brand-text,
-#sidebar.minimized .admin-section-label,
+#sidebar.minimized .sidebar-subtitle,
 #sidebar.minimized .user-info,
 #sidebar.minimized .logout-label {
     opacity: 0;
@@ -77,28 +1276,60 @@
     white-space: nowrap;
     transition: opacity 0.15s, width 0.25s;
 }
-#sidebar .nav-label,
-#sidebar .sidebar-subtitle,
-#sidebar .sidebar-brand-text,
-#sidebar .admin-section-label,
-#sidebar .user-info,
-#sidebar .logout-label {
+
+#sidebar .sidebar-section-label {
     opacity: 1;
-    transition: opacity 0.2s 0.05s, width 0.25s;
+    max-height: 2rem;
+    overflow: hidden;
     white-space: nowrap;
+    transition: opacity 0.2s 0.05s, max-height 0.25s ease, padding 0.2s ease;
 }
 
-#sidebar.minimized .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
-#sidebar.minimized .logo-wrap { justify-content: center; padding: 0; }
-#sidebar.minimized .logo-icon { margin-right: 0; }
-#sidebar.minimized .user-box { justify-content: center; }
-#sidebar.minimized .user-avatar { margin-right: 0; }
-#sidebar.minimized .logout-btn { padding-left: 0; padding-right: 0; justify-content: center; }
+#sidebar.minimized .nav-label,
+#sidebar.minimized .sidebar-brand-text,
+#sidebar.minimized .sidebar-subtitle,
+#sidebar.minimized .user-info,
+#sidebar.minimized .logout-label {
+    opacity: 0;
+    width: 0;
+    transition: opacity 0.15s, width 0.25s;
+}
 
-.sidebar-no-transition,
-.sidebar-no-transition * { transition: none !important; }
+#sidebar.minimized .sidebar-section-label {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, max-height 0.2s ease, padding 0.2s ease;
+}
 
-/* Nav */
+#sidebar.minimized .nav-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#sidebar.minimized .logo-wrap {
+    justify-content: center;
+    padding: 0;
+}
+
+#sidebar.minimized .user-box {
+    justify-content: center;
+}
+
+#sidebar.minimized .user-avatar {
+    margin-right: 0;
+}
+
+#sidebar.minimized .logout-btn {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+}
+
+/* ========== NAVIGATION ITEMS ========== */
 .nav-item {
     display: flex;
     align-items: center;
@@ -107,14 +1338,28 @@
     border-radius: 10px;
     font-weight: 500;
     font-size: 0.875rem;
-    color: #475569;
+    color: var(--text-secondary);
     transition: background 0.15s, color 0.15s;
     cursor: pointer;
     text-decoration: none;
 }
-.nav-item:hover { background: #f0fdf4; color: #16a34a; }
-.nav-item.active { background: #22c55e; color: #fff; font-weight: 700; }
-.nav-item.active .nav-icon { filter: brightness(10); }
+
+.nav-item:hover {
+    background: var(--nav-hover-bg);
+    color: var(--nav-hover-txt);
+}
+
+.nav-item.active {
+    background: var(--nav-active-bg);
+    color: var(--nav-active-txt);
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 0 var(--brand-dark);
+}
+
+.nav-item.active .nav-icon {
+    filter: none;
+    color: var(--nav-active-txt);
+}
 
 .nav-icon {
     width: 20px;
@@ -126,86 +1371,118 @@
     font-size: 1rem;
 }
 
-/* Inputs */
-input, select, textarea {
-    border: 1px solid #cbd5e1;
-    padding: 10px 12px;
-    outline: none;
-    background-color: white;
-    border-radius: 10px;
-}
-input:focus, select:focus, textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-::-webkit-scrollbar-track { background: transparent; }
-
-/* Mobile overlay */
-#overlay { display: none; }
-#overlay.show { 
-    display: block; 
-}
-
-.room-card {
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-.room-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 48px -12px rgba(0,0,0,0.18);
-}
-.room-img {
-    transition: transform 0.45s ease;
-}
-.room-card:hover .room-img {
-    transform: scale(1.06);
-}
-
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.fade-up { animation: fadeUp 0.4s ease both; }
-
-.stagger > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger > *:nth-child(2) { animation-delay: 0.10s; }
-.stagger > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger > *:nth-child(4) { animation-delay: 0.20s; }
-.stagger > *:nth-child(5) { animation-delay: 0.25s; }
-.stagger > *:nth-child(6) { animation-delay: 0.30s; }
-
-.filter-btn { transition: all 0.15s ease; }
-.filter-btn.active {
-    background: #0f172a;
-    color: white;
-    border-color: #0f172a;
-}
-
-/* ── rooms/show only ── */
-.delay-1 { animation-delay: 0.06s; }
-.delay-2 { animation-delay: 0.12s; }
-.delay-3 { animation-delay: 0.18s; }
-.delay-4 { animation-delay: 0.24s; }
-
-.cal-cell {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.cal-cell:hover {
-    transform: scale(1.15);
-    z-index: 10;
+/* ════════════════════════════════════════════════════════════
+   TOOLTIP STYLES
+   ════════════════════════════════════════════════════════════ */
+[data-tooltip] {
     position: relative;
+    isolation: isolate;
 }
 
-.action-btn {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.18);
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--z-tooltip);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
 }
 
-.hero-img { transition: transform 6s ease; }
-.hero-img:hover { transform: scale(1.03); }
+[data-tooltip]:hover::after {
+    opacity: 1;
+}
+
+[data-tooltip]::after {
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: max-content;
+}
+
+[data-tooltip][data-placement="left"]::after {
+    left: auto;
+    right: calc(100% + 8px);
+    transform: translateY(-50%);
+}
+
+[data-tooltip][data-placement="top"]::after {
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+}
+
+[data-tooltip][data-placement="bottom"]::after {
+    left: 50%;
+    top: calc(100% + 8px);
+    transform: translateX(-50%);
+}
+
+[data-tooltip]:hover::after {
+    max-width: 280px;
+    white-space: normal;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SEARCH INPUT STYLES
+   ════════════════════════════════════════════════════════════ */
+.search-input {
+    @apply w-full pl-14 pr-4 py-3 rounded-2xl text-sm
+           transition-all duration-200 shadow-sm hover:shadow-md
+           focus:outline-none;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-default);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-focus-shadow);
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE OVERLAY
+   ════════════════════════════════════════════════════════════ */
+#overlay {
+    display: none;
+}
+
+#overlay.show {
+    display: block;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HERO SECTION & CONTACT CARDS (Dark mode)
+   ════════════════════════════════════════════════════════════ */
+.dark .bg-slate-50\/90,
+.dark .rounded-2xl.bg-slate-50,
+.dark .rounded-2xl\[\.bg-slate-50\] {
+    background-color: var(--bg-muted);
+}
+
+.dark .bg-slate-950 {
+    background-color: #0f1117;
+}
+
+/* Link and anchor tags */
+.dark a.text-slate-800,
+.dark a.text-slate-700 {
+    color: var(--text-primary);
+}
+
+.dark a.text-slate-500 {
+    color: var(--text-muted);
+}

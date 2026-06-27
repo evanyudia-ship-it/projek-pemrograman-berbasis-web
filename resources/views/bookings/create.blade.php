@@ -72,10 +72,10 @@
             </div>
 
             <div class="mt-6 flex flex-col md:flex-row gap-3 md:justify-end">
-                <a href="{{ route('rooms.index') }}" class="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-center">
+                <a href="{{ route('rooms.index') }}" class="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-center transition">
                     Batal
                 </a>
-                <button type="submit" class="px-5 py-3 rounded-xl bg-blue-400 hover:bg-slate-800 text-white font-semibold">
+                <button type="submit" class="px-5 py-3 rounded-xl bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-semibold transition shadow-sm">
                     Ajukan Booking
                 </button>
             </div>

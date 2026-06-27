@@ -44,7 +44,7 @@
             </div>
 
             <div class="flex flex-col md:flex-row gap-3">
-                <input type="text" id="searchBooking" 
+                <input type="text" id="searchBooking"
                         class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400"
                         placeholder="Cari kode, ruang, kegiatan...">
 
@@ -150,7 +150,7 @@
                             @if($bk['status'] === 'pending')
                             <form method="POST" action="{{ route('bookings.cancel', $bk['id']) }}" class="inline">
                                 @csrf
-                                <button type="button" 
+                                <button type="button"
                                         class="btn-cancel px-3 py-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-xs transition"
                                         data-id="{{ $bk['id'] }}"
                                         data-action="{{ route('bookings.cancel', $bk['id']) }}">

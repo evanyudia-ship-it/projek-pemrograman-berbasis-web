@@ -8,21 +8,21 @@
 
 {{-- STAT CARDS --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <p class="text-sm text-slate-500">Menunggu Approval</p>
-        <h3 class="text-3xl font-extrabold mt-1 text-amber-500">{{ $stats['pending'] }}</h3>
+    <div class="bg-white dark:bg-surface rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-default">
+        <p class="text-sm text-slate-500 dark:text-text-muted">Menunggu Approval</p>
+        <h3 class="text-3xl font-extrabold mt-1 text-amber-500 dark:text-amber-400">{{ $stats['pending'] }}</h3>
     </div>
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <p class="text-sm text-slate-500">Disetujui</p>
-        <h3 class="text-3xl font-extrabold mt-1 text-emerald-600">{{ $stats['approved'] }}</h3>
+    <div class="bg-white dark:bg-surface rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-default">
+        <p class="text-sm text-slate-500 dark:text-text-muted">Disetujui</p>
+        <h3 class="text-3xl font-extrabold mt-1 text-emerald-600 dark:text-emerald-400">{{ $stats['approved'] }}</h3>
     </div>
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <p class="text-sm text-slate-500">Ditolak</p>
-        <h3 class="text-3xl font-extrabold mt-1 text-red-500">{{ $stats['rejected'] }}</h3>
+    <div class="bg-white dark:bg-surface rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-default">
+        <p class="text-sm text-slate-500 dark:text-text-muted">Ditolak</p>
+        <h3 class="text-3xl font-extrabold mt-1 text-red-500 dark:text-red-400">{{ $stats['rejected'] }}</h3>
     </div>
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-        <p class="text-sm text-slate-500">Total Pengajuan</p>
-        <h3 class="text-3xl font-extrabold mt-1 text-slate-700">{{ $stats['total'] }}</h3>
+    <div class="bg-white dark:bg-surface rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-default">
+        <p class="text-sm text-slate-500 dark:text-text-muted">Total Pengajuan</p>
+        <h3 class="text-3xl font-extrabold mt-1 text-slate-700 dark:text-text-primary">{{ $stats['total'] }}</h3>
     </div>
 </div>
 
@@ -70,22 +70,22 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($pending as $submission)
                 <tr class="hover:bg-slate-50 transition group">
-                    <td class="px-6 py-4 font-mono text-xs font-bold text-slate-600">
+                    <td class="px-6 py-4 font-mono text-xs font-bold text-slate-600 dark:text-text-secondary">
                         {{ $submission['id'] }}
                     </td>
                     <td class="px-6 py-4">
-                        <p class="font-semibold text-slate-800">{{ $submission['nama_mahasiswa'] }}</p>
-                        <p class="text-xs text-slate-400">{{ $submission['email'] }}</p>
+                        <p class="font-semibold text-slate-800 dark:text-text-primary">{{ $submission['nama_mahasiswa'] }}</p>
+                        <p class="text-xs text-slate-400 dark:text-text-muted">{{ $submission['email'] }}</p>
                     </td>
-                    <td class="px-6 py-4 font-mono text-xs">{{ $submission['nim'] }}</td>
+                    <td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-text-secondary">{{ $submission['nim'] }}</td>
                     <td class="px-6 py-4">
-                        <p class="font-medium text-slate-700">{{ $submission['organisasi'] }}</p>
-                        <p class="text-xs text-slate-400">{{ $submission['singkatan'] }}</p>
+                        <p class="font-medium text-slate-700 dark:text-text-secondary">{{ $submission['organisasi'] }}</p>
+                        <p class="text-xs text-slate-400 dark:text-text-muted">{{ $submission['singkatan'] }}</p>
                     </td>
-                    <td class="px-6 py-4 text-slate-600">{{ $submission['jabatan'] }}</td>
-                    <td class="px-6 py-4 text-slate-500 text-xs">{{ $submission['tgl_ajuan'] }}</td>
+                    <td class="px-6 py-4 text-slate-600 dark:text-text-secondary">{{ $submission['jabatan'] }}</td>
+                    <td class="px-6 py-4 text-slate-500 dark:text-text-muted text-xs">{{ $submission['tgl_ajuan'] }}</td>
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 dark:text-amber-300">
                             ⏳ Pending
                         </span>
                     </td>
@@ -178,11 +178,11 @@
                     <td class="px-6 py-4 text-slate-500 text-xs">{{ $submission['diproses'] ?? '-' }}</td>
                     <td class="px-6 py-4">
                         @if($submission['status'] === 'approved')
-                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                            <span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
                                 ✓ Disetujui
                             </span>
                         @else
-                            <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                            <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 text-xs font-bold">
                                 ✕ Ditolak
                             </span>
                         @endif

@@ -26,8 +26,8 @@
             {{-- Badge summary --}}
             <div class="flex items-center gap-3 shrink-0">
                 <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-2xl text-sm font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Tersedia
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 {{ $totalTersedia > 0 ? 'animate-pulse' : '' }}"></span>
+                    Tersedia ({{ $totalTersedia ?? 0 }})
                 </div>
                 <div class="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-2xl text-sm font-semibold">
                     <span class="w-2 h-2 rounded-full bg-red-500"></span>
@@ -39,31 +39,22 @@
 
     {{-- ===== FILTER & SEARCH ===== --}}
     <div class="fade-up flex flex-col sm:flex-row gap-3">
-
-    {{-- Search --}}
-    <div class="relative w-full max-w-xl">
-
-        <input 
-            type="text" 
-            id="searchInput" 
-            placeholder="🔍 Cari nama ruangan, kode, atau gedung..."
-            class="w-full pl-14 pr-4 py-3 rounded-2xl 
-                border border-slate-200 
-                bg-white 
-                text-sm text-slate-700 
-                placeholder:text-slate-400
-                focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
-                transition-all duration-200 shadow-sm hover:shadow-md"
-        >
-    </div>
+        {{-- Search --}}
+        <div class="relative w-full max-w-2xl">  {{-- Diperbesar dari max-w-xl menjadi max-w-2xl --}}
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔍 Cari nama ruangan, kode, atau gedung..."
+                class="search-input w-full px-5 py-3.5 bg-white border border-slate-300 rounded-2xl focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none text-sm placeholder:text-slate-400">
+        </div>
 
         {{-- Filter status --}}
         <div class="flex gap-2">
-            <button class="filter-btn active px-5 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold"
+            <button class="filter-btn active px-5 py-3 rounded-2xl border text-sm font-semibold"
                     data-filter="semua">Semua</button>
-            <button class="filter-btn px-5 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-600"
+            <button class="filter-btn px-5 py-3 rounded-2xl border text-sm font-semibold"
                     data-filter="Tersedia">Tersedia</button>
-            <button class="filter-btn px-5 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-600"
+            <button class="filter-btn px-5 py-3 rounded-2xl border text-sm font-semibold"
                     data-filter="Dipakai">Dipakai</button>
         </div>
     </div>
@@ -72,28 +63,25 @@
     <div id="roomGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
 
         @foreach(($rooms ?? []) as $i => $room)
-        <div class="room-card fade-up bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
-             data-status="{{ $room['status'] }}"
-             data-nama="{{ strtolower($room['nama']) }} {{ strtolower($room['kode']) }} {{ strtolower($room['gedung']) }}">
+        <div class="room-card fade-up bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full"
+             data-status="{{ $room['status'] ?? '' }}"
+             data-nama="{{ $room['search_keywords'] ?? $room['nama'] }}">
 
             {{-- ===== FOTO ===== --}}
-            <div class="relative h-48 overflow-hidden bg-slate-200">
-                <img src="{{ $room['foto'] }}"
+            <div class="relative h-48 overflow-hidden bg-slate-200 flex-shrink-0">
+                <img src="{{ $room['foto'] ?? asset('images/default-room.jpg') }}"
                      alt="{{ $room['nama'] ?? 'Ruangan' }}"
                      class="room-img w-full h-full object-cover">
 
                 {{-- Overlay gradient --}}
-                <div class="absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
 
                 {{-- Badge Status --}}
                 <span class="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
-                    {{ $room['status'] == 'Tersedia'
-                        ? 'bg-emerald-400/90 text-emerald-900'
-                        : 'bg-red-400/90 text-red-900' }}">
+                    {{ $room['status'] == 'Tersedia' ? 'bg-emerald-400/90 text-emerald-900' : 'bg-red-400/90 text-red-900' }}">
                     <span class="w-1.5 h-1.5 rounded-full
-                        {{ $room['status'] == 'Tersedia' ? 'bg-emerald-700' : 'bg-red-700' }}
-                        {{ $room['status'] == 'Tersedia' ? 'animate-pulse' : '' }}"></span>
-                    {{ $room['status'] }}
+                        {{ $room['status'] == 'Tersedia' ? 'bg-emerald-700 animate-pulse' : 'bg-red-700' }}"></span>
+                    {{ $room['status'] ?? 'Unknown' }}
                 </span>
 
                 {{-- Nomor urut --}}
@@ -109,18 +97,18 @@
             </div>
 
             {{-- ===== BODY ===== --}}
-            <div class="p-5">
+            <div class="p-5 flex-grow">
 
-                {{-- Kapasitas --}}
+                {{-- Kapasitas & Jam --}}
                 <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100">
                     <div class="flex items-center gap-2 text-sm">
                         <span class="text-base">👥</span>
-                        <span class="font-semibold text-slate-700">{{ $room['kapasitas'] }} orang</span>
+                        <span class="font-semibold text-slate-700">{{ $room['kapasitas'] ?? 0 }} orang</span>
                     </div>
                     <div class="w-px h-4 bg-slate-200"></div>
                     <div class="flex items-center gap-2 text-sm text-slate-500">
                         <span class="text-base">🕐</span>
-                        <span>{{ $room['jam_buka'] }} – {{ $room['jam_tutup'] }}</span>
+                        <span>{{ $room['jam_buka'] ?? '-' }} – {{ $room['jam_tutup'] ?? '-' }}</span>
                     </div>
                 </div>
 
@@ -129,14 +117,14 @@
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Fasilitas</p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach(array_slice($room['fasilitas'] ?? [], 0, 4) as $f)
-                        <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-xl font-medium">
-                            {{ $f }}
-                        </span>
+                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-xl font-medium">
+                                {{ $f }}
+                            </span>
                         @endforeach
                         @if(count($room['fasilitas'] ?? []) > 4)
-                        <span class="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-xl font-medium">
-                            +{{ count($room['fasilitas'] ?? []) - 4 }} lainnya
-                        </span>
+                            <span class="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-xl font-medium">
+                                +{{ count($room['fasilitas'] ?? []) - 4 }} lainnya
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -144,56 +132,71 @@
                 {{-- Alamat --}}
                 <div class="flex items-start gap-2 mb-4">
                     <span class="text-base mt-0.5">📍</span>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat'] ?? '') }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-xs text-slate-600 leading-relaxed hover:text-slate-900 transition line-clamp-2">
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['maps_query'] ?? $room['alamat'] ?? '') }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="text-xs text-slate-600 leading-relaxed hover:text-slate-900 transition line-clamp-2">
                         {{ $room['alamat'] }}
                     </a>
                 </div>
 
                 {{-- Deskripsi --}}
                 <p class="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4 border-l-2 border-slate-200 pl-3 italic">
-                    {{ $room['deskripsi'] }}
+                    {{ $room['deskripsi'] ?? 'Tidak ada deskripsi.' }}
                 </p>
 
-                {{-- Footer Meta --}} {{-- TODO: tampilkan berdasarkan $room['fasilitas'] saat DB aktif --}}
-                <div class="flex items-center gap-3 text-xs text-slate-400 pb-1">
-                    <span>🪑 kursi terstandar</span>
-                    <span>•</span>
-                    <span>📶 WiFi cepat</span>
-                    <span>•</span>
-                    <span>⚡ listrik tersedia</span>
-                </div>
-            </div>
+                {{-- Footer Meta --}}
+                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 pb-1">
+                    @php
+                        $metaIcons = [
+                            'kursi' => '🪑', 'wifi' => '📶', 'listrik' => '⚡',
+                            'ac' => '❄️', 'proyektor' => '📽️',
+                        ];
+                        $metas = $room['displayed_meta'] ?? [];
+                    @endphp
 
-            {{-- ===== FOOTER ===== --}}
-            <div class="border-t border-slate-100 px-5 py-4 bg-slate-50/60 flex items-center justify-between gap-3">
+                    @forelse($metas as $index => $meta)
+                        <span class="flex items-center gap-1">
+                            <span>{{ $metaIcons[explode(' ', $meta)[0]] ?? '✓' }}</span>
+                            <span>{{ $meta }}</span>
+                        </span>
+                        @if ($index !== count($metas) - 1)
+                            <span class="text-slate-300">•</span>
+                        @endif
+                    @empty
+                        <span class="text-slate-400 italic">Fasilitas lengkap</span>
+                    @endforelse
+                </div>
+
+            </div> {{-- End Body --}}
+
+            {{-- ===== FOOTER (Booking) ===== --}}
+            <div class="border-t border-slate-100 px-5 py-4 bg-slate-50 flex items-center justify-between gap-3 flex-shrink-0 mt-auto">
                 <a href="{{ route('rooms.show', $room['id']) }}"
                    class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1">
                     Lihat Detail
                     <span class="text-xs">→</span>
                 </a>
 
-                @if($room['status'] == 'Tersedia')
-                <a href="{{ route('bookings.create', ['room_id' => $room['id']]) }}"
-                   class="bg-slate-900 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5">
-                    <span>➕</span> Booking
-                </a>
+                @if(($room['status'] ?? '') == 'Tersedia')
+                    <a href="{{ route('bookings.create', ['room_id' => $room['id']]) }}"
+                       class="bg-slate-900 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                        <span>➕</span> Booking
+                    </a>
                 @else
-                <span class="text-xs font-semibold text-red-500 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                    Saat ini Sedang digunakan
-                </span>
+                    <span class="text-xs font-semibold text-red-500 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+                        Sedang digunakan
+                    </span>
                 @endif
             </div>
 
-        </div>
+        </div> {{-- End Room Card --}}
         @endforeach
 
     </div>
 
-    {{-- Empty state --}}
+    {{-- Empty State --}}
     <div id="emptyState" class="hidden text-center py-20 text-slate-400">
         <p class="text-5xl mb-4">🔍</p>
         <p class="font-semibold text-slate-500">Ruangan tidak ditemukan</p>
@@ -209,33 +212,59 @@
 $(document).ready(function () {
     let currentFilter = 'semua';
     let currentSearch = '';
+    let isLoading = false;
 
     function filterRooms() {
-        let visible = 0;
+        if (isLoading) return;
+        isLoading = true;
+        showLoading();
 
-        $('#roomGrid .room-card').each(function () {
-            const status = $(this).data('status');
-            const nama   = $(this).data('nama');
+        setTimeout(() => {
+            let visible = 0;
+            const searchLower = currentSearch.toLowerCase().trim();
 
-            const matchFilter = currentFilter === 'semua' || status === currentFilter;
-            const matchSearch = currentSearch === '' || nama.includes(currentSearch.toLowerCase());
+            $('#roomGrid .room-card').each(function () {
+                const status = $(this).data('status') || '';
+                const namaAttr = ($(this).data('nama') || '').toString().toLowerCase();
 
-            if (matchFilter && matchSearch) {
-                $(this).removeClass('hidden');
-                visible++;
+                const matchFilter = currentFilter === 'semua' || status.toLowerCase() === currentFilter.toLowerCase();
+
+                let matchSearch = true;
+                if (searchLower !== '') {
+                    const keywords = searchLower.split(/\s+/).filter(Boolean);
+                    matchSearch = keywords.every(k => namaAttr.includes(k));
+                }
+
+                if (matchFilter && matchSearch) {
+                    $(this).removeClass('hidden');
+                    visible++;
+                } else {
+                    $(this).addClass('hidden');
+                }
+            });
+
+            if (visible === 0) {
+                $('#emptyState').removeClass('hidden').hide().fadeIn(200);
             } else {
-                $(this).addClass('hidden');
+                $('#emptyState').fadeOut(200, function() {
+                    $(this).addClass('hidden');
+                });
             }
-        });
 
-        if (visible === 0) {
-            $('#emptyState').removeClass('hidden');
-        } else {
-            $('#emptyState').addClass('hidden');
-        }
+            hideLoading();
+            isLoading = false;
+        }, 60);
     }
 
-    // Filter tombol
+    // Search with debounce
+    let searchTimeout;
+    $('#searchInput').on('input', function () {
+        clearTimeout(searchTimeout);
+        currentSearch = $(this).val();
+        searchTimeout = setTimeout(filterRooms, 300);
+    });
+
+    // Filter buttons
     $('.filter-btn').on('click', function () {
         $('.filter-btn').removeClass('active');
         $(this).addClass('active');
@@ -243,11 +272,22 @@ $(document).ready(function () {
         filterRooms();
     });
 
-    // Search
-    $('#searchInput').on('input', function () {
-        currentSearch = $(this).val().trim();
-        filterRooms();
-    });
+    function showLoading() {
+        if ($('.skeleton-loader').length === 0) {
+            const skeleton = `<div class="skeleton-loader grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${Array(6).fill(0).map(() => '<div class="bg-slate-100 dark:bg-slate-800 rounded-3xl h-96 animate-pulse"></div>').join('')}
+            </div>`;
+            $('#roomGrid').before(skeleton).hide();
+        }
+    }
+
+    function hideLoading() {
+        $('.skeleton-loader').remove();
+        $('#roomGrid').show();
+    }
+
+    // Initial load
+    filterRooms();
 });
 </script>
 @endpush

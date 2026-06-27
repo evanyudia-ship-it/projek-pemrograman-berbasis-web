@@ -2,7 +2,7 @@
 
 @section('title', 'Perwakilan Organisasi')
 @section('page_title', 'Perwakilan Organisasi')
-@section('page_subtitle', 'Kelola pengajuan perwakilan organisasi kampus Anda')
+@section('page_subtitle', 'Kelola pengajuan perwakilan organisasi kampus')
 
 @section('content')
 
@@ -21,8 +21,15 @@
     </div>
 @endif
 
-{{-- ── STATUS AKTIF BANNER ─────────────────────────────────────────────── --}}
-@if($active)
+@if(session('error'))
+    <div class="mb-5 flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
+        <span class="text-lg leading-none">❌</span>
+        <span class="font-medium">{{ session('error') }}</span>
+    </div>
+@endif
+
+{{-- ── STATUS AKTIF BANNER (hanya untuk Mahasiswa & Dosen) ─────────────────── --}}
+@if($active && in_array(session('user_role'), ['mahasiswa', 'dosen']))
     @php
         $bannerConfig = match($active['status']) {
             'pending'  => ['bg' => 'bg-amber-50',   'border' => 'border-amber-200',  'text' => 'text-amber-800',  'icon' => '⏳', 'msg' => 'Pengajuan Anda sedang menunggu persetujuan superadmin.'],
@@ -71,21 +78,29 @@
     <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
         <div>
             <h3 class="font-bold text-base text-slate-800">Riwayat Pengajuan</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Semua pengajuan perwakilan organisasi Anda</p>
+            <p class="text-xs text-slate-400 mt-0.5">
+                @if(session('user_role') === 'superadmin')
+                    Semua pengajuan perwakilan organisasi dari mahasiswa dan dosen
+                @else
+                    Semua pengajuan perwakilan organisasi Anda
+                @endif
+            </p>
         </div>
 
-        {{-- Tombol ajukan: nonaktif jika ada pengajuan aktif --}}
-        @if($active && in_array($active['status'], ['pending', 'approved']))
-            <button disabled
-                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-sm font-semibold cursor-not-allowed"
-                title="Anda sudah memiliki pengajuan aktif">
-                ➕ Ajukan Perwakilan Baru
-            </button>
-        @else
-            <a href="{{ route('organization.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-semibold transition-all duration-150 shadow-sm shadow-blue-200">
-                ➕ Ajukan Perwakilan Baru
-            </a>
+        {{-- Tombol ajukan: hanya untuk Mahasiswa & Dosen --}}
+        @if(in_array(session('user_role'), ['mahasiswa', 'dosen']))
+            @if($active && in_array($active['status'], ['pending', 'approved']))
+                <button disabled
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-sm font-semibold cursor-not-allowed"
+                    title="Anda sudah memiliki pengajuan aktif">
+                    ➕ Ajukan Perwakilan Baru
+                </button>
+            @else
+                <a href="{{ route('organization.create') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-semibold transition-all duration-150 shadow-sm shadow-blue-200">
+                    ➕ Ajukan Perwakilan Baru
+                </a>
+            @endif
         @endif
     </div>
 
@@ -110,11 +125,16 @@
     </div>
 
     {{-- Table --}}
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <div style="min-width: 800px;">
+        <table class="w-full text-sm table-auto md:table-fixed">
             <thead>
                 <tr class="bg-slate-50 text-slate-400 text-xs font-semibold uppercase tracking-wide">
                     <th class="text-left px-6 py-3">Kode</th>
+                    @if(session('user_role') === 'superadmin')
+                        <th class="text-left px-6 py-3">Pemohon</th>
+                        <th class="text-left px-6 py-3">Role</th>
+                    @endif
                     <th class="text-left px-6 py-3">Organisasi</th>
                     <th class="text-left px-6 py-3">Periode</th>
                     <th class="text-left px-6 py-3">Jabatan</th>
@@ -134,35 +154,52 @@
                             {{ $s['id'] }}
                         </span>
                     </td>
-                
+
+                    @if(session('user_role') === 'superadmin')
+                        <td class="px-6 py-4">
+                            <p class="font-semibold text-slate-800 leading-tight">{{ $s['user_name'] ?? '-' }}</p>
+                            <p class="text-xs text-slate-400">ID: {{ $s['user_id'] ?? '-' }}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            @php
+                                $roleBadge = match($s['user_role'] ?? '') {
+                                    'mahasiswa' => 'bg-blue-100 text-blue-700',
+                                    'dosen' => 'bg-purple-100 text-purple-700',
+                                    default => 'bg-slate-100 text-slate-600',
+                                };
+                            @endphp
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $roleBadge }}">
+                                {{ ucfirst($s['user_role'] ?? 'Unknown') }}
+                            </span>
+                        </td>
+                    @endif
+
                     <td class="px-6 py-4">
                         <p class="font-semibold text-slate-800 leading-tight">{{ $s['organisasi'] }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">{{ $s['singkatan'] }}</p>
                     </td>
-                
-                    <!-- Kolom Periode -->
+
                     <td class="px-6 py-4 text-sm text-slate-600">
                         {{ $s['periode'] ?? '-' }}
                     </td>
-                
+
                     <td class="px-6 py-4 text-slate-600">{{ $s['jabatan'] }}</td>
-                
-                    <!-- Kolom Kontak -->
+
                     <td class="px-6 py-4 text-xs text-slate-600">
                         @if(!empty($s['email_organisasi']))
-                            <div>Email: {{ $s['email_organisasi'] }}</div>
+                            <div>📧 {{ $s['email_organisasi'] }}</div>
                         @endif
                         @if(!empty($s['instagram']))
-                            <div>IG: {{ $s['instagram'] }}</div>
+                            <div>📷 {{ $s['instagram'] }}</div>
                         @endif
                         @if(!empty($s['whatsapp']))
-                            <div>WA: {{ $s['whatsapp'] }}</div>
+                            <div>📱 {{ $s['whatsapp'] }}</div>
                         @endif
                         @if(empty($s['email_organisasi']) && empty($s['instagram']) && empty($s['whatsapp']))
                             <span class="text-slate-400">—</span>
                         @endif
                     </td>
-                
+
                     <td class="px-6 py-4 text-slate-400 text-xs whitespace-nowrap">{{ $s['tgl_ajuan'] }}</td>
 
                     <td class="px-6 py-4">
@@ -197,30 +234,41 @@
                     </td>
 
                     <td class="px-6 py-4 text-center">
-                        @if($s['status'] === 'pending')
-                            <button
-                            class="btn-cancel-temp px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition-colors"
-                                data-id="{{ $s['id'] }}"
-                                data-action="{{ route('organization.cancel', $s['id']) }}">
-                                Batalkan
-                            </button>
-                        @elseif($s['status'] === 'rejected')
-                            <a href="{{ route('organization.create') }}"
-                               class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition-colors">
-                                Ajukan Ulang
-                            </a>
+                        @if(in_array(session('user_role'), ['mahasiswa', 'dosen']))
+                            @if($s['status'] === 'pending')
+                                <button
+                                    class="btn-cancel-temp px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold transition-colors"
+                                    data-id="{{ $s['id'] }}"
+                                    data-action="{{ route('organization.cancel', $s['id']) }}">
+                                    Batalkan
+                                </button>
+                            @elseif($s['status'] === 'rejected')
+                                <a href="{{ route('organization.create') }}"
+                                   class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition-colors">
+                                    Ajukan Ulang
+                                </a>
+                            @else
+                                <span class="text-slate-300 text-xs">—</span>
+                            @endif
                         @else
+                            {{-- Superadmin hanya bisa melihat, tidak ada aksi --}}
                             <span class="text-slate-300 text-xs">—</span>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-16 text-center">
+                    <td colspan="{{ session('user_role') === 'superadmin' ? '10' : '8' }}" class="px-6 py-16 text-center">
                         <div class="flex flex-col items-center gap-2 text-slate-400">
                             <span class="text-4xl">📋</span>
                             <p class="font-semibold text-slate-500">Belum ada pengajuan</p>
-                            <p class="text-xs">Klik tombol "Ajukan Perwakilan Baru" untuk memulai.</p>
+                            <p class="text-xs">
+                                @if(in_array(session('user_role'), ['mahasiswa', 'dosen']))
+                                    Klik tombol "Ajukan Perwakilan Baru" untuk memulai.
+                                @else
+                                    Belum ada pengajuan dari mahasiswa atau dosen.
+                                @endif
+                            </p>
                         </div>
                     </td>
                 </tr>
@@ -230,35 +278,6 @@
     </div>
 
 </div>{{-- /main card --}}
-
-
-{{-- ── MODAL KONFIRMASI BATALKAN ───────────────────────────────────────── --}}
-<div id="modal-cancel"
-     class="hidden fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 animate-fade-in">
-
-        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-2xl mb-4">⚠️</div>
-        <h3 class="font-bold text-lg text-slate-800 mb-1">Batalkan Pengajuan?</h3>
-        <p class="text-sm text-slate-500 mb-6">
-            Pengajuan yang dibatalkan tidak dapat dikembalikan. Anda bisa mengajukan ulang setelahnya.
-        </p>
-
-        <form id="form-cancel" method="POST">
-            @csrf
-            @method('DELETE')
-            <div class="flex gap-3">
-                <button type="button" id="btn-close-modal"
-                    class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition text-sm">
-                    Tidak
-                </button>
-                <button type="submit"
-                    class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold transition text-sm">
-                    Ya, Batalkan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
 @push('scripts')
 <script>
@@ -282,25 +301,11 @@ $(document).ready(function () {
         });
     });
 
-    // ── Buka modal ──────────────────────────────────────────────────────
-    $('.btn-cancel').on('click', function () {
-        const action = $(this).data('action');
-        $('#form-cancel').attr('action', action);
-        $('#modal-cancel').removeClass('hidden').addClass('flex');
-    });
-
-    // ── Tutup modal ─────────────────────────────────────────────────────
-    $('#btn-close-modal, #modal-cancel').on('click', function (e) {
-        if (e.target.id === 'btn-close-modal' || e.target.id === 'modal-cancel') {
-            $('#modal-cancel').removeClass('flex').addClass('hidden');
-        }
-    });
-
-    // ── Tombol Batalkan ─────────────────────────────────────────────────
+    // ── Tombol Batalkan dengan SweetAlert ───────────────────────────────
     $(document).on('click', '.btn-cancel-temp', function () {
         const id = $(this).data('id');
         const action = $(this).data('action');
-        
+
         Swal.fire({
             title: 'Batalkan Pengajuan?',
             text: 'Pengajuan yang dibatalkan tidak dapat dikembalikan.',
@@ -316,12 +321,18 @@ $(document).ready(function () {
                     url: action,
                     type: 'DELETE',
                     data: { _token: '{{ csrf_token() }}' },
-                    success: function() {
-                        Swal.fire('Dibatalkan!', 'Pengajuan berhasil dibatalkan.', 'success');
-                        location.reload();
+                    success: function(response) {
+                        Swal.fire('Dibatalkan!', response.message || 'Pengajuan berhasil dibatalkan.', 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
                     },
-                    error: function() {
-                        Swal.fire('Gagal!', 'Terjadi kesalahan.', 'error');
+                    error: function(xhr) {
+                        let errorMsg = 'Terjadi kesalahan.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire('Gagal!', errorMsg, 'error');
                     }
                 });
             }

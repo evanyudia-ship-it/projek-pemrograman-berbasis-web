@@ -103,11 +103,11 @@
             @endif
 
             {{-- Fasilitas --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Fasilitas</p>
+            <div class="bg-white dark:bg-surface rounded-2xl border border-slate-100 dark:border-default shadow-sm p-5">
+                <p class="text-xs font-semibold text-slate-400 dark:text-text-muted uppercase tracking-wider mb-4">Fasilitas</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach(($room['fasilitas'] ?? []) as $f)
-                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-medium">
+                    <span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs px-3 py-1.5 rounded-xl font-medium">
                         {{ $f }}
                     </span>
                     @endforeach

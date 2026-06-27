@@ -77,7 +77,7 @@
             <span class="text-xl">⚠️</span>
             <p class="text-amber-700 text-sm font-medium">Email Anda belum diverifikasi. Tolong verifikasi akun terlebih dahulu</p>
         </div>
-        <a href="{{ route('verify.show') }}" 
+        <a href="{{ route('verify.show') }}"
            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors shrink-0">
             Verifikasi Sekarang
         </a>
@@ -111,7 +111,7 @@
                 <div class="p-4 flex items-center justify-between">
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-slate-700">
-                            🕐 {{ $jadwal['waktu'] }} 
+                            🕐 {{ $jadwal['waktu'] }}
                             <span class="text-slate-400 font-normal text-xs">({{ $jadwal['durasi'] }})</span>
                         </p>
                         <p class="text-xs text-slate-500 mt-0.5 line-clamp-1">{{ $jadwal['keperluan'] }}</p>
@@ -160,17 +160,17 @@
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-800 mb-3">Akses Cepat</h2>
                 <div class="space-y-1">
-                    <a href="{{ route('rooms.index') }}" 
+                    <a href="{{ route('rooms.index') }}"
                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-colors text-sm text-slate-700 font-medium group">
                         <span class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">🏫</span>
                         Ketersediaan Ruang
                     </a>
-                    <a href="{{ route('schedule.index') }}" 
+                    <a href="{{ route('schedule.index') }}"
                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-colors text-sm text-slate-700 font-medium group">
                         <span class="w-8 h-8 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">🕒</span>
                         Jadwal Ruangan
                     </a>
-                    <a href="{{ route('bookings.index') }}" 
+                    <a href="{{ route('bookings.index') }}"
                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-colors text-sm text-slate-700 font-medium group">
                         <span class="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">📋</span>
                         Riwayat Booking

@@ -110,11 +110,27 @@ class HelpController extends Controller
                 'icon'   => '🏆',
             ],
         ];
+        $durasiBooking = [
+            ['role' => 'Mahasiswa', 'icon' => '🎓', 'color' => 'blue', 'durasi' => '2 Jam', 'keterangan' => 'Maksimal per sesi booking'],
+            ['role' => 'Dosen', 'icon' => '👨‍🏫', 'color' => 'violet', 'durasi' => '6 Jam', 'keterangan' => 'Maksimal per sesi booking'],
+            ['role' => 'Organisasi', 'icon' => '🏢', 'color' => 'emerald', 'durasi' => 'Fleksibel', 'keterangan' => 'Butuh persetujuan penanggung jawab'],
+        ];
+
+        array_walk_recursive($faqs, function (&$value) {
+            $value = strip_tags($value);
+        });
+
+
+        $campusAddress = 'Kampus Undiksha, Jalan Ahmad Yani No. 52, Singaraja, Bali';
+        $adminRoomLocation = 'Ruang Admin Smart Classroom, Gedung A Lantai 1, Kampus Undiksha';
 
         return view('help.index', compact(
             'faqs',
             'aturanReputation',
-            'panduanLangkah'
+            'panduanLangkah',
+            'durasiBooking',
+            'campusAddress',
+            'adminRoomLocation'
         ));
     }
 }

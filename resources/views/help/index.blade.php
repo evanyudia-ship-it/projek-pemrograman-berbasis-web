@@ -6,7 +6,7 @@
 
 @section('content')
 
-<div class="max-w-5xl mx-auto space-y-8 font-sora fade-up">
+<div class="max-w-5xl mx-auto space-y-8 font-sora">
 
     {{-- ===== HERO ===== --}}
     <div class="bg-slate-950 rounded-3xl p-8 text-white relative overflow-hidden">
@@ -22,34 +22,23 @@
     </div>
 
     {{-- ===== ATURAN DURASI BOOKING ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-5">Batas Durasi Booking per Role</p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="p-5 rounded-2xl bg-blue-50 border border-blue-100">
-                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl mb-3">🎓</div>
-                <p class="font-bold text-blue-700">Mahasiswa</p>
-                <p class="text-2xl font-extrabold text-slate-900 mt-1">2 Jam</p>
-                <p class="text-xs text-slate-500 mt-1">Maksimal per sesi booking</p>
+    <div id="durasi" class="grid grid-cols-1 sm:grid-cols-3 gap-4 scroll-mt-28">
+        @foreach($durasiBooking as $durasi)
+        <div class="p-5 rounded-2xl bg-{{ $durasi['color'] }}-50 border border-{{ $durasi['color'] }}-100">
+            <div class="w-10 h-10 bg-{{ $durasi['color'] }}-100 rounded-xl flex items-center justify-center text-xl mb-3">
+                {{ $durasi['icon'] }}
             </div>
-            <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-100">
-                <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl mb-3">👨‍🏫</div>
-                <p class="font-bold text-indigo-700">Dosen</p>
-                <p class="text-2xl font-extrabold text-slate-900 mt-1">6 Jam</p>
-                <p class="text-xs text-slate-500 mt-1">Maksimal per sesi booking</p>
-            </div>
-            <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-100">
-                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-xl mb-3">🏢</div>
-                <p class="font-bold text-emerald-700">Organisasi</p>
-                <p class="text-2xl font-extrabold text-slate-900 mt-1">Fleksibel</p>
-                <p class="text-xs text-slate-500 mt-1">Butuh persetujuan penanggung jawab</p>
-            </div>
+            <p class="font-bold text-{{ $durasi['color'] }}-700">{{ $durasi['role'] }}</p>
+            <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ $durasi['durasi'] }}</p>
+            <p class="text-xs text-slate-500 mt-1">{{ $durasi['keterangan'] }}</p>
         </div>
+        @endforeach
     </div>
 
     {{-- ===== PANDUAN BOOKING ===== --}}
-    <div id="panduan" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    <div id="panduan" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">1. Aturan Cara Booking</p>
-        
+
         <div class="space-y-8">
             <div>
                 <h3 class="font-semibold text-slate-800 mb-3">🔹 Langkah Booking</h3>
@@ -94,7 +83,7 @@
     </div>
 
     {{-- ===== REPUTATION POINT ===== --}}
-    <div id="reputation" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    <div id="reputation" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">2. Sistem Reputation Point</p>
         <p class="text-sm text-slate-600 mb-6">
             Reputation Point mencerminkan tingkat keandalan dan kepatuhan pengguna. Point ini memengaruhi kemampuan booking kamu.
@@ -158,9 +147,9 @@
     </div>
 
     {{-- ===== SANKSI & PELANGGARAN ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    <div id="sanksi" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">3. Aturan Sanksi & Pelanggaran</p>
-        
+
         <div class="space-y-6">
             <div>
                 <h3 class="font-semibold mb-3">Jenis Pelanggaran</h3>
@@ -189,7 +178,7 @@
     </div>
 
     {{-- ===== ATURAN TAMBAHAN ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    <div id="aturan-tambahan" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">4. Aturan Tambahan</p>
         <div class="space-y-4">
             <div class="flex gap-4">
@@ -216,19 +205,18 @@
         </div>
     </div>
 
-    {{-- ===== FAQ & KONTAK ===== --}}
-    <div id="faq" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    {{-- ===== FAQ ===== --}}
+    <div id="faq" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">Pertanyaan yang Sering Diajukan</p>
-        <!-- FAQ tetap sama atau bisa ditambah -->
-        <div class="space-y-3" id="faqList">
-            @foreach(($faqs ?? []) as $i => $faq)
+        <div class="space-y-3">
+            @foreach(($faqs ?? []) as $faq)
             <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden">
-                <button class="faq-toggle w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition">
-                    <span class="text-sm font-semibold text-slate-800 pr-4">{{ $faq['pertanyaan'] ?? '-' }}</span>
-                    <span class="faq-icon shrink-0 w-7 h-7 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-bold transition-transform">+</span>
+                <button class="faq-toggle w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50" type="button">
+                    <span class="text-sm font-semibold text-slate-800 pr-4">{{ e($faq['pertanyaan'] ?? '-') }}</span>
+                    <span class="faq-icon shrink-0 w-7 h-7 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-bold">+</span>
                 </button>
                 <div class="faq-answer hidden px-5 pb-4">
-                    <p class="text-sm text-slate-500 leading-relaxed border-l-2 border-slate-200 pl-4">{{ $faq['jawaban'] ?? '-' }}</p>
+                    <p class="text-sm text-slate-500 leading-relaxed">{{ e($faq['jawaban'] ?? '-') }}</p>
                 </div>
             </div>
             @endforeach
@@ -236,29 +224,25 @@
     </div>
 
     {{-- ===== KONTAK BANTUAN ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    <div id="kontak" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-5">Butuh Bantuan Lebih Lanjut?</p>
-        <!-- Kontak tetap sama -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <a href="https://mail.google.com/mail/?view=cm&to=syaefuldarmawan02@gmail.com" target="_blank" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition">
+            <a href="https://mail.google.com/mail/?view=cm&to=syaefuldarmawan02@gmail.com" target="_blank" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50">
                 <span class="text-2xl shrink-0">📧</span>
                 <div>
                     <p class="text-sm font-bold text-slate-800">Email Admin</p>
                     <p class="text-xs text-blue-600 mt-0.5 font-medium">syaefuldarmawan02@gmail.com</p>
                 </div>
             </a>
-            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room['alamat'] ?? '') }}"
-            class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors">
+            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($campusAddress ?? '') }}" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100">
                 <span class="text-2xl shrink-0">📍</span>
                 <div>
                     <p class="text-sm font-bold text-slate-800">Datang Langsung</p>
-                    <p class="text-xs text-slate-500">Ruang Admin Gedung A Lt. 1</p>
-                    @if(!empty($room['alamat']))
-                        <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ $room['alamat'] }}</p>
-                    @endif
+                    <p class="text-xs text-slate-500">{{ $adminRoomLocation ?? 'Ruangan Tata Usaha' }}</p>
+                    <p class="text-xs text-slate-600 mt-1">{{ $campusAddress ?? 'Kampus' }}</p>
                 </div>
             </a>
-            <a href="https://wa.me/6285797279169" target="_blank" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition">
+            <a href="https://wa.me/6285797279169" target="_blank" class="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50">
                 <span class="text-2xl shrink-0">💬</span>
                 <div>
                     <p class="text-sm font-bold text-slate-800">WhatsApp</p>
@@ -268,25 +252,74 @@
         </div>
     </div>
 
+    {{-- ===== BACK TO TOP BUTTON ===== --}}
+    <button id="backToTop"
+            class="fixed bottom-8 right-8 w-11 h-11 bg-slate-900 text-white rounded-full shadow-lg hover:bg-slate-700 opacity-0 invisible z-30 flex items-center justify-center"
+            type="button">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
 </div>
 
 @push('scripts')
 <script>
-$(document).ready(function () {
-    $('.faq-toggle').on('click', function () {
-        const $item   = $(this).closest('.faq-item');
-        const $answer = $item.find('.faq-answer');
-        const $icon   = $(this).find('.faq-icon');
-        const isOpen  = !$answer.hasClass('hidden');
+$(document).ready(function() {
+    'use strict';
 
-        $('.faq-answer').addClass('hidden');
-        $('.faq-icon').text('+');
+    // ===== FAQ - Toggle dengan jQuery (tanpa animasi) =====
+    $('.faq-toggle').on('click', function(e) {
+        e.preventDefault();
 
-        if (!isOpen) {
-            $answer.removeClass('hidden');
+        var $item = $(this).closest('.faq-item');
+        var $answer = $item.find('.faq-answer');
+        var $icon = $(this).find('.faq-icon');
+
+        // Tutup semua FAQ lainnya
+        $('.faq-item').not($item).each(function() {
+            $(this).find('.faq-answer').hide();
+            $(this).find('.faq-icon').text('+');
+        });
+
+        // Toggle FAQ yang diklik
+        if ($answer.is(':visible')) {
+            $answer.hide();
+            $icon.text('+');
+        } else {
+            $answer.show();
             $icon.text('−');
         }
     });
+
+    // ===== Back to Top Button =====
+    var $backToTop = $('#backToTop');
+
+    $(window).on('scroll', function() {
+        if ($(window).scrollTop() > 300) {
+            $backToTop.removeClass('opacity-0 invisible').addClass('opacity-100 visible');
+        } else {
+            $backToTop.removeClass('opacity-100 visible').addClass('opacity-0 invisible');
+        }
+    });
+
+    $backToTop.on('click', function(e) {
+        e.preventDefault();
+        $('html, body').animate({ scrollTop: 0 }, 0);
+    });
+
+    // ===== Handle URL Hash (scroll ke section yang dituju) =====
+    if (window.location.hash) {
+        var targetId = window.location.hash;
+        var $target = $(targetId);
+        if ($target.length) {
+            setTimeout(function() {
+                var offset = 90;
+                var targetPosition = $target.offset().top - offset;
+                $('html, body').animate({ scrollTop: targetPosition }, 0);
+            }, 50);
+        }
+    }
 });
 </script>
 @endpush

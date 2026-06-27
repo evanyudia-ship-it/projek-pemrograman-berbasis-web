@@ -70,7 +70,7 @@
                     <option value="banned">Banned</option>
                 </select>
 
-                <button id="resetFilter" class="px-4 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl">
+                <button id="resetFilter" class="px-4 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-xl transition">
                     ↺ Reset Filter
                 </button>
 
@@ -583,7 +583,7 @@ $(document).ready(function () {
 
         const form = $(this);
         const isEdit = $('#formMethod').val() === 'PUT';
-        
+
         // Ambil nilai
         const name = $('#formName').val().trim();
         const email = $('#formEmail').val().trim();
