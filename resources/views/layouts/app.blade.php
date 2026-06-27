@@ -267,11 +267,7 @@
                     <span class="toggle-icon text-base" id="themeIcon">🌙</span>
                 </button>
 
-                <button class="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition relative dark:bg-bg-muted dark:text-text-secondary dark:hover:bg-nav-hover-bg dark:hover:text-nav-hover-txt"
-                        aria-label="Notifikasi (segera hadir)" title="Fitur segera hadir">
-                    🔔
-                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full"></span>
-                </button>
+                @include('layouts.notifikasi')
 
                 <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-border">
                     <div class="text-right">
@@ -499,6 +495,27 @@ $(document).ready(function () {
     $(window).on('load pageshow', function() {
         hideLoadingOverlay();
     });
+});
+</script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const notificationButton = document.getElementById('notificationButton');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+
+    if (notificationButton && notificationDropdown) {
+        notificationButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            notificationDropdown.classList.toggle('hidden');
+        });
+
+        notificationDropdown.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', function () {
+            notificationDropdown.classList.add('hidden');
+        });
+    }
 });
 </script>
 
