@@ -12,7 +12,7 @@
     // Gunakan data dari Controller
     $bookings       = $bookingsGrouped ?? [];
     $daftarRuang    = $rooms ?? collect([]);
-    $roomParam      = $room ?? '';
+    $roomParam      = $roomId ?? '';
     $dateParam      = $date ?? '';
     $hasActiveFilter = $hasActiveFilter ?? false;
     $totalBookingsAfterFilter = $totalBookingsAfterFilter ?? 0;
@@ -46,7 +46,7 @@
                     class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     <option value="">Semua Ruang</option>
                     @foreach($daftarRuang as $r)
-                        <option value="{{ e($r->id) }}" {{ $roomParam === $r->id ? 'selected' : '' }}>
+                        <option value="{{ e($r->id) }}" {{ $roomParam == $r->id ? 'selected' : '' }}>
                             {{ e($r->nama) }}
                         </option>
                     @endforeach

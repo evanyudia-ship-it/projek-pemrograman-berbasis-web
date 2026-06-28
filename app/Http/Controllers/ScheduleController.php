@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -9,105 +11,96 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $room = strip_tags($request->input('room', ''));
-        $date = $request->has('date') && !empty($request->date)
-            ? $request->date
-            : null;
+        // Ambil parameter filter
+        $roomId   = $request->input('room');
+        $date     = $request->input('date');
+        $bulan    = $request->input('bulan', now()->month);
+        $tahun    = $request->input('tahun', now()->year);
 
-        // Dummy data (bisa diganti dengan query database nanti)
-        $allBookings = collect([
-            (object)[
-                'room_id'   => 'R-201',
-                'title'     => 'Kelas Pengganti',
-                'start_time'=> '08:00',
-                'date'      => now()->format('Y-m-d'),
-                'status'    => 'approved',
-                'warna'     => 'emerald'
-            ],
-            (object)[
-                'room_id'   => 'LAB-01',
-                'title'     => 'Rapat Organisasi',
-                'start_time'=> '13:00',
-                'date'      => now()->format('Y-m-d'),
-                'status'    => 'approved',
-                'warna'     => 'yellow'
-            ],
-            (object)[
-                'room_id'   => 'R-105',
-                'title'     => 'Diskusi Kelompok',
-                'start_time'=> '18:00',
-                'date'      => now()->format('Y-m-d'),
-                'status'    => 'approved',
-                'warna'     => 'blue'
-            ],
-        ]);
+        // Daftar ruang untuk dropdown
+        $rooms = Room::where('status', 'Tersedia')->orderBy('nama')->get();
 
-        // Filter berdasarkan room
-        if ($room && $room != 'all' && $room != '') {
-            $allBookings = $allBookings->where('room_id', $room);
+        // Query booking yang approved atau completed
+        $query = Booking::with(['room', 'user'])
+            ->whereIn('status', ['approved', 'completed']);
+
+        // Filter ruang
+        if ($roomId) {
+            $query->where('room_id', $roomId);
         }
 
-        // Filter berdasarkan tanggal (jika ada)
+        // Filter tanggal spesifik
         if ($date) {
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                $date = null;
-            } else {
-                $allBookings = $allBookings->where('date', $date);
+            $query->whereDate('tanggal', $date);
+        } else {
+            // Jika tidak ada filter tanggal, ambil berdasarkan bulan & tahun
+            $query->whereYear('tanggal', $tahun)
+                  ->whereMonth('tanggal', $bulan);
+        }
+
+        $bookings = $query->orderBy('tanggal')->orderBy('jam_mulai')->get();
+
+        // Group booking berdasarkan tanggal
+        $bookingsGrouped = [];
+        $dateStatuses = [];
+
+        if ($bookings->count() > 0) {
+            foreach ($bookings as $bk) {
+                $tanggal = $bk->tanggal->format('Y-m-d');
+                if (!isset($bookingsGrouped[$tanggal])) {
+                    $bookingsGrouped[$tanggal] = [];
+                }
+
+                // Warna berdasarkan prioritas atau tipe
+                $warnaMap = [
+                    'High' => 'red',
+                    'Medium-High' => 'purple',
+                    'Medium' => 'yellow',
+                    'Low' => 'blue',
+                ];
+                $warna = $warnaMap[$bk->priority_level] ?? 'blue';
+
+                $bookingsGrouped[$tanggal][] = [
+                    'ruang' => $bk->room->nama ?? '-',
+                    'jam'   => $bk->jam_mulai->format('H:i') . '-' . $bk->jam_selesai->format('H:i'),
+                    'title' => $bk->kegiatan,
+                    'warna' => $warna,
+                    'status' => $bk->status,
+                    'id' => $bk->id,
+                ];
             }
         }
 
-        $totalBookingsAfterFilter = $allBookings->count();
-        $hasActiveFilter = !empty($room) && $room !== 'all' || !empty($date);
-
-        // Konversi ke format yang dibutuhkan Blade
-        $bookingsGrouped = $allBookings->groupBy('date')->map(function ($items) {
-            return $items->map(function ($b) {
-                return [
-                    'ruang'  => $b->room_id,
-                    'jam'    => $b->start_time,
-                    'warna'  => $b->warna ?? 'blue',
-                    'title'  => $b->title ?? '',
-                    'status' => $b->status ?? 'approved',
-                ];
-            });
-        })->toArray();
-
-        // Daftar Ruangan
-        $rooms = collect([
-            (object)['id' => 'R-201', 'nama' => 'Ruang Kelas 201'],
-            (object)['id' => 'R-105', 'nama' => 'Ruang Kelas 105'],
-            (object)['id' => 'LAB-01', 'nama' => 'Laboratorium Komputer'],
-            (object)['id' => 'AULA',   'nama' => 'Aula Utama'],
-        ]);
-
-        // Data Kalender (Status Hari)
-        $today = Carbon::today();
-        $tahun = $request->get('tahun', $today->year);
-        $bulan = $request->get('bulan', $today->month);
-
-        $bulanIni = Carbon::createFromDate($tahun, $bulan, 1);
-        $totalHari = $bulanIni->daysInMonth;
+        // Jika ada filter date, kita perlu status hari (past, today, etc) untuk kalender
+        // Tapi karena kita menampilkan kalender bulanan, kita buat status untuk semua tanggal di bulan tersebut
+        $bulanObj = Carbon::createFromDate($tahun, $bulan, 1);
+        $startOfMonth = $bulanObj->copy()->startOfMonth();
+        $endOfMonth = $bulanObj->copy()->endOfMonth();
 
         $dateStatuses = [];
-
-        for ($hari = 1; $hari <= $totalHari; $hari++) {
-            $tglStr = $bulanIni->format('Y-m') . '-' . str_pad($hari, 2, '0', STR_PAD_LEFT);
-            $dateStatuses[$tglStr] = [
-                'isPast'  => Carbon::parse($tglStr)->lt($today),
-                'isToday' => $tglStr === $today->format('Y-m-d'),
+        for ($dateLoop = $startOfMonth->copy(); $dateLoop->lte($endOfMonth); $dateLoop->addDay()) {
+            $dateStr = $dateLoop->format('Y-m-d');
+            $dateStatuses[$dateStr] = [
+                'isPast' => $dateLoop->isPast() && !$dateLoop->isToday(),
+                'isToday' => $dateLoop->isToday(),
             ];
         }
+
+        // Jika ada filter tanggal spesifik, kita hanya tampilkan hari itu (tapi tetap di kalender)
+        // Kita juga set variable untuk info filter
+        $hasActiveFilter = !empty($roomId) || !empty($date);
+        $totalBookingsAfterFilter = $bookings->count();
 
         return view('schedule.index', compact(
             'bookingsGrouped',
             'rooms',
-            'room',
+            'roomId',
             'date',
-            'totalBookingsAfterFilter',
-            'hasActiveFilter',
-            'dateStatuses',
+            'bulan',
             'tahun',
-            'bulan'
+            'hasActiveFilter',
+            'totalBookingsAfterFilter',
+            'dateStatuses'
         ));
     }
 }

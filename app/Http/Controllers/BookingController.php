@@ -2,197 +2,253 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Room;
+use App\Models\RoomSchedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
-    private function getAllBookings(): array
-    {
-        return session('all_bookings', $this->getDummyBookings());
-    }
-
-    private function getUserBookings(): array
-    {
-        $userId   = session('user_id');
-        $bookings = $this->getAllBookings();
-
-        return collect($bookings)
-            ->filter(fn($b) => $b['user_id'] === $userId)
-            ->values()
-            ->toArray();
-    }
-
-    private function getDummyBookings(): array
-    {
-        return [
-            // Milik user_id = 3 (Dosen)
-            [
-                'id'         => 'BK-001',
-                'user_id'    => 3,
-                'pemohon'    => 'Dosen',
-                'tipe'       => 'Dosen',
-                'ruang'      => 'R-201',
-                'ruang_nama' => 'Ruang Kelas 201',
-                'kegiatan'   => 'Kelas Pengganti',
-                'tanggal'    => '2026-05-03',
-                'jam_mulai'  => '08:00',
-                'jam_selesai'=> '10:00',
-                'durasi'     => '2 jam',
-                'status'     => 'approved',
-                'tujuan'     => 'Kelas pengganti karena jadwal sebelumnya bentrok dengan kegiatan jurusan.',
-            ],
-            [
-                'id'         => 'BK-007',
-                'user_id'    => 3,
-                'pemohon'    => 'Dosen',
-                'tipe'       => 'Dosen',
-                'ruang'      => 'R-301',
-                'ruang_nama' => 'Ruang Kuliah 301',
-                'kegiatan'   => 'Seminar Kelas',
-                'tanggal'    => '2026-05-10',
-                'jam_mulai'  => '13:00',
-                'jam_selesai'=> '15:00',
-                'durasi'     => '2 jam',
-                'status'     => 'pending',
-                'tujuan'     => 'Seminar kecil untuk mahasiswa tingkat akhir.',
-            ],
-
-            // Milik user_id = 4 (Mahasiswa)
-            [
-                'id'         => 'BK-002',
-                'user_id'    => 4,
-                'pemohon'    => 'I Made Syaeful Gahar',
-                'tipe'       => 'Mahasiswa',
-                'ruang'      => 'LAB-01',
-                'ruang_nama' => 'Lab Komputer',
-                'kegiatan'   => 'Rapat Organisasi',
-                'tanggal'    => '2026-05-03',
-                'jam_mulai'  => '13:00',
-                'jam_selesai'=> '16:00',
-                'durasi'     => '3 jam',
-                'status'     => 'pending',
-                'tujuan'     => 'Rapat rutin BEM semester genap.',
-            ],
-            [
-                'id'         => 'BK-003',
-                'user_id'    => 4,
-                'pemohon'    => 'I Made Syaeful Gahar',
-                'tipe'       => 'Mahasiswa',
-                'ruang'      => 'R-105',
-                'ruang_nama' => 'Ruang Diskusi 105',
-                'kegiatan'   => 'Belajar Kelompok',
-                'tanggal'    => '2026-05-02',
-                'jam_mulai'  => '18:00',
-                'jam_selesai'=> '20:00',
-                'durasi'     => '2 jam',
-                'status'     => 'completed',
-                'tujuan'     => 'Belajar kelompok persiapan UAS.',
-            ],
-            [
-                'id'         => 'BK-008',
-                'user_id'    => 4,
-                'pemohon'    => 'I Made Syaeful Gahar',
-                'tipe'       => 'Mahasiswa',
-                'ruang'      => 'R-302',
-                'ruang_nama' => 'Ruang Kelas 302',
-                'kegiatan'   => 'Diskusi Tugas',
-                'tanggal'    => '2026-05-01',
-                'jam_mulai'  => '09:00',
-                'jam_selesai'=> '11:00',
-                'durasi'     => '2 jam',
-                'status'     => 'no_show',
-                'tujuan'     => 'Diskusi pengerjaan tugas besar.',
-            ],
-
-            // Milik user_id = 1 (Admin)
-            [
-                'id'         => 'BK-005',
-                'user_id'    => 1,
-                'pemohon'    => 'Admin Kampus',
-                'tipe'       => 'Admin',
-                'ruang'      => 'MR-401',
-                'ruang_nama' => 'Meeting Room Lt. 4',
-                'kegiatan'   => 'Rapat Divisi',
-                'tanggal'    => '2026-05-06',
-                'jam_mulai'  => '09:00',
-                'jam_selesai'=> '11:00',
-                'durasi'     => '2 jam',
-                'status'     => 'approved',
-                'tujuan'     => 'Rapat koordinasi divisi admin.',
-            ],
-        ];
-    }
-
+    /**
+     * Display a listing of user's bookings.
+     */
     public function index()
     {
-        $bookings   = $this->getUserBookings();
-        $collection = collect($bookings);
+        $userId = session('user_id');
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $bookings = Booking::with(['room', 'user'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         $stats = [
-            'total'    => $collection->count(),
-            'pending'  => $collection->where('status', 'pending')->count(),
-            'approved' => $collection->where('status', 'approved')->count(),
-            'no_show'  => $collection->where('status', 'no_show')->count(),
+            'total' => Booking::where('user_id', $userId)->count(),
+            'pending' => Booking::where('user_id', $userId)->where('status', 'pending')->count(),
+            'approved' => Booking::where('user_id', $userId)->where('status', 'approved')->count(),
+            'no_show' => Booking::where('user_id', $userId)->where('status', 'no_show')->count(),
         ];
 
         return view('bookings.index', compact('bookings', 'stats'));
     }
 
+    /**
+     * Show form to create a new booking.
+     */
     public function create()
     {
-        return view('bookings.create');
+        $rooms = Room::where('status', 'Tersedia')->get();
+        return view('bookings.create', compact('rooms'));
     }
 
+    /**
+     * Store a newly created booking.
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'ruang'      => 'required',
-            'kegiatan'   => 'required|string|max:100',
-            'tanggal'    => 'required|date|after_or_equal:today',
-            'jam_mulai'  => 'required',
-            'jam_selesai'=> 'required',
-            'tujuan'     => 'required|string|max:500',
+            'room_id' => 'required|exists:rooms,id',
+            'kegiatan' => 'required|string|max:150',
+            'tujuan' => 'required|string|max:500',
+            'tanggal' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
+            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
         ]);
 
-        $allBookings = $this->getAllBookings();
+        $userId = session('user_id');
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Silakan login.');
+        }
 
-        $newBooking = [
-            'id'         => 'BK-' . str_pad(count($allBookings) + 1, 3, '0', STR_PAD_LEFT),
-            'user_id'    => session('user_id'),
-            'pemohon'    => session('user_name'),
-            'tipe'       => ucfirst(session('user_role')),
-            'ruang'      => strtoupper($request->ruang),
-            'ruang_nama' => $request->ruang,
-            'kegiatan'   => $request->kegiatan,
-            'tanggal'    => $request->tanggal,
-            'jam_mulai'  => $request->jam_mulai,
-            'jam_selesai'=> $request->jam_selesai,
-            'durasi'     => '-',
-            'status'     => 'pending',
-            'tujuan'     => $request->tujuan,
-        ];
+        // Cek ketersediaan ruang
+        $room = Room::find($request->room_id);
+        if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai)) {
+            return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
+        }
 
-        $allBookings[] = $newBooking;
-        session(['all_bookings' => $allBookings]);
+        // Generate booking code
+        $lastBooking = Booking::orderBy('id', 'desc')->first();
+        $nextId = $lastBooking ? $lastBooking->id + 1 : 1;
+        $bookingCode = 'BK-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+
+        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
+        $durasiMenit = $start->diffInMinutes($end);
+
+        // Deadline check-in: 30 menit setelah jam mulai
+        $checkinDeadline = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai)->addMinutes(30);
+
+        $booking = Booking::create([
+            'booking_code' => $bookingCode,
+            'user_id' => $userId,
+            'room_id' => $request->room_id,
+            'kegiatan' => $request->kegiatan,
+            'tujuan' => $request->tujuan,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'durasi_menit' => $durasiMenit,
+            'priority_level' => 'Medium', // default
+            'status' => 'pending',
+            'check_in_status' => 'belum_checkin',
+            'checkin_deadline' => $checkinDeadline,
+            'is_penalty_applied' => false,
+        ]);
+
+        // Catat histori (opsional)
+        // BookingHistory::create([...]);
 
         return redirect()->route('bookings.index')
-                         ->with('success', 'Booking berhasil diajukan! Menunggu persetujuan admin.');
+            ->with('success', 'Booking berhasil diajukan! Menunggu persetujuan admin.');
     }
 
-    public function cancel(Request $request, string $id)
+    /**
+     * Display the specified booking.
+     */
+    public function show($id)
     {
-        $allBookings = $this->getAllBookings();
-        $userId      = session('user_id');
+        $booking = Booking::with(['room', 'user', 'approvedBy', 'cancelledBy'])
+            ->findOrFail($id);
 
-        $updated = collect($allBookings)->map(function ($b) use ($id, $userId) {
-            if ($b['id'] === $id && $b['user_id'] === $userId && $b['status'] === 'pending') {
-                $b['status'] = 'cancelled';
-            }
-            return $b;
-        })->toArray();
+        // Pastikan hanya pemilik atau admin yang bisa melihat
+        if (session('user_id') != $booking->user_id && !in_array(session('user_role'), ['admin', 'superadmin'])) {
+            abort(403);
+        }
 
-        session(['all_bookings' => $updated]);
+        return view('bookings.show', compact('booking'));
+    }
 
-        return back()->with('success', "Booking {$id} berhasil dibatalkan.");
+    /**
+     * Show the form for editing the specified booking.
+     */
+    public function edit($id)
+    {
+        $booking = Booking::findOrFail($id);
+        // Hanya bisa edit jika status pending dan milik sendiri
+        if (session('user_id') != $booking->user_id || $booking->status != 'pending') {
+            abort(403);
+        }
+        $rooms = Room::where('status', 'Tersedia')->get();
+        return view('bookings.edit', compact('booking', 'rooms'));
+    }
+
+    /**
+     * Update the specified booking.
+     */
+    public function update(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        if (session('user_id') != $booking->user_id || $booking->status != 'pending') {
+            abort(403);
+        }
+
+        $request->validate([
+            'room_id' => 'required|exists:rooms,id',
+            'kegiatan' => 'required|string|max:150',
+            'tujuan' => 'required|string|max:500',
+            'tanggal' => 'required|date|after_or_equal:today',
+            'jam_mulai' => 'required|date_format:H:i',
+            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+        ]);
+
+        // Cek ketersediaan (kecuali jika ruang dan waktu sama persis)
+        $room = Room::find($request->room_id);
+        if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai, $booking->id)) {
+            return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
+        }
+
+        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
+        $durasiMenit = $start->diffInMinutes($end);
+
+        $booking->update([
+            'room_id' => $request->room_id,
+            'kegiatan' => $request->kegiatan,
+            'tujuan' => $request->tujuan,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'durasi_menit' => $durasiMenit,
+            // deadline check-in diupdate juga
+            'checkin_deadline' => Carbon::parse($request->tanggal . ' ' . $request->jam_mulai)->addMinutes(30),
+        ]);
+
+        return redirect()->route('bookings.show', $booking->id)
+            ->with('success', 'Booking berhasil diperbarui.');
+    }
+
+    /**
+     * Check-in action.
+     */
+    public function checkin(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        if (session('user_id') != $booking->user_id) {
+            abort(403);
+        }
+
+        if (!$booking->canCheckIn()) {
+            return back()->with('error', 'Booking tidak dapat di-check-in. Status: ' . $booking->status);
+        }
+
+        $now = Carbon::now();
+        $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai->format('H:i:s'));
+        $checkinStatus = $now->lte($startTime) ? 'checkin_tepat_waktu' : 'checkin_terlambat';
+
+        $booking->update([
+            'check_in_status' => $checkinStatus,
+            'check_in_at' => $now,
+            'status' => 'approved', // tetap approved, atau bisa lanjut
+        ]);
+
+        // Tambahkan reputasi jika check-in tepat waktu (contoh)
+        // $booking->user->addReputationPoints(5, 'Check-in tepat waktu', null, $booking->id);
+
+        return redirect()->route('bookings.show', $booking->id)
+            ->with('success', 'Check-in berhasil!');
+    }
+
+    /**
+     * Show booking history (completed, cancelled, no-show).
+     */
+    public function history()
+    {
+        $userId = session('user_id');
+        $bookings = Booking::with(['room'])
+            ->where('user_id', $userId)
+            ->whereIn('status', ['completed', 'cancelled', 'no_show', 'rejected'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('bookings.history', compact('bookings'));
+    }
+
+    /**
+     * Cancel booking (old method, may be replaced by cancellation controller).
+     * We keep for backward compatibility.
+     */
+    public function cancel(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        if (session('user_id') != $booking->user_id) {
+            abort(403);
+        }
+
+        if (!$booking->canBeCancelledByUser()) {
+            return back()->with('error', 'Booking tidak dapat dibatalkan.');
+        }
+
+        $booking->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $request->input('reason', 'Dibatalkan oleh pemohon'),
+            'cancelled_by' => session('user_id'),
+        ]);
+
+        return redirect()->route('bookings.index')->with('success', 'Booking dibatalkan.');
     }
 }
