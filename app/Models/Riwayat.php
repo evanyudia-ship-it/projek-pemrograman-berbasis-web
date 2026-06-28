@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -78,27 +79,21 @@ class Riwayat extends Model
         return null;
     }
 
-    /**
-     * Scope for specific activity type.
-     */
-    public function scopeOfType($query, $type)
+    // ========== SCOPES ==========
+
+    public function scopeOfType(Builder $query, string $type): Builder
     {
         return $query->where('jenis_aktivitas', $type);
     }
 
-    /**
-     * Scope for booking activities.
-     */
-    public function scopeBookingActivities($query)
+    public function scopeBookingActivities(Builder $query): Builder
     {
         return $query->where('jenis_aktivitas', self::ACTIVITY_BOOKING);
     }
 
-    /**
-     * Scope for check-in activities.
-     */
-    public function scopeCheckinActivities($query)
+    public function scopeCheckinActivities(Builder $query): Builder
     {
         return $query->where('jenis_aktivitas', self::ACTIVITY_CHECKIN);
     }
+
 }

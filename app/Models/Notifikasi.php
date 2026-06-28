@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -91,35 +92,21 @@ class Notifikasi extends Model
         return $this->status === 'sudah_dibaca';
     }
 
-    /**
-     * Check if notification is unread.
-     */
-    public function isUnread(): bool
-    {
-        return $this->status === 'belum_dibaca';
-    }
+    // ========== SCOPES ==========
 
-    /**
-     * Scope for unread notifications.
-     */
-    public function scopeUnread($query)
+    public function scopeUnread(Builder $query): Builder
     {
         return $query->where('status', 'belum_dibaca');
     }
 
-    /**
-     * Scope for read notifications.
-     */
-    public function scopeRead($query)
+    public function scopeRead(Builder $query): Builder
     {
         return $query->where('status', 'sudah_dibaca');
     }
 
-    /**
-     * Scope for specific type.
-     */
-    public function scopeOfType($query, $type)
+    public function scopeOfType(Builder $query, string $type): Builder
     {
         return $query->where('tipe', $type);
     }
+
 }

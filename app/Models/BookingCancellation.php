@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,11 +11,6 @@ class BookingCancellation extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'booking_id',
         'cancelled_by',
@@ -24,11 +20,6 @@ class BookingCancellation extends Model
         'penalti_point',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'kena_penalti' => 'boolean',
         'penalti_point' => 'integer',
@@ -36,51 +27,80 @@ class BookingCancellation extends Model
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the booking that was cancelled.
-     */
+    // ========== CONSTANTS ==========
+
+    const ACTOR_USER = 'user';
+    const ACTOR_ADMIN = 'admin';
+    const ACTOR_SYSTEM = 'system';
+
+    // ========== RELATIONS ==========
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
 
-    /**
-     * Get the user who cancelled the booking.
-     */
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');
     }
 
-    /**
-     * Check if cancellation has penalty.
-     */
+    // ========== SCOPES ==========
+
+    public function scopeWithPenalty(Builder $query): Builder
+    {
+        return $query->where('kena_penalti', true);
+    }
+
+    public function scopeWithoutPenalty(Builder $query): Builder
+    {
+        return $query->where('kena_penalti', false);
+    }
+
+    public function scopeUserCancellation(Builder $query): Builder
+    {
+        return $query->where('actor_type', self::ACTOR_USER);
+    }
+
+    public function scopeAdminCancellation(Builder $query): Builder
+    {
+        return $query->where('actor_type', self::ACTOR_ADMIN);
+    }
+
+    public function scopeSystemCancellation(Builder $query): Builder
+    {
+        return $query->where('actor_type', self::ACTOR_SYSTEM);
+    }
+
+    // ========== HELPER METHODS ==========
+
     public function hasPenalty(): bool
     {
         return $this->kena_penalti && $this->penalti_point > 0;
     }
 
-    /**
-     * Check if cancellation was done by user.
-     */
     public function isUserCancellation(): bool
     {
-        return $this->actor_type === 'user';
+        return $this->actor_type === self::ACTOR_USER;
     }
 
-    /**
-     * Check if cancellation was done by admin.
-     */
     public function isAdminCancellation(): bool
     {
-        return $this->actor_type === 'admin';
+        return $this->actor_type === self::ACTOR_ADMIN;
     }
 
-    /**
-     * Check if cancellation was done by system.
-     */
     public function isSystemCancellation(): bool
     {
-        return $this->actor_type === 'system';
+        return $this->actor_type === self::ACTOR_SYSTEM;
+    }
+
+    public function getActorLabelAttribute(): string
+    {
+        return match($this->actor_type) {
+            self::ACTOR_USER => 'User',
+            self::ACTOR_ADMIN => 'Admin',
+            self::ACTOR_SYSTEM => 'Sistem',
+            default => 'Unknown',
+        };
     }
 }
