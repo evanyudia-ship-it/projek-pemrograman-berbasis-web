@@ -31,21 +31,33 @@ class ReputationLog extends Model
         ];
     }
 
+    /**
+     * Log reputasi milik 1 user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Log reputasi berdasarkan aturan reputasi tertentu.
+     */
     public function reputationSetting()
     {
         return $this->belongsTo(ReputationSetting::class);
     }
 
+    /**
+     * Log reputasi bisa terkait dengan booking.
+     */
     public function booking()
     {
         return $this->belongsTo(Booking::class);
     }
 
+    /**
+     * User/admin yang membuat log reputasi.
+     */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -2,160 +2,99 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Faculty;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
 class ProfileController extends Controller
 {
-    /**
-     * Ambil data pengajuan organisasi dari session
-     * Sama seperti di OrganizationController
-     */
-    private function getUserOrganizationSubmission(): ?array
+    private function currentUser(): ?User
     {
-        $userId = session('user_id');
-        if (!$userId) {
-            return null;
-        }  
-        $key = "org_submissions_{$userId}";
-        $submissions = session($key, []);
-    
-        foreach ($submissions as $submission) {
-            if (in_array($submission['status'] ?? null, ['pending', 'approved', 'rejected'])) {
-                $defaults = [
-                    'periode' => '-',
-                    'email_organisasi' => null,
-                    'instagram' => null,
-                    'whatsapp' => null,
-                    'jenis_bukti' => [],
-                    'file_bukti_nama' => null,
-                    'file_bukti_path' => null,
-                ];
-            
-                return array_merge($defaults, $submission);
-            }
+        if (Auth::check()) {
+            return Auth::user();
         }
-    
+
+        if (session()->has('user_id')) {
+            return User::find(session('user_id'));
+        }
+
         return null;
     }
 
     public function index()
     {
-        $role = session('user_role', 'mahasiswa');
-        $name = session('user_name', 'Guest');
-        $email = session('user_email', '-');
+        $user = $this->currentUser();
 
-        // Data dasar dari session
-        $user = (object) [
-            'name'  => $name,
-            'email' => $email,
-            'role'  => ucfirst($role),
-            'nim_nip'  => session('user_nim_nip', 'Belum diisi'),
-        ];
-
-        // ========== AMBIL DATA PENGAJUAN ORGANISASI (KHUSUS MAHASISWA) ==========
-        $organizationSubmission = null;
-        $orgStatus = null;
-        
-        if ($role === 'mahasiswa') {
-            $organizationSubmission = $this->getUserOrganizationSubmission();
-            if ($organizationSubmission) {
-                $orgStatus = $organizationSubmission['status'];
-            }
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        // Data spesifik per role
-        $profileData = match($role) {
+        $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
 
-            'superadmin' => (object) [
-                'point'          => 100,
-                'status'         => 'SuperAdmin',
-                'status_color'   => 'purple',
-                'booking_active' => 0,
-                'violation'      => 0,
-                'badge'          => '👑',
-                'description'    => 'Akses penuh ke seluruh sistem Smart Classroom.',
-                'stats' => [
-                    ['label' => 'Total User',    'value' => 142,  'icon' => '👥', 'color' => 'blue'],
-                    ['label' => 'Total Ruang',   'value' => 28,   'icon' => '🏫', 'color' => 'emerald'],
-                    ['label' => 'Booking Aktif', 'value' => 8,    'icon' => '📅', 'color' => 'amber'],
-                    ['label' => 'Pending Appr.', 'value' => 2,    'icon' => '⏳', 'color' => 'red'],
-                ],
-            ],
+        return view('profile.index', compact('user', 'faculties'));
+    }
 
-            'admin' => (object) [
-                'point'          => 100,
-                'status'         => 'Validator',
-                'status_color'   => 'blue',
-                'booking_active' => 0,
-                'violation'      => 0,
-                'badge'          => '✅',
-                'description'    => 'Bertugas memvalidasi dan menyetujui pengajuan booking ruangan.',
-                'stats' => [
-                    ['label' => 'Disetujui',     'value' => 38,  'icon' => '✅', 'color' => 'emerald'],
-                    ['label' => 'Ditolak',        'value' => 5,   'icon' => '❌', 'color' => 'red'],
-                    ['label' => 'Pending',        'value' => 2,   'icon' => '⏳', 'color' => 'amber'],
-                    ['label' => 'Total Proses',   'value' => 45,  'icon' => '📋', 'color' => 'blue'],
-                ],
-            ],
+    public function update(Request $request)
+    {
+        $user = $this->currentUser();
 
-            'dosen' => (object) [
-                'point'          => 90,
-                'status'         => 'Trusted User',
-                'status_color'   => 'emerald',
-                'booking_active' => 2,
-                'violation'      => 0,
-                'badge'          => '🎓',
-                'description'    => 'Dosen memiliki prioritas booking ruang kuliah dan seminar.',
-                'stats' => [
-                    ['label' => 'Booking Aktif',  'value' => 2,   'icon' => '📅', 'color' => 'blue'],
-                    ['label' => 'Booking Selesai','value' => 24,  'icon' => '✅', 'color' => 'emerald'],
-                    ['label' => 'Pelanggaran',    'value' => 0,   'icon' => '⚠️', 'color' => 'amber'],
-                    ['label' => 'Reputation',     'value' => 90,  'icon' => '⭐', 'color' => 'purple'],
-                ],
-            ],
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
 
-            // mahasiswa (default) dengan data organisasi
-            default => (object) [
-                'point'          => 85,
-                'status'         => $orgStatus === 'approved' ? 'Perwakilan Organisasi Aktif' : 'Trusted User',
-                'status_color'   => $orgStatus === 'approved' ? 'emerald' : 'emerald',
-                'booking_active' => 3,
-                'violation'      => 0,
-                'badge'          => $orgStatus === 'approved' ? '🏢' : '🎒',
-                'description'    => $orgStatus === 'approved' 
-                    ? 'Anda terdaftar sebagai perwakilan resmi organisasi kampus.' 
-                    : 'Mahasiswa dapat mengajukan booking ruang untuk kegiatan akademik dan organisasi.',
-                'stats' => [
-                    ['label' => 'Booking Aktif',  'value' => 3,   'icon' => '📅', 'color' => 'blue'],
-                    ['label' => 'Booking Selesai','value' => 10,  'icon' => '✅', 'color' => 'emerald'],
-                    ['label' => 'Pelanggaran',    'value' => 0,   'icon' => '⚠️', 'color' => 'amber'],
-                    ['label' => 'Reputation',     'value' => 85,  'icon' => '⭐', 'color' => 'purple'],
-                ],
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'email' => [
+                'required',
+                'email',
+                'max:150',
+                Rule::unique('users', 'email')->ignore($user->id),
             ],
-        };
+            'nim' => [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::unique('users', 'nim')->ignore($user->id),
+            ],
+            'nidn' => [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::unique('users', 'nidn')->ignore($user->id),
+            ],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'faculty_id' => ['nullable', 'exists:faculties,id'],
+        ]);
 
-        // Aktivitas per role
-        $activities = match($role) {
-            'superadmin' => [
-                ['icon' => '👥', 'text' => 'Menambahkan user baru: dosen@kampus.ac.id',   'waktu' => '1 jam lalu'],
-                ['icon' => '🏗️', 'text' => 'Menambahkan ruang baru: LAB Komputer 3',      'waktu' => '3 jam lalu'],
-                ['icon' => '⚙️', 'text' => 'Memperbarui konfigurasi sistem',              'waktu' => 'Kemarin'],
-            ],
-            'admin' => [
-                ['icon' => '✅', 'text' => 'Menyetujui booking Ruang Seminar A',           'waktu' => '30 menit lalu'],
-                ['icon' => '❌', 'text' => 'Menolak booking R-105 (konflik jadwal)',       'waktu' => '2 jam lalu'],
-                ['icon' => '✅', 'text' => 'Menyetujui booking LAB Komputer 2',            'waktu' => '5 jam lalu'],
-            ],
-            'dosen' => [
-                ['icon' => '📅', 'text' => 'Booking Ruang Seminar A dikonfirmasi',         'waktu' => '1 jam lalu'],
-                ['icon' => '✅', 'text' => 'Check-in Ruang Kuliah B-12 berhasil',          'waktu' => 'Kemarin'],
-                ['icon' => '➕', 'text' => 'Mengajukan booking Ruang Rapat 205',           'waktu' => '2 hari lalu'],
-            ],
-            default => [
-                ['icon' => '✅', 'text' => 'Booking R-201 disetujui',                      'waktu' => '2 jam lalu'],
-                ['icon' => '📍', 'text' => 'Check-in LAB-01 berhasil',                    'waktu' => 'Kemarin'],
-                ['icon' => '➕', 'text' => 'Mengajukan booking R-105',                     'waktu' => '2 hari lalu'],
-            ],
-        };
+        $user->update($validated);
 
-        return view('profile.index', compact('user', 'profileData', 'activities', 'organizationSubmission', 'orgStatus'));
+        return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = $this->currentUser();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $validated = $request->validate([
+            'current_password' => ['required'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return back()->with('error', 'Password lama tidak sesuai.');
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', 'Password berhasil diperbarui.');
     }
 }

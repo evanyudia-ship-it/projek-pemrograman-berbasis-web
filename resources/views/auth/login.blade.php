@@ -2,348 +2,88 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Smart Classroom</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    {{-- Dark mode initialization (sama seperti layout) --}}
-    <script>
-    (function () {
-        try {
-            var theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else if (theme === 'light') {
-                document.documentElement.classList.remove('dark');
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-        } catch (e) {}
-    })();
-
-    window.toggleDarkMode = function() {
-        const html = document.documentElement;
-        if (html.classList.contains('dark')) {
-            html.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        } else {
-            html.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        }
-        window.updateDarkModeIcon();
-    };
-
-    window.updateDarkModeIcon = function() {
-        const icon = document.getElementById('themeIcon');
-        if (icon) {
-            icon.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
-        }
-    };
-    </script>
-
-    {{-- Tailwind & CSS --}}
-    @vite(['resources/css/app.css'])
-
-    {{-- jQuery --}}
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <style>
-        /* Additional dark mode fixes untuk login page */
-        html.dark body {
-            background: var(--bg-page) !important;
-        }
-
-        html.dark .bg-white {
-            background-color: var(--bg-surface) !important;
-        }
-
-        html.dark .border-slate-200 {
-            border-color: var(--border) !important;
-        }
-
-        html.dark .text-slate-900 {
-            color: var(--text-primary) !important;
-        }
-
-        html.dark .text-slate-500,
-        html.dark .text-slate-400,
-        html.dark .text-slate-600 {
-            color: var(--text-secondary) !important;
-        }
-
-        html.dark .bg-slate-100 {
-            background-color: var(--bg-muted) !important;
-        }
-
-        html.dark .login-input {
-            background-color: var(--bg-input) !important;
-            border-color: var(--border) !important;
-            color: var(--text-primary) !important;
-        }
-
-        html.dark .login-input::placeholder {
-            color: var(--text-muted) !important;
-        }
-
-        html.dark .bg-red-50 {
-            background-color: var(--danger-bg) !important;
-            border-color: rgba(239, 68, 68, 0.2) !important;
-        }
-
-        html.dark .text-red-700 {
-            color: var(--danger-text) !important;
-        }
-
-        /* Dark mode toggle button styling */
-        .dark-mode-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 50;
-            width: 44px;
-            height: 44px;
-            border-radius: 999px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-default);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            transition: all 0.2s ease;
-        }
-
-        .dark-mode-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: var(--shadow-lg);
-        }
-
-        html.dark .dark-mode-toggle {
-            background: var(--bg-surface-alt);
-            border-color: var(--border);
-        }
-
-        /* Demo login buttons dark mode */
-        html.dark .demo-login {
-            background-color: var(--bg-muted) !important;
-            color: var(--text-secondary) !important;
-            border: 1px solid var(--border);
-        }
-
-        html.dark .demo-login:hover {
-            background-color: var(--bg-surface-alt) !important;
-            color: var(--text-primary) !important;
-            border-color: var(--brand);
-        }
-    </style>
+    <title>Login - Sistem Booking Ruangan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center px-4">
 
-<body class="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
-      style="font-family: 'Inter', sans-serif;">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-4">
+                B
+            </div>
 
-{{-- Dark Mode Toggle Button (floating) --}}
-<button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle dark mode">
-    <span id="themeIcon">🌙</span>
-</button>
+            <h1 class="text-2xl font-extrabold text-slate-800">
+                Login
+            </h1>
 
-<div class="min-h-screen flex items-center justify-center p-4">
+            <p class="text-sm text-slate-500 mt-1">
+                Masuk ke sistem booking ruangan
+            </p>
+        </div>
 
-    <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-surface rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-border">
+        @if(session('success'))
+            <div class="mb-4 rounded-xl bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
 
-        {{-- LEFT SECTION --}}
-        <div class="hidden lg:flex relative bg-linear-to-br from-slate-800 to-indigo-900 text-white p-12 flex-col justify-between">
+        @if(session('warning'))
+            <div class="mb-4 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 text-sm">
+                {{ session('warning') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-4 rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
+                <ul class="list-disc ml-5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('login.process') }}" class="space-y-5">
+            @csrf
 
             <div>
-                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6 overflow-hidden">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Logo_undiksha.png"
-                         alt="Logo Undiksha"
-                         class="w-10 h-10 object-contain">
-                </div>
-
-                <h1 class="text-4xl font-extrabold leading-tight">
-                    Smart Classroom Booking System
-                </h1>
-
-                <p class="text-blue-100 mt-5 text-lg leading-relaxed">
-                    Sistem pemesanan ruang kelas berbasis web untuk mahasiswa, dosen, dan organisasi kampus secara transparan dan real-time.
-                </p>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Email
+                </label>
+                <input type="email"
+                       name="email"
+                       value="{{ old('email') }}"
+                       placeholder="Masukkan email"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       required>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mt-10">
-                <div class="bg-white/10 rounded-2xl p-4 backdrop-blur">
-                    <p class="text-3xl font-extrabold">24</p>
-                    <p class="text-sm text-blue-100">Ruang tersedia</p>
-                </div>
-
-                <div class="bg-white/10 rounded-2xl p-4 backdrop-blur">
-                    <p class="text-3xl font-extrabold">Real-time</p>
-                    <p class="text-sm text-blue-100">Cek jadwal ruang</p>
-                </div>
-
-                <div class="bg-white/10 rounded-2xl p-4 backdrop-blur">
-                    <p class="text-3xl font-extrabold">Role</p>
-                    <p class="text-sm text-blue-100">Admin, dosen, mahasiswa</p>
-                </div>
-
-                <div class="bg-white/10 rounded-2xl p-4 backdrop-blur">
-                    <p class="text-3xl font-extrabold">Point</p>
-                    <p class="text-sm text-blue-100">Reputation system</p>
-                </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Password
+                </label>
+                <input type="password"
+                       name="password"
+                       placeholder="Masukkan password"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       required>
             </div>
 
-            <div class="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-white/10"></div>
-            <div class="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white/10"></div>
-        </div>
+            <button type="submit"
+                    class="w-full px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold">
+                Login
+            </button>
+        </form>
 
-        {{-- RIGHT LOGIN FORM --}}
-        <div class="p-8 md:p-12">
-
-            <div class="mb-8">
-                <h2 class="text-3xl font-extrabold text-slate-900 dark:text-text-primary">
-                    Masuk ke Sistem
-                </h2>
-                <p class="text-slate-500 dark:text-text-secondary mt-2">
-                    Gunakan email dan password terdaftar. Role akan terbaca otomatis setelah login.
-                </p>
-            </div>
-
-            @if ($errors->any())
-                <div class="mb-4 p-3 rounded-xl bg-red-50 dark:bg-danger-bg border border-red-200 dark:border-red-800 text-red-700 dark:text-danger-text text-sm font-medium">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
-
-            <form action="{{ route('login.process') }}" method="POST" id="loginForm">
-                @csrf
-
-                <div class="space-y-5">
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-text-secondary mb-2">
-                            Email
-                        </label>
-                        <input type="email"
-                               name="email"
-                               id="email"
-                               class="w-full rounded-xl login-input bg-white dark:bg-bg-input border border-slate-200 dark:border-border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                               placeholder="contoh: user@kampus.ac.id"
-                               required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-text-secondary mb-2">
-                            Password
-                        </label>
-                        <div class="relative">
-                            <input type="password"
-                                   name="password"
-                                   id="password"
-                                   class="w-full rounded-xl pr-12 login-input bg-white dark:bg-bg-input border border-slate-200 dark:border-border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
-                                   placeholder="Masukkan password"
-                                   required>
-
-                            <button type="button"
-                                    id="togglePassword"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-text-muted text-sm hover:text-slate-700 dark:hover:text-text-secondary transition">
-                                Lihat
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <label class="flex items-center gap-2 text-slate-600 dark:text-text-secondary">
-                            <input type="checkbox" name="remember" class="rounded border-slate-300 dark:border-border">
-                            Ingat saya
-                        </label>
-
-                        <a href="#" class="text-blue-600 dark:text-brand font-semibold hover:underline">
-                            Lupa password?
-                        </a>
-                    </div>
-
-                    <button type="submit"
-                            class="w-full bg-blue-500 hover:bg-slate-800 dark:bg-brand dark:hover:bg-brand-dark text-white py-3 rounded-xl font-bold transition-all duration-200 hover:shadow-lg active:scale-95">
-                        Login
-                    </button>
-
-                </div>
-            </form>
-
-            <div class="my-8 flex items-center gap-4">
-                <div class="h-px bg-slate-200 dark:bg-border flex-1"></div>
-                <span class="text-xs text-slate-400 dark:text-text-muted">Demo Role</span>
-                <div class="h-px bg-slate-200 dark:bg-border flex-1"></div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold transition-all duration-150"
-                        data-email="superadmin@kampus.ac.id">
-                    SuperAdmin
-                </button>
-
-                <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold transition-all duration-150"
-                        data-email="admin@kampus.ac.id">
-                    Admin (Validator)
-                </button>
-
-                <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold transition-all duration-150"
-                        data-email="dosen@kampus.ac.id">
-                    Dosen
-                </button>
-
-                <button class="demo-login px-4 py-3 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 font-semibold transition-all duration-150"
-                        data-email="syaefuldarmawan02@gmail.com">
-                    Mahasiswa
-                </button>
-            </div>
-
-            <p class="text-center text-sm text-slate-500 dark:text-text-muted mt-8">
-                Belum punya akun?
-                <a href="{{ route('register') }}" class="text-blue-600 dark:text-brand font-semibold hover:underline">
-                    Daftar sekarang
-                </a>
-            </p>
-
-        </div>
-
+        <p class="text-center text-sm text-slate-500 mt-6">
+            Belum punya akun?
+            <a href="{{ route('register') }}" class="text-blue-600 font-bold hover:underline">
+                Daftar sekarang
+            </a>
+        </p>
     </div>
-
-</div>
-
-<script>
-    $(document).ready(function() {
-        // Update dark mode icon on load
-        window.updateDarkModeIcon();
-
-        // Dark mode toggle
-        $('#darkModeToggle').on('click', function() {
-            window.toggleDarkMode();
-        });
-
-        // Toggle password visibility
-        $('#togglePassword').on('click', function() {
-            let input = $('#password');
-
-            if (input.attr('type') === 'password') {
-                input.attr('type', 'text');
-                $(this).text('Sembunyi');
-            } else {
-                input.attr('type', 'password');
-                $(this).text('Lihat');
-            }
-        });
-
-        // Demo login buttons
-        $('.demo-login').on('click', function() {
-            let email = $(this).data('email');
-            $('#email').val(email);
-            $('#password').val('password');
-        });
-    });
-</script>
 
 </body>
 </html>

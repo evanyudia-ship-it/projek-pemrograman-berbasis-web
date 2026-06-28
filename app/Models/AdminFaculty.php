@@ -16,11 +16,17 @@ class AdminFaculty extends Model
         'status',
     ];
 
+    /**
+     * Data admin fakultas dimiliki oleh 1 user.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Data admin fakultas dimiliki oleh 1 fakultas.
+     */
     public function faculty()
     {
         return $this->belongsTo(Faculty::class);
@@ -29,5 +35,10 @@ class AdminFaculty extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === 'inactive';
     }
 }

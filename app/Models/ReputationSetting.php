@@ -26,6 +26,9 @@ class ReputationSetting extends Model
         ];
     }
 
+    /**
+     * 1 aturan reputasi bisa dipakai oleh banyak log reputasi.
+     */
     public function reputationLogs()
     {
         return $this->hasMany(ReputationLog::class);

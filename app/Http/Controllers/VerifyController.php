@@ -2,94 +2,137 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VerifyController extends Controller
 {
     public function show()
     {
-        // Sudah verified → tidak perlu ke sini
         if (session('is_verified')) {
-            return redirect()->route('user.dashboard');
+            $role = session('user_role');
+
+            return match ($role) {
+                'superadmin' => redirect()->route('dashboard'),
+                'admin' => redirect()->route('admin.dashboard'),
+                default => redirect()->route('user.dashboard'),
+            };
         }
-    
-        // Ada reg_email → tampilkan halaman OTP
-        if (session('reg_email')) {
-            // Flash ulang OTP supaya banner dev tetap muncul
-            session()->flash('otp_demo', session('reg_otp'));
-            
-            return view('auth.verify');
+
+        if (!session('reg_email')) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Silakan login atau daftar terlebih dahulu.']);
         }
-    
-        // Tidak ada reg_email sama sekali
-        return redirect()->route('register')->withErrors([
-            'email' => 'Silakan daftar terlebih dahulu.',
-        ]);
+
+        session()->flash('otp_demo', session('reg_otp'));
+
+        return view('auth.verify');
     }
 
     public function process(Request $request)
     {
-        $request->validate([
-            'otp' => 'required|digits:6',
-        ], [
-            'otp.required' => 'Kode OTP wajib diisi.',
-            'otp.digits'   => 'Kode OTP harus 6 digit angka.',
-        ]);
+        $validated = $request->validate(
+            [
+                'otp' => ['required', 'digits:6'],
+            ],
+            [
+                'otp.required' => 'Kode OTP wajib diisi.',
+                'otp.digits' => 'Kode OTP harus 6 digit angka.',
+            ]
+        );
 
-        $inputOtp = $request->otp;
         $savedOtp = session('reg_otp');
-        $otpAt    = session('reg_otp_at');
+        $otpAt = session('reg_otp_at');
+
+        if (!$savedOtp || !$otpAt) {
+            return redirect()
+                ->route('verify.show')
+                ->withErrors(['otp' => 'Kode OTP tidak ditemukan. Silakan kirim ulang kode OTP.']);
+        }
 
         if (now()->timestamp - $otpAt > 600) {
-            return back()->withErrors(['otp' => 'Kode OTP sudah kadaluarsa. Silakan kirim ulang.']);
-        }
-
-        if ($inputOtp !== $savedOtp) {
-            return back()->withErrors(['otp' => 'Kode OTP salah. Silakan coba lagi.']);
-        }
-
-        // Kalau user belum login (flow register baru), set semua session
-        if (!session('logged_in')) {
-            session([
-                'user_id'    => time(),
-                'user_name'  => session('reg_name'),
-                'user_email' => session('reg_email'),
-                'user_role'  => session('reg_role'),
-                'logged_in'  => true,
+            return back()->withErrors([
+                'otp' => 'Kode OTP sudah kadaluarsa. Silakan kirim ulang.',
             ]);
         }
 
-        // Set verified (berlaku untuk user baru maupun user lama dari profile)
-        session(['is_verified' => true]);
+        if ($validated['otp'] !== $savedOtp) {
+            return back()->withErrors([
+                'otp' => 'Kode OTP salah. Silakan coba lagi.',
+            ]);
+        }
 
-        // Bersihkan semua reg_* session
-        session()->forget([
-            'reg_name', 'reg_email', 'reg_role',
-            'reg_nim_nip', 'reg_password',
-            'reg_otp', 'reg_otp_at', 'reg_verified',
+        $email = session('reg_email');
+
+        $user = Auth::user();
+
+        if (!$user) {
+            $user = User::where('email', $email)->first();
+        }
+
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'User tidak ditemukan. Silakan login ulang.']);
+        }
+
+        $user->update([
+            'email_verified_at' => now(),
+            'status' => 'active',
         ]);
 
-        return redirect()->route('user.dashboard')
-            ->with('success', 'Akun berhasil diverifikasi! Selamat datang 🎉');
+        Auth::login($user);
+
+        session([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_email' => $user->email,
+            'user_role' => $user->role,
+            'logged_in' => true,
+            'is_verified' => true,
+        ]);
+
+        session()->forget([
+            'reg_email',
+            'reg_otp',
+            'reg_otp_at',
+        ]);
+
+        return match ($user->role) {
+            'superadmin' => redirect()
+                ->route('dashboard')
+                ->with('success', 'Akun berhasil diverifikasi.'),
+            'admin' => redirect()
+                ->route('admin.dashboard')
+                ->with('success', 'Akun berhasil diverifikasi.'),
+            default => redirect()
+                ->route('user.dashboard')
+                ->with('success', 'Akun berhasil diverifikasi.'),
+        };
     }
 
     public function resend()
     {
         if (!session('reg_email')) {
-            return redirect()->route('register');
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Silakan login terlebih dahulu.']);
         }
 
-        // Generate OTP baru
         $otp = strval(rand(100000, 999999));
 
         session([
-            'reg_otp'    => $otp,
+            'reg_otp' => $otp,
             'reg_otp_at' => now()->timestamp,
         ]);
 
         session()->flash('otp_demo', $otp);
         session()->flash('resent', true);
 
-        return redirect()->route('verify.show');
+        return redirect()
+            ->route('verify.show')
+            ->with('success', 'Kode OTP baru berhasil dikirim.');
     }
 }
