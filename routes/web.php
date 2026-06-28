@@ -202,7 +202,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware(['role:admin,superadmin'])
+    Route::middleware(['role:admin,superadmin,organisasi'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {

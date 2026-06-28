@@ -5,68 +5,39 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
-use App\Models\Notifikasi;
-use App\Models\Faculty;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    /**
-     * Super Admin Dashboard
-     */
     public function index()
     {
-        // Cek role
-        if (session('user_role') !== 'superadmin') {
+        if ($this->currentRole() !== 'superadmin') {
             return $this->redirectByRole();
         }
 
-        // ===== STATISTIK =====
         $total_ruang = Room::count();
-        $ruang_tersedia = Room::available()->count();
 
-        // Booking aktif hari ini
+        $ruang_tersedia = method_exists(Room::class, 'scopeAvailable')
+            ? Room::available()->count()
+            : Room::whereIn('status', ['tersedia', 'available', 'aktif'])->count();
+
         $booking_aktif = Booking::whereDate('tanggal', today())
             ->where('status', Booking::STATUS_APPROVED)
             ->count();
 
-        // Menunggu approval
-        $menunggu_approval = Booking::pending()->count();
+        $menunggu_approval = method_exists(Booking::class, 'scopePending')
+            ? Booking::pending()->count()
+            : Booking::where('status', Booking::STATUS_PENDING)->count();
 
-        // Reputation point user (ambil dari session user)
-        $userId = session('user_id');
-        $reputation_point = User::find($userId)?->reputation_points ?? 100;
+        $reputation_point = $this->currentUser()?->reputation_points ?? 100;
 
-        // Total users
         $total_users = User::count();
         $total_dosen = User::where('role', 'dosen')->count();
         $total_mahasiswa = User::where('role', 'mahasiswa')->count();
+        $total_organisasi = User::where('role', 'organisasi')->count();
 
-        // ===== JADWAL HARI INI =====
-        $jadwal_hari_ini = Booking::with(['room', 'user'])
-            ->whereDate('tanggal', today())
-            ->whereIn('status', [Booking::STATUS_APPROVED, Booking::STATUS_PENDING])
-            ->orderBy('jam_mulai')
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'id' => $booking->room_id,
-                    'ruangan' => $booking->room->nama ?? 'Ruangan',
-                    'kode' => $booking->room->kode ?? '-',
-                    'waktu' => Carbon::parse($booking->jam_mulai)->format('H:i') . ' - ' .
-                              Carbon::parse($booking->jam_selesai)->format('H:i'),
-                    'durasi' => $booking->durasi_menit . ' menit',
-                    'keperluan' => $booking->kegiatan,
-                    'status' => $booking->status_label,
-                    'foto' => $booking->room->foto
-                        ? asset('storage/' . $booking->room->foto)
-                        : asset('images/default-room.jpg'),
-                ];
-            });
-
-        // ===== NOTIFIKASI =====
-        $notifikasi = $this->getNotifications('superadmin');
+        $jadwal_hari_ini = $this->getJadwalHariIni();
 
         return view('admin.SuperAdminDashboard', compact(
             'ruang_tersedia',
@@ -77,22 +48,20 @@ class DashboardController extends Controller
             'total_users',
             'total_dosen',
             'total_mahasiswa',
-            'jadwal_hari_ini',
-            'notifikasi'
+            'total_organisasi',
+            'jadwal_hari_ini'
         ));
     }
 
-    /**
-     * Admin Dashboard
-     */
     public function adminDashboard()
     {
-        if (session('user_role') !== 'admin') {
+        if (!in_array($this->currentRole(), ['admin', 'superadmin'])) {
             return $this->redirectByRole();
         }
 
-        // ===== STATISTIK =====
-        $menunggu_approval = Booking::pending()->count();
+        $menunggu_approval = method_exists(Booking::class, 'scopePending')
+            ? Booking::pending()->count()
+            : Booking::where('status', Booking::STATUS_PENDING)->count();
 
         $disetujui_hari_ini = Booking::whereDate('disetujui_at', today())
             ->where('status', Booking::STATUS_APPROVED)
@@ -106,103 +75,56 @@ class DashboardController extends Controller
             ->whereDate('tanggal', '>=', today())
             ->count();
 
-        // ===== JADWAL HARI INI =====
-        $jadwal_hari_ini = Booking::with(['room', 'user'])
-            ->whereDate('tanggal', today())
-            ->whereIn('status', [Booking::STATUS_APPROVED, Booking::STATUS_PENDING])
-            ->orderBy('jam_mulai')
-            ->get()
-            ->map(function ($booking) {
-                return [
-                    'id' => $booking->room_id,
-                    'ruangan' => $booking->room->nama ?? 'Ruangan',
-                    'kode' => $booking->room->kode ?? '-',
-                    'waktu' => Carbon::parse($booking->jam_mulai)->format('H:i') . ' - ' .
-                              Carbon::parse($booking->jam_selesai)->format('H:i'),
-                    'durasi' => $booking->durasi_menit . ' menit',
-                    'keperluan' => $booking->kegiatan,
-                    'status' => $booking->status_label,
-                    'foto' => $booking->room->foto
-                        ? asset('storage/' . $booking->room->foto)
-                        : asset('images/default-room.jpg'),
-                ];
-            });
-
-        // ===== NOTIFIKASI =====
-        $notifikasi = $this->getNotifications('admin');
+        $jadwal_hari_ini = $this->getJadwalHariIni();
 
         return view('admin.AdminDashboard', compact(
             'menunggu_approval',
             'disetujui_hari_ini',
             'ditolak_hari_ini',
             'total_booking_aktif',
-            'jadwal_hari_ini',
-            'notifikasi'
+            'jadwal_hari_ini'
         ));
     }
 
-    /**
-     * User Dashboard (Mahasiswa/Dosen)
-     */
     public function userDashboard()
     {
-        $role = session('user_role');
-        if (!in_array($role, ['mahasiswa', 'dosen'])) {
+        $role = $this->currentRole();
+
+        if (!in_array($role, ['mahasiswa', 'dosen', 'organisasi'])) {
             return $this->redirectByRole();
         }
 
-        $userId = session('user_id');
+        $userId = $this->currentUser()?->id ?? session('user_id');
 
-        // ===== STATISTIK =====
-        // Booking aktif (approved)
         $booking_aktif = Booking::where('user_id', $userId)
             ->where('status', Booking::STATUS_APPROVED)
             ->whereDate('tanggal', '>=', today())
             ->count();
 
-        // Booking selesai (completed)
         $booking_selesai = Booking::where('user_id', $userId)
             ->where('status', Booking::STATUS_COMPLETED)
             ->count();
 
-        // Booking pending
         $booking_pending = Booking::where('user_id', $userId)
             ->where('status', Booking::STATUS_PENDING)
             ->count();
 
-        // Booking no_show
         $booking_no_show = Booking::where('user_id', $userId)
             ->where('status', Booking::STATUS_NO_SHOW)
             ->count();
 
-        // Reputation point
-        $reputation_point = User::find($userId)?->reputation_points ?? 100;
+        $reputation_point = $this->currentUser()?->reputation_points ?? 100;
 
-        // ===== JADWAL HARI INI =====
         $jadwal_hari_ini = Booking::with(['room'])
             ->where('user_id', $userId)
             ->whereDate('tanggal', today())
-            ->whereIn('status', [Booking::STATUS_APPROVED, Booking::STATUS_PENDING])
+            ->whereIn('status', [
+                Booking::STATUS_APPROVED,
+                Booking::STATUS_PENDING,
+            ])
             ->orderBy('jam_mulai')
             ->get()
-            ->map(function ($booking) {
-                return [
-                    'id' => $booking->room_id,
-                    'ruangan' => $booking->room->nama ?? 'Ruangan',
-                    'kode' => $booking->room->kode ?? '-',
-                    'waktu' => Carbon::parse($booking->jam_mulai)->format('H:i') . ' - ' .
-                              Carbon::parse($booking->jam_selesai)->format('H:i'),
-                    'durasi' => $booking->durasi_menit . ' menit',
-                    'keperluan' => $booking->kegiatan,
-                    'status' => $booking->status_label,
-                    'foto' => $booking->room->foto
-                        ? asset('storage/' . $booking->room->foto)
-                        : asset('images/default-room.jpg'),
-                ];
-            });
-
-        // ===== NOTIFIKASI =====
-        $notifikasi = $this->getNotifications($role);
+            ->map(fn ($booking) => $this->formatBookingSchedule($booking));
 
         return view('user.dashboard', compact(
             'booking_aktif',
@@ -210,122 +132,77 @@ class DashboardController extends Controller
             'booking_pending',
             'booking_no_show',
             'reputation_point',
-            'jadwal_hari_ini',
-            'notifikasi'
+            'jadwal_hari_ini'
         ));
     }
 
-    /**
-     * Redirect by role.
-     */
-    private function redirectByRole()
+    public function redirectByRole()
     {
-        return match(session('user_role')) {
+        return match ($this->currentRole()) {
             'superadmin' => redirect()->route('dashboard'),
-            'admin'      => redirect()->route('admin.dashboard'),
-            default      => redirect()->route('user.dashboard'),
+            'admin' => redirect()->route('admin.dashboard'),
+            'mahasiswa', 'dosen', 'organisasi' => redirect()->route('user.dashboard'),
+            default => redirect()->route('login'),
         };
     }
 
-    /**
-     * Get notifications from database.
-     */
-    private function getNotifications(string $role): array
+    private function getJadwalHariIni()
     {
-        $userId = session('user_id');
+        return Booking::with(['room', 'user'])
+            ->whereDate('tanggal', today())
+            ->whereIn('status', [
+                Booking::STATUS_APPROVED,
+                Booking::STATUS_PENDING,
+            ])
+            ->orderBy('jam_mulai')
+            ->get()
+            ->map(fn ($booking) => $this->formatBookingSchedule($booking));
+    }
 
-        // Ambil notifikasi dari database
-        $notifications = Notifikasi::where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+    private function formatBookingSchedule($booking): array
+    {
+        return [
+            'id' => $booking->room_id,
+            'ruangan' => $booking->room->nama ?? $booking->room->nama_ruangan ?? 'Ruangan',
+            'kode' => $booking->room->kode ?? '-',
+            'waktu' => $this->formatTime($booking->jam_mulai) . ' - ' . $this->formatTime($booking->jam_selesai),
+            'durasi' => ($booking->durasi_menit ?? 0) . ' menit',
+            'keperluan' => $booking->kegiatan ?? '-',
+            'status' => $booking->status_label ?? $booking->status,
+            'foto' => !empty($booking->room?->foto)
+                ? asset('storage/' . $booking->room->foto)
+                : asset('images/default-room.jpg'),
+        ];
+    }
 
-        if ($notifications->isNotEmpty()) {
-            return $notifications->map(function ($notif) {
-                return [
-                    'tipe' => $notif->tipe,
-                    'pesan' => $notif->pesan,
-                    'waktu' => Carbon::parse($notif->created_at)->diffForHumans(),
-                    'icon' => $this->getNotificationIcon($notif->tipe),
-                    'read' => $notif->status === 'sudah_dibaca',
-                ];
-            })->toArray();
+    private function formatTime($time): string
+    {
+        if (!$time) {
+            return '-';
         }
 
-        // Fallback: data dummy jika belum ada notifikasi
-        return $this->dummyNotifikasi($role);
+        return Carbon::parse($time)->format('H:i');
     }
 
-    /**
-     * Get notification icon by type.
-     */
-    private function getNotificationIcon(string $type): string
+    private function currentUser(): ?User
     {
-        return match($type) {
-            'success' => '✅',
-            'warning' => '⚠️',
-            'approval' => '⏳',
-            'danger' => '❌',
-            default => '🔔',
-        };
+        if (Auth::check()) {
+            return Auth::user();
+        }
+
+        if (session()->has('user_id')) {
+            return User::find(session('user_id'));
+        }
+
+        return null;
     }
 
-    /**
-     * Dummy notifications for fallback.
-     */
-    private function dummyNotifikasi(string $role): array
+    private function currentRole(): ?string
     {
-        $dummy = [
-            'superadmin' => [
-                [
-                    'tipe' => 'info',
-                    'pesan' => 'Selamat datang di dashboard Super Admin!',
-                    'waktu' => 'Baru saja',
-                    'icon' => '👋',
-                    'read' => false,
-                ],
-                [
-                    'tipe' => 'warning',
-                    'pesan' => 'Ada ' . Booking::pending()->count() . ' booking menunggu approval',
-                    'waktu' => '5 menit lalu',
-                    'icon' => '⏳',
-                    'read' => false,
-                ],
-            ],
-            'admin' => [
-                [
-                    'tipe' => 'info',
-                    'pesan' => 'Selamat datang di dashboard Admin!',
-                    'waktu' => 'Baru saja',
-                    'icon' => '👋',
-                    'read' => false,
-                ],
-                [
-                    'tipe' => 'warning',
-                    'pesan' => 'Ada ' . Booking::pending()->count() . ' booking menunggu approval',
-                    'waktu' => '5 menit lalu',
-                    'icon' => '⏳',
-                    'read' => false,
-                ],
-            ],
-            'default' => [
-                [
-                    'tipe' => 'info',
-                    'pesan' => 'Selamat datang di dashboard!',
-                    'waktu' => 'Baru saja',
-                    'icon' => '👋',
-                    'read' => false,
-                ],
-                [
-                    'tipe' => 'success',
-                    'pesan' => 'Anda memiliki ' . Booking::where('user_id', session('user_id'))->where('status', Booking::STATUS_APPROVED)->count() . ' booking aktif',
-                    'waktu' => '10 menit lalu',
-                    'icon' => '✅',
-                    'read' => false,
-                ],
-            ],
-        ];
+        if (Auth::check()) {
+            return Auth::user()->role;
+        }
 
-        return $dummy[$role] ?? $dummy['default'];
+        return session('user_role');
     }
 }

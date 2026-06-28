@@ -29,10 +29,14 @@ class ProfileController extends Controller
         $user = $this->currentUser();
 
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()
+                ->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
+        $faculties = Faculty::where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         return view('profile.index', compact('user', 'faculties'));
     }
@@ -42,36 +46,40 @@ class ProfileController extends Controller
         $user = $this->currentUser();
 
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()
+                ->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'email' => [
-                'required',
-                'email',
-                'max:150',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
+
             'nim' => [
                 'nullable',
                 'string',
                 'max:30',
                 Rule::unique('users', 'nim')->ignore($user->id),
             ],
+
             'nidn' => [
                 'nullable',
                 'string',
                 'max:30',
                 Rule::unique('users', 'nidn')->ignore($user->id),
             ],
+
             'phone' => ['nullable', 'string', 'max:30'],
+
             'faculty_id' => ['nullable', 'exists:faculties,id'],
         ]);
 
+        /*
+         * Email sengaja tidak di-update.
+         * Email/Gmail tidak boleh diubah setelah akun dibuat.
+         */
         $user->update($validated);
 
-        return back()->with('success', 'Profil berhasil diperbarui.');
+        return back()->with('success', 'Profil berhasil diperbarui. Email akun tidak dapat diubah.');
     }
 
     public function updatePassword(Request $request)
@@ -79,7 +87,9 @@ class ProfileController extends Controller
         $user = $this->currentUser();
 
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()
+                ->route('login')
+                ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $validated = $request->validate([

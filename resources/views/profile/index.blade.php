@@ -30,7 +30,6 @@
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-    {{-- Kartu Ringkasan Profil --}}
     <div class="xl:col-span-1">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center">
             <div class="w-24 h-24 rounded-full bg-slate-900 text-white flex items-center justify-center text-4xl font-bold mx-auto mb-4">
@@ -51,7 +50,7 @@
                 </span>
 
                 <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                    {{ ucfirst($user->status) }}
+                    {{ ucfirst($user->status ?? 'active') }}
                 </span>
             </div>
 
@@ -88,17 +87,15 @@
         </div>
     </div>
 
-    {{-- Form Edit Profil dan Ganti Password --}}
     <div class="xl:col-span-2 space-y-6">
 
-        {{-- Edit Profil --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h3 class="text-lg font-bold text-slate-800 mb-1">
                 Edit Profil
             </h3>
 
             <p class="text-sm text-slate-500 mb-5">
-                Perbarui informasi dasar akun Anda.
+                Email akun tidak dapat diubah setelah akun dibuat.
             </p>
 
             <form method="POST" action="{{ route('profile.update') }}" class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -118,13 +115,15 @@
 
                 <div>
                     <label class="block text-sm font-semibold mb-2">
-                        Email
+                        Email / Gmail
                     </label>
                     <input type="email"
-                           name="email"
-                           value="{{ old('email', $user->email) }}"
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           required>
+                           value="{{ $user->email }}"
+                           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                           readonly>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Email tidak bisa diubah.
+                    </p>
                 </div>
 
                 <div>
@@ -183,7 +182,6 @@
             </form>
         </div>
 
-        {{-- Ganti Password --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <h3 class="text-lg font-bold text-slate-800 mb-1">
                 Ganti Password
