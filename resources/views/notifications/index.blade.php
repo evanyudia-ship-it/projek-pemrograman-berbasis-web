@@ -115,6 +115,17 @@
     <div class="fade-up delay-2 space-y-3">
 
         @forelse($notifications as $notif)
+        @php
+            $colorMap = [
+                'success' => 'border-emerald-200 bg-emerald-50',
+                'warning' => 'border-amber-200 bg-amber-50',
+                'approval' => 'border-blue-200 bg-blue-50',
+                'danger' => 'border-red-200 bg-red-50',
+                'info' => 'border-slate-200 bg-slate-50',
+            ];
+            $borderColor = $colorMap[$notif['tipe']] ?? 'border-slate-200 bg-slate-50';
+        @endphp
+
         <div class="notification-item bg-white rounded-3xl border {{ $notif['is_read'] ? 'border-slate-100' : 'border-slate-300 shadow-md' }}
                     p-5 hover:shadow-lg transition-all group
                     {{ $notif['is_read'] ? 'opacity-80' : '' }}"
@@ -122,7 +133,7 @@
 
             <div class="flex items-start gap-4">
                 {{-- Icon --}}
-                <div class="w-12 h-12 rounded-2xl {{ $this->getColorClass($notif['tipe']) }} flex items-center justify-center text-2xl shrink-0">
+                <div class="w-12 h-12 rounded-2xl {{ $borderColor }} flex items-center justify-center text-2xl shrink-0">
                     {{ $notif['icon'] }}
                 </div>
 
@@ -150,7 +161,7 @@
                                 <span>🕐</span> {{ $notif['waktu'] }}
                                 @if($notif['entitas_terkait'] && $notif['entitas_id'])
                                 <span class="mx-1">·</span>
-                                <a href="{{ $this->getEntityUrl($notif['entitas_terkait'], $notif['entitas_id']) }}"
+                                <a href="{{ route('bookings.show', $notif['entitas_id']) }}"
                                    class="text-blue-600 hover:underline">
                                     Lihat detail →
                                 </a>
@@ -252,7 +263,7 @@ $(document).ready(function () {
                     if ($badge.length) {
                         $badge.text(response.unread_count > 99 ? '99+' : response.unread_count);
                     } else {
-                        $('.notification-button').append(
+                        $('#notificationToggle').append(
                             `<span class="notification-badge absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">${response.unread_count > 99 ? '99+' : response.unread_count}</span>`
                         );
                     }

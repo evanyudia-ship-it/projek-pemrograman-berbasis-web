@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faculty;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +29,16 @@ class FacultyController extends Controller
 
         $faculties = $query->paginate(10)->withQueryString();
 
-        return view('admin.faculties.index', compact('faculties'));
+        // ===== KIRIMKAN SEMUA VARIABEL YANG DIBUTUHKAN =====
+        $admins = User::whereIn('role', ['admin', 'superadmin'])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        // Untuk admin-faculties (jika view membutuhkan)
+        $adminFaculties = collect(); // empty collection
+
+        return view('admin.faculties.index', compact('faculties', 'admins', 'adminFaculties'));
     }
 
     public function create()

@@ -166,10 +166,6 @@
                 </span>
                 @endif
             </a>
-            <a href="{{ route('reputation.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('reputation*') ? 'active' : '' }}">
-                <span class="nav-icon">⭐</span>
-                <span class="nav-label">Reputation Point</span>
-            </a>
         @endif
 
         {{-- NAVIGATION --}}
@@ -214,14 +210,6 @@
                 </a>
             @endif
 
-            @if(in_array($role, ['mahasiswa', 'dosen', 'superadmin']))
-                <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Lainnya</p>
-                <a href="{{ route('organization.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('organization*') ? 'active' : '' }}">
-                    <span class="nav-icon">🏢</span>
-                    <span class="nav-label">Perwakilan Organisasi</span>
-                </a>
-            @endif
-
             <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Akun</p>
             <a href="{{ route('profile.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('profile*') ? 'active' : '' }}">
                 <span class="nav-icon">👤</span>
@@ -230,6 +218,10 @@
             <a href="{{ route('help.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('help*') ? 'active' : '' }}">
                 <span class="nav-icon">❓</span>
                 <span class="nav-label">Bantuan</span>
+            </a>
+                        <a href="{{ route('reputation.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('reputation*') ? 'active' : '' }}">
+                <span class="nav-icon">⭐</span>
+                <span class="nav-label">Reputation Point</span>
             </a>
 
             @if(in_array($role, ['admin', 'superadmin']))
@@ -342,6 +334,7 @@
                     <span class="toggle-icon text-base" id="themeIcon">🌙</span>
                 </button>
 
+                {{-- ===== NOTIFIKASI DROPDOWN ===== --}}
                 @include('layouts.notifikasi')
 
                 <div class="hidden md:flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-border">
@@ -577,27 +570,6 @@ $(document).ready(function () {
     $(window).on('load pageshow', function() {
         hideLoadingOverlay();
     });
-});
-</script>
-    <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const notificationButton = document.getElementById('notificationButton');
-    const notificationDropdown = document.getElementById('notificationDropdown');
-
-    if (notificationButton && notificationDropdown) {
-        notificationButton.addEventListener('click', function (event) {
-            event.stopPropagation();
-            notificationDropdown.classList.toggle('hidden');
-        });
-
-        notificationDropdown.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
-
-        document.addEventListener('click', function () {
-            notificationDropdown.classList.add('hidden');
-        });
-    }
 });
 </script>
 

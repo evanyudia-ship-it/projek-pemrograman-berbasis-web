@@ -11,6 +11,8 @@ use Carbon\Carbon;
 
 class Room extends Model
 {
+    protected $table = 'rooms';
+
     protected $fillable = [
         'kode',
         'nama',
@@ -52,7 +54,7 @@ class Room extends Model
         return $this->belongsToMany(
             Facility::class,
             'room_facilities'
-        )->withPivot('status')->withTimestamps();
+        )->withPivot('status');
     }
 
     public function roomFacilities(): HasMany
@@ -158,13 +160,12 @@ class Room extends Model
     /**
      * Check if room is available at specific date and time.
      */
-    public function isAvailableAt(string $date, string $startTime, string $endTime): bool
+    public function isAvailableAt(string $date, string $startTime, string $endTime, ?int $excludeBookingId = null): bool
     {
         if ($this->isMaintenance()) {
             return false;
         }
 
-        // Check if within operating hours
         $open = Carbon::parse($this->jam_buka->format('H:i:s'));
         $close = Carbon::parse($this->jam_tutup->format('H:i:s'));
         $start = Carbon::parse($startTime);
@@ -174,26 +175,24 @@ class Room extends Model
             return false;
         }
 
-        // Check for overlapping bookings
-        $overlapping = $this->bookings()
+        $query = $this->bookings()
             ->whereDate('tanggal', $date)
             ->where('status', '!=', Booking::STATUS_CANCELLED)
             ->where('status', '!=', Booking::STATUS_REJECTED)
-            ->where('status', '!=', Booking::STATUS_COMPLETED)
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where(function ($q) use ($startTime, $endTime) {
-                    $q->where('jam_mulai', '<', $endTime)
-                      ->where('jam_selesai', '>', $startTime);
-                });
-            })
-            ->exists();
+            ->where('status', '!=', Booking::STATUS_COMPLETED);
+
+        if ($excludeBookingId) {
+            $query->where('id', '!=', $excludeBookingId);
+        }
+
+        $overlapping = $query->where(function ($q) use ($startTime, $endTime) {
+            $q->where('jam_mulai', '<', $endTime)
+              ->where('jam_selesai', '>', $startTime);
+        })->exists();
 
         return !$overlapping;
     }
 
-    /**
-     * Get available facilities count.
-     */
     public function getAvailableFacilitiesCount(): int
     {
         return $this->roomFacilities()
@@ -201,9 +200,6 @@ class Room extends Model
             ->count();
     }
 
-    /**
-     * Get facility status for a specific facility.
-     */
     public function getFacilityStatus(int $facilityId): ?string
     {
         $pivot = $this->roomFacilities()
@@ -213,9 +209,6 @@ class Room extends Model
         return $pivot ? $pivot->status : null;
     }
 
-    /**
-     * Get available facilities list.
-     */
     public function getAvailableFacilities(): array
     {
         return $this->roomFacilities()
@@ -226,17 +219,11 @@ class Room extends Model
             ->toArray();
     }
 
-    /**
-     * Get all facility names.
-     */
     public function getFacilityNamesAttribute(): array
     {
         return $this->facilities->pluck('nama')->toArray();
     }
 
-    /**
-     * Get facilities with status.
-     */
     public function getFacilitiesWithStatus(): array
     {
         return $this->facilities->map(function ($facility) {

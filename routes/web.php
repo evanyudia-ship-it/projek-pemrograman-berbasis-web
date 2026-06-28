@@ -35,16 +35,13 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// ===== LOGIN ROUTES =====
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'process'])->name('login.process');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// ===== REGISTER ROUTES =====
 Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'process'])->name('register.process');
 
-// ===== VERIFY ROUTES =====
 Route::get('/verify', [VerifyController::class, 'show'])->name('verify.show');
 Route::post('/verify', [VerifyController::class, 'process'])->name('verify.process');
 Route::post('/verify/resend', [VerifyController::class, 'resend'])->name('verify.resend');
@@ -64,22 +61,18 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    // Super Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard')
         ->middleware('role:superadmin');
 
-    // Admin Dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])
         ->name('admin.dashboard')
         ->middleware('role:admin');
 
-    // User Dashboard (Mahasiswa/Dosen)
     Route::get('/user/dashboard', [DashboardController::class, 'userDashboard'])
         ->name('user.dashboard')
         ->middleware('role:mahasiswa,dosen');
 
-    // Fallback: redirect ke dashboard yang sesuai
     Route::get('/dashboard/redirect', [DashboardController::class, 'redirectByRole'])
         ->name('dashboard.redirect');
 
@@ -124,8 +117,6 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}', [BookingController::class, 'update'])->name('update');
         Route::post('/{id}/checkin', [BookingController::class, 'checkin'])->name('checkin');
         Route::post('/{id}/cancel', [BookingController::class, 'cancel'])->name('cancel');
-
-        // Cancellation via separate controller
         Route::get('/{id}/cancel-form', [BookingCancellationController::class, 'create'])->name('cancel.create');
         Route::post('/{id}/cancel-process', [BookingCancellationController::class, 'store'])->name('cancel.store');
     });
@@ -202,7 +193,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware(['role:admin,superadmin,organisasi'])
+    Route::middleware(['role:admin,superadmin'])
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {

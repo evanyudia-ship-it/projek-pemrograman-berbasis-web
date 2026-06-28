@@ -74,6 +74,22 @@
         @if($rooms->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($rooms as $room)
+            @php
+                // ===== PERBAIKAN: Ambil status dari pivot =====
+                $status = $room->pivot->status ?? 'tersedia';
+                $statusLabel = match($status) {
+                    'tersedia' => 'Tersedia',
+                    'rusak' => 'Rusak',
+                    'maintenance' => 'Maintenance',
+                    default => 'Unknown',
+                };
+                $statusColor = match($status) {
+                    'tersedia' => 'bg-emerald-100 text-emerald-700',
+                    'rusak' => 'bg-red-100 text-red-700',
+                    'maintenance' => 'bg-amber-100 text-amber-700',
+                    default => 'bg-slate-100 text-slate-500',
+                };
+            @endphp
             <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 shrink-0">
                     <img src="{{ $room->foto ? asset('storage/' . $room->foto) : asset('images/default-room.jpg') }}"
@@ -84,11 +100,8 @@
                     <p class="font-semibold text-slate-800 text-sm truncate">{{ $room->nama }}</p>
                     <p class="text-xs text-slate-400 font-mono">{{ $room->kode }}</p>
                 </div>
-                <span class="px-2 py-1 rounded-lg text-xs font-bold
-                    {{ $room->pivot->status == 'tersedia' ? 'bg-emerald-100 text-emerald-700' : '' }}
-                    {{ $room->pivot->status == 'rusak' ? 'bg-red-100 text-red-700' : '' }}
-                    {{ $room->pivot->status == 'maintenance' ? 'bg-amber-100 text-amber-700' : '' }}">
-                    {{ $room->pivot->getStatusLabelAttribute() }}
+                <span class="px-2 py-1 rounded-lg text-xs font-bold {{ $statusColor }}">
+                    {{ $statusLabel }}
                 </span>
             </div>
             @endforeach
@@ -110,14 +123,20 @@
     <div class="grid grid-cols-2 gap-4 fade-up delay-2">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 text-center">
             <p class="text-xs text-slate-400 mb-1">Status Tersedia</p>
+            @php
+                $tersediaCount = $rooms->filter(fn($r) => $r->pivot->status == 'tersedia')->count();
+            @endphp
             <p class="text-2xl font-bold text-emerald-600">
-                {{ $rooms->filter(fn($r) => $r->pivot->status == 'tersedia')->count() }}
+                {{ $tersediaCount }}
             </p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 text-center">
             <p class="text-xs text-slate-400 mb-1">Status Rusak / Maintenance</p>
+            @php
+                $rusakCount = $rooms->filter(fn($r) => $r->pivot->status != 'tersedia')->count();
+            @endphp
             <p class="text-2xl font-bold text-red-500">
-                {{ $rooms->filter(fn($r) => $r->pivot->status != 'tersedia')->count() }}
+                {{ $rusakCount }}
             </p>
         </div>
     </div>

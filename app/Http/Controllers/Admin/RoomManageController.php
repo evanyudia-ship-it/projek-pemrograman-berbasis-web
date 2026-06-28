@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Models\Faculty;
 use App\Models\Facility;
+use App\Models\RoomFacility;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -78,11 +80,13 @@ class RoomManageController extends Controller
 
         // Attach facilities
         if ($request->filled('facilities')) {
-            $facilities = [];
             foreach ($request->facilities as $facilityId) {
-                $facilities[$facilityId] = ['status' => 'tersedia'];
+                RoomFacility::create([
+                    'room_id' => $room->id,
+                    'facility_id' => $facilityId,
+                    'status' => 'tersedia',
+                ]);
             }
-            $room->facilities()->attach($facilities);
         }
 
         return redirect()->route('admin.rooms.index')
@@ -154,13 +158,16 @@ class RoomManageController extends Controller
 
         // Sync facilities
         if ($request->filled('facilities')) {
-            $facilities = [];
+            RoomFacility::where('room_id', $room->id)->delete();
             foreach ($request->facilities as $facilityId) {
-                $facilities[$facilityId] = ['status' => 'tersedia'];
+                RoomFacility::create([
+                    'room_id' => $room->id,
+                    'facility_id' => $facilityId,
+                    'status' => 'tersedia',
+                ]);
             }
-            $room->facilities()->sync($facilities);
         } else {
-            $room->facilities()->detach();
+            RoomFacility::where('room_id', $room->id)->delete();
         }
 
         return redirect()->route('admin.rooms.index')

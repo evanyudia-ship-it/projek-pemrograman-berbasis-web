@@ -178,7 +178,8 @@
 
                     {{-- Status --}}
                     <td class="px-6 py-4">
-                        <form action="{{ route('admin.rooms.toggleStatus', $room->id) }}" method="POST">
+                        {{-- PERBAIKAN: route('admin.rooms.toggleStatus') -> route('admin.rooms.toggle-status') --}}
+                        <form action="{{ route('admin.rooms.toggle-status', $room->id) }}" method="POST">
                             @csrf
                             <button type="submit"
                                     title="Klik untuk ubah status"

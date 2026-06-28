@@ -33,7 +33,7 @@ class AdminFacultyController extends Controller
             ->get();
 
         return view('admin.admin-faculties.index', compact(
-            'adminFaculties',
+            'adminFaculties',  // <-- INI YANG DIGUNAKAN DI VIEW
             'faculties',
             'admins'
         ));

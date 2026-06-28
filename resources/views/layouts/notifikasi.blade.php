@@ -23,6 +23,9 @@
                     'time' => $notif->created_at->diffForHumans(),
                     'type' => $notif->tipe,
                     'read' => $notif->status === 'sudah_dibaca',
+                    'id' => $notif->id,
+                    'entity' => $notif->entitas_terkait,
+                    'entity_id' => $notif->entitas_id,
                 ];
             })
             ->toArray();
@@ -34,11 +37,12 @@
 @endphp
 
 <div class="relative">
-    <a href="{{ route('notifications.index') }}"
-       id="notificationButton"
-       class="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition relative dark:bg-bg-muted dark:text-text-secondary dark:hover:bg-nav-hover-bg dark:hover:text-nav-hover-txt"
-       aria-label="Notifikasi"
-       title="Notifikasi">
+    {{-- ===== BUTTON NOTIFIKASI ===== --}}
+    <button type="button"
+            id="notificationToggle"
+            class="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition relative dark:bg-bg-muted dark:text-text-secondary dark:hover:bg-nav-hover-bg dark:hover:text-nav-hover-txt"
+            aria-label="Notifikasi"
+            title="Notifikasi">
         🔔
 
         @if($unreadCount > 0)
@@ -46,10 +50,11 @@
                 {{ $unreadCount > 99 ? '99+' : $unreadCount }}
             </span>
         @endif
-    </a>
+    </button>
 
+    {{-- ===== DROPDOWN NOTIFIKASI ===== --}}
     <div id="notificationDropdown"
-        class="hidden absolute right-0 mt-3 w-96 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden dark:bg-bg-surface dark:border-border">
+         class="hidden absolute right-0 mt-3 w-96 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden dark:bg-bg-surface dark:border-border">
 
         <div class="px-4 py-3 border-b border-slate-100 dark:border-border flex items-center justify-between">
             <div>
@@ -133,20 +138,23 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const notificationButton = document.getElementById('notificationButton');
+    const notificationToggle = document.getElementById('notificationToggle');
     const notificationDropdown = document.getElementById('notificationDropdown');
 
-    if (notificationButton && notificationDropdown) {
-        notificationButton.addEventListener('click', function (event) {
+    if (notificationToggle && notificationDropdown) {
+        // Toggle dropdown
+        notificationToggle.addEventListener('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
             notificationDropdown.classList.toggle('hidden');
         });
 
+        // Prevent dropdown from closing when clicking inside
         notificationDropdown.addEventListener('click', function (event) {
             event.stopPropagation();
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', function () {
             notificationDropdown.classList.add('hidden');
         });

@@ -1,111 +1,78 @@
 @extends('layouts.app')
 
-@section('title', ($roomData['nama'] ?? 'Ruangan') . ' - Smart Classroom')
-@section('page_title', 'Detail Ruangan')
-@section('page_subtitle', ($roomData['kode'] ?? '-') . ' · ' . ($roomData['gedung'] ?? '-'))
+@section('title', 'Detail Ruang - Admin')
+@section('page_title', 'Detail Ruang')
+@section('page_subtitle', $room->full_name)
 
 @section('content')
 
-@php
-    use Carbon\Carbon;
-
-    $today         = Carbon::today();
-    $kalender      = Carbon::createFromDate($tahun, $bulan, 1);
-    $prevBulan     = $kalender->copy()->subMonth();
-    $nextBulan     = $kalender->copy()->addMonth();
-    $hariAwal      = (int) $kalender->copy()->startOfMonth()->dayOfWeek;
-    $totalHari     = (int) $kalender->daysInMonth;
-
-    $jadwalBulanIni = collect($roomData['jadwal'] ?? [])
-        ->filter(fn($v, $tgl) => str_starts_with($tgl, $kalender->format('Y-m')));
-@endphp
-
 <div class="max-w-6xl mx-auto font-sora space-y-6">
 
-    {{-- ===== BREADCRUMB ===== --}}
-    <nav class="flex items-center gap-2 text-sm text-slate-500 fade-up">
-        <a href="{{ route('rooms.index') }}"
-           class="hover:text-blue-600 transition font-medium">Ketersediaan Ruang</a>
-        <span class="text-slate-300">/</span>
-        <span class="text-slate-800 font-semibold">{{ $roomData['kode'] }}</span>
-    </nav>
+    {{-- ===== NAV BACK ===== --}}
+    <div class="fade-up">
+        <a href="{{ route('admin.rooms.index') }}"
+           class="text-sm text-slate-500 hover:text-slate-700 transition flex items-center gap-2">
+            ← Kembali ke Manajemen Ruang
+        </a>
+    </div>
 
-    {{-- ===== HERO FOTO ===== --}}
-    <div class="fade-up relative h-64 md:h-80 rounded-3xl overflow-hidden bg-slate-200 shadow-sm">
-        <img src="{{ $roomData['foto'] ?? asset('images/default-room.jpg') }}"
-             alt="{{ $roomData['nama'] }}"
-             class="hero-img w-full h-full object-cover">
+    {{-- ===== HERO ===== --}}
+    <div class="fade-up relative h-56 md:h-72 rounded-3xl overflow-hidden bg-slate-200">
+        <img src="{{ $room->foto ? asset('storage/' . $room->foto) : asset('images/default-room.jpg') }}"
+             alt="{{ $room->nama }}"
+             class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
-        <div class="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent"></div>
-
-        <span class="absolute top-5 right-5 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold
-            {{ $roomData['status'] == 'Tersedia'
-                ? 'bg-emerald-400/90 text-emerald-900'
-                : 'bg-red-400/90 text-red-900' }}">
-            <span class="w-2 h-2 rounded-full
-                {{ $roomData['status'] == 'Tersedia' ? 'bg-emerald-800 animate-pulse' : 'bg-red-800' }}"></span>
-            {{ $roomData['status'] }}
-            <span class="text-xs font-normal opacity-75">· saat ini</span>
+        <span class="absolute top-4 right-4 px-4 py-2 rounded-full text-sm font-bold
+            {{ $room->status == 'Tersedia' ? 'bg-emerald-400/90 text-emerald-900' : 'bg-red-400/90 text-red-900' }}">
+            {{ $room->status_label }}
         </span>
 
-        <span class="absolute top-5 left-5 bg-white/20 backdrop-blur-sm text-white font-mono text-xs px-3 py-1.5 rounded-xl">
-            {{ $roomData['kode'] }}
-        </span>
-
-        <div class="absolute bottom-5 left-6 right-6">
-            <h1 class="text-white text-2xl md:text-3xl font-bold leading-tight">
-                {{ $roomData['nama'] }}
-            </h1>
-            <p class="text-white/70 text-sm mt-1">
-                {{ $roomData['gedung'] }} · Lantai {{ $roomData['lantai'] }}
-                @if(!empty($roomData['faculty_name']))
-                · {{ $roomData['faculty_name'] }}
-                @endif
-            </p>
+        <div class="absolute bottom-4 left-6 right-6">
+            <h1 class="text-white text-2xl md:text-3xl font-bold">{{ $room->nama }}</h1>
+            <p class="text-white/70 text-sm mt-1">{{ $room->kode }} · {{ $room->location }}</p>
         </div>
     </div>
 
-    {{-- ===== ROW 1: Info + Sidebar Aksi ===== --}}
+    {{-- ===== INFO GRID ===== --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up delay-1">
 
-        {{-- ===== KIRI: Info Lengkap (2/3) ===== --}}
+        {{-- Kiri: Info --}}
         <div class="lg:col-span-2 space-y-5">
 
-            {{-- Stat cards --}}
+            {{-- Stat Cards --}}
             <div class="grid grid-cols-3 gap-4">
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
                     <p class="text-xs text-slate-400 mb-1">Kapasitas</p>
-                    <p class="text-3xl font-bold text-slate-900">{{ $roomData['kapasitas'] }}</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $room->kapasitas }}</p>
                     <p class="text-xs text-slate-400 mt-0.5">orang</p>
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
                     <p class="text-xs text-slate-400 mb-1">Lantai</p>
-                    <p class="text-3xl font-bold text-slate-900">{{ $roomData['lantai'] }}</p>
-                    <p class="text-xs text-slate-400 mt-0.5">{{ $roomData['gedung'] }}</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $room->lantai }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ $room->gedung }}</p>
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
-                    <p class="text-xs text-slate-400 mb-1">Booking Bulan Ini</p>
-                    <p class="text-3xl font-bold text-slate-900">{{ $totalBooking ?? 0 }}</p>
-                    <p class="text-xs text-slate-400 mt-0.5">sesi</p>
+                    <p class="text-xs text-slate-400 mb-1">Max Durasi</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $room->max_durasi_jam }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">jam/hari</p>
                 </div>
             </div>
 
             {{-- Deskripsi --}}
-            @if(!empty($roomData['deskripsi']))
+            @if($room->deskripsi)
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Tentang Ruangan</p>
-                <p class="text-sm text-slate-600 leading-relaxed border-l-2 border-slate-200 pl-4">
-                    {{ $roomData['deskripsi'] }}
-                </p>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ $room->deskripsi }}</p>
             </div>
             @endif
 
             {{-- Alamat --}}
-            @if(!empty($roomData['alamat']))
+            @if($room->alamat)
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">📍 Lokasi</p>
-                <p class="text-sm text-slate-600">{{ $roomData['alamat'] }}</p>
-                <a href="https://www.google.com/maps/search/?api=1&query={{ $roomData['maps_query'] ?? '' }}"
+                <p class="text-sm text-slate-600">{{ $room->alamat }}</p>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($room->alamat) }}"
                    target="_blank"
                    class="text-xs text-blue-600 hover:text-blue-700 mt-2 inline-block">
                     Lihat di Google Maps →
@@ -116,263 +83,142 @@
             {{-- Fasilitas --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Fasilitas</p>
-                <div class="flex flex-wrap gap-2">
-                    @foreach(($roomData['fasilitas'] ?? []) as $f)
-                    <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-medium">
-                        {{ $f }}
-                    </span>
+                @if($room->facilities->count() > 0)
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    @foreach($room->facilities as $facility)
+                    <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+                        @if($facility->icon)<span class="text-lg">{{ $facility->icon }}</span>@endif
+                        <span class="text-sm text-slate-700">{{ $facility->nama }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full
+                            {{ $facility->pivot->status == 'tersedia' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
+                            {{ $facility->pivot->status_label }}
+                        </span>
+                    </div>
                     @endforeach
-                    @if(empty($roomData['fasilitas']))
-                    <span class="text-sm text-slate-400">Tidak ada fasilitas terdaftar</span>
-                    @endif
                 </div>
+                @else
+                <p class="text-sm text-slate-400">Tidak ada fasilitas terdaftar</p>
+                @endif
             </div>
 
-            {{-- Meta info --}}
+            {{-- Jam Operasional --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Informasi Operasional</p>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Jam Operasional</p>
                 <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="flex items-center gap-3">
-                        <span class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-base">🕐</span>
-                        <div>
-                            <p class="text-xs text-slate-400">Jam Operasional</p>
-                            <p class="font-semibold text-slate-800">{{ $roomData['jam_buka'] }} – {{ $roomData['jam_tutup'] }}</p>
-                        </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Jam Buka</p>
+                        <p class="font-semibold text-slate-800">{{ $room->formatted_jam_buka }}</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center text-base">⏱</span>
-                        <div>
-                            <p class="text-xs text-slate-400">Maks. Durasi</p>
-                            <p class="font-semibold text-slate-800">{{ $roomData['max_durasi'] }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-base">📶</span>
-                        <div>
-                            <p class="text-xs text-slate-400">Koneksi</p>
-                            <p class="font-semibold text-slate-800">WiFi Tersedia</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center text-base">⚡</span>
-                        <div>
-                            <p class="text-xs text-slate-400">Listrik</p>
-                            <p class="font-semibold text-slate-800">Stop kontak tersedia</p>
-                        </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Jam Tutup</p>
+                        <p class="font-semibold text-slate-800">{{ $room->formatted_jam_tutup }}</p>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        {{-- ===== KANAN: Panel Aksi (1/3) ===== --}}
-        <div class="flex flex-col gap-4">
+        {{-- Kanan: Aksi --}}
+        <div class="space-y-4">
 
-            {{-- Booking action --}}
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col gap-3">
+            {{-- Action Buttons --}}
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 space-y-3">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tindakan</p>
 
-                @if($roomData['status'] == 'Tersedia')
-                <a href="{{ route('bookings.create', ['room_id' => $roomData['id']]) }}"
-                   class="action-btn bg-slate-900 hover:bg-slate-700 text-white text-center py-3.5 rounded-2xl font-semibold text-sm transition flex items-center justify-center gap-2">
-                    <span>➕</span> Ajukan Booking
+                <a href="{{ route('admin.rooms.edit', $room->id) }}"
+                   class="block w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white text-center rounded-xl font-semibold text-sm transition">
+                    ✏️ Edit Ruang
                 </a>
+
+                <form action="{{ route('admin.rooms.toggle-status', $room->id) }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                            class="block w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white text-center rounded-xl font-semibold text-sm transition">
+                        🔄 Ubah Status ke {{ $room->status == 'Tersedia' ? 'Maintenance' : 'Tersedia' }}
+                    </button>
+                </form>
+
+                <form action="{{ route('admin.rooms.destroy', $room->id) }}" method="POST"
+                      onsubmit="return confirm('Hapus ruang {{ $room->nama }}? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="block w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white text-center rounded-xl font-semibold text-sm transition">
+                        🗑 Hapus Ruang
+                    </button>
+                </form>
+            </div>
+
+            {{-- Faculty Info --}}
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Fakultas</p>
+                @if($room->faculty)
+                <p class="font-semibold text-slate-800">{{ $room->faculty->name }}</p>
+                <p class="text-xs text-slate-400">Kode: {{ $room->faculty->code }}</p>
                 @else
-                <div class="bg-red-50 border border-red-100 text-red-600 text-center py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                    {{ $roomData['status'] == 'Maintenance' ? 'Ruangan Maintenance' : 'Ruangan Sedang Dipakai' }}
-                </div>
-                <p class="text-xs text-slate-400 text-center">Cek kalender untuk waktu lain</p>
+                <p class="text-sm text-slate-400">Tidak terikat fakultas</p>
                 @endif
-
-                <a href="{{ route('rooms.index') }}"
-                   class="action-btn border border-slate-200 hover:border-slate-300 text-slate-600 text-center py-3 rounded-2xl font-semibold text-sm transition">
-                    ← Kembali ke Daftar
-                </a>
             </div>
 
-            {{-- Legenda kalender --}}
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Keterangan Kalender</p>
-                <div class="space-y-2.5">
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="w-6 h-6 rounded-lg bg-emerald-100 shrink-0"></span>
-                        <span class="text-slate-600">Tersedia</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="w-6 h-6 rounded-lg bg-amber-100 shrink-0"></span>
-                        <span class="text-slate-600">Sebagian terpakai</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="w-6 h-6 rounded-lg bg-red-100 shrink-0"></span>
-                        <span class="text-slate-600">Penuh</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="w-6 h-6 rounded-lg bg-slate-100 shrink-0"></span>
-                        <span class="text-slate-600">Sudah lewat</span>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="w-6 h-6 rounded-lg border-2 border-blue-500 shrink-0"></span>
-                        <span class="text-slate-600">Hari ini</span>
-                    </div>
-                </div>
+            {{-- Booking Count --}}
+            <div class="bg-slate-950 rounded-3xl p-5 text-white">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Booking</p>
+                <p class="text-3xl font-bold">{{ $room->bookings->count() }}</p>
+                <p class="text-xs text-slate-400 mt-1">sepanjang waktu</p>
             </div>
-
-            {{-- Quick stats ruang --}}
-            <div class="bg-slate-950 rounded-3xl p-6 text-white">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Utilisasi Bulan Ini</p>
-                @php
-                    $pctBooking = ($totalBooking ?? 0) > 0 ? min(($totalBooking ?? 0) / 10 * 100, 100) : 0;
-                @endphp
-                <div class="text-3xl font-bold mb-1">{{ $totalBooking ?? 0 }}
-                    <span class="text-base font-normal text-slate-400">sesi</span>
-                </div>
-                <div class="mt-3 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div class="h-full bg-linear-to-r from-blue-400 to-violet-400 rounded-full transition-all duration-700"
-                         style="width: {{ $pctBooking }}%"></div>
-                </div>
-                <p class="text-xs text-slate-500 mt-2">dari estimasi 10 sesi/bulan</p>
-            </div>
-
         </div>
+
     </div>
 
-    {{-- ===== ROW 2: KALENDER ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 fade-up delay-2">
+    {{-- ===== DAFTAR BOOKING TERBARU ===== --}}
+    @if($room->bookings->count() > 0)
+    <div class="fade-up delay-2">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Booking Terbaru</p>
+                <span class="text-xs text-slate-400">10 terakhir</span>
+            </div>
 
-        {{-- Header kalender --}}
-        <div class="flex items-center justify-between mb-6">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kalender Ketersediaan</p>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('rooms.show', ['id' => $roomData['id'], 'tahun' => $prevBulan->year, 'bulan' => $prevBulan->month]) }}"
-                   class="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 transition font-bold">‹</a>
-                <span class="font-bold text-slate-800 text-sm min-w-35 text-center">
-                    {{ $kalender->translatedFormat('F Y') }}
-                </span>
-                <a href="{{ route('rooms.show', ['id' => $roomData['id'], 'tahun' => $nextBulan->year, 'bulan' => $nextBulan->month]) }}"
-                   class="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600 transition font-bold">›</a>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                        <tr>
+                            <th class="text-left px-4 py-3">Kode</th>
+                            <th class="text-left px-4 py-3">Kegiatan</th>
+                            <th class="text-left px-4 py-3">Tanggal</th>
+                            <th class="text-left px-4 py-3">Waktu</th>
+                            <th class="text-left px-4 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($room->bookings->take(10) as $booking)
+                        <tr>
+                            <td class="px-4 py-3 font-mono text-xs">{{ $booking->booking_code }}</td>
+                            <td class="px-4 py-3">{{ $booking->kegiatan }}</td>
+                            <td class="px-4 py-3">{{ $booking->tanggal->format('d/m/Y') }}</td>
+                            <td class="px-4 py-3 text-xs">
+                                {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
+                                {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold
+                                    {{ $booking->status == 'approved' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                    {{ $booking->status == 'pending' ? 'bg-amber-100 text-amber-700' : '' }}
+                                    {{ $booking->status == 'rejected' ? 'bg-red-100 text-red-700' : '' }}
+                                    {{ $booking->status == 'completed' ? 'bg-blue-100 text-blue-700' : '' }}
+                                    {{ $booking->status == 'cancelled' ? 'bg-slate-100 text-slate-700' : '' }}
+                                    {{ $booking->status == 'no_show' ? 'bg-red-200 text-red-800' : '' }}">
+                                    {{ $booking->status_label }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        {{-- Nama hari --}}
-        <div class="grid grid-cols-7 mb-1">
-            @foreach(['Min','Sen','Sel','Rab','Kam','Jum','Sab'] as $h)
-            <div class="text-center text-xs font-bold text-slate-400 py-2 uppercase tracking-wide">{{ $h }}</div>
-            @endforeach
-        </div>
-
-        {{-- Grid tanggal --}}
-        <div class="grid grid-cols-7 gap-1.5">
-
-            @for($i = 0; $i < $hariAwal; $i++)
-            <div></div>
-            @endfor
-
-            @for($hari = 1; $hari <= $totalHari; $hari++)
-                @php
-                    $tglStr  = $kalender->format('Y-m') . '-' . str_pad($hari, 2, '0', STR_PAD_LEFT);
-                    $jadwal  = $roomData['jadwal'][$tglStr] ?? null;
-                    $isToday = $tglStr === $today->format('Y-m-d');
-                    $isPast  = Carbon::parse($tglStr)->lt($today);
-
-                    if ($jadwal && ($jadwal['tipe'] ?? '') === 'penuh') {
-                        $bg = 'bg-red-100 text-red-700 hover:bg-red-200';
-                    } elseif ($jadwal && ($jadwal['tipe'] ?? '') === 'sebagian') {
-                        $bg = 'bg-amber-100 text-amber-700 hover:bg-amber-200';
-                    } elseif ($isPast) {
-                        $bg = 'bg-slate-50 text-slate-300 cursor-default';
-                    } else {
-                        $bg = 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
-                    }
-
-                    $ring    = $isToday ? 'ring-2 ring-blue-500 ring-offset-1' : '';
-                    $tooltip = $jadwal
-                        ? ($jadwal['label'] ?? '-') . ' · ' . ($jadwal['waktu'] ?? '-')
-                        : ($isPast ? 'Sudah lewat' : 'Tersedia');
-                @endphp
-
-                <div class="flex justify-center py-0.5">
-                    <span title="{{ $tooltip }}"
-                          class="cal-cell w-10 h-10 flex items-center justify-center rounded-xl text-sm font-semibold select-none cursor-default {{ $bg }} {{ $ring }}">
-                        {{ $hari }}
-                    </span>
-                </div>
-            @endfor
-
-        </div>
     </div>
-
-    {{-- ===== ROW 3: JADWAL LIST ===== --}}
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 fade-up delay-3">
-
-        <div class="flex items-center justify-between mb-5">
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Jadwal Penggunaan – {{ $kalender->translatedFormat('F Y') }}
-            </p>
-            <span class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-semibold">
-                {{ $jadwalBulanIni->count() }} acara
-            </span>
-        </div>
-
-        @if($jadwalBulanIni->isEmpty())
-        <div class="text-center py-12">
-            <p class="text-5xl mb-4">📭</p>
-            <p class="text-slate-500 font-semibold">Belum ada jadwal bulan ini</p>
-            <p class="text-sm text-slate-400 mt-1">Ruangan ini tersedia untuk dibooking</p>
-            @if($roomData['status'] == 'Tersedia')
-            <a href="{{ route('bookings.create', ['room_id' => $roomData['id']]) }}"
-               class="inline-block mt-5 bg-slate-900 text-white text-sm font-semibold px-6 py-3 rounded-2xl hover:bg-slate-700 transition">
-                ➕ Ajukan Booking Sekarang
-            </a>
-            @endif
-        </div>
-
-        @else
-        <div class="divide-y divide-slate-100">
-            @foreach($jadwalBulanIni as $tgl => $j)
-            @php
-                $tanggal    = Carbon::parse($tgl);
-                $isPastItem = $tanggal->lt($today);
-                $badgeCls   = ($j['tipe'] ?? '') === 'penuh'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-amber-100 text-amber-700';
-                $badgeLabel = ($j['tipe'] ?? '') === 'penuh' ? 'Penuh' : 'Sebagian';
-            @endphp
-            <div class="py-4 flex items-center gap-4 {{ $isPastItem ? 'opacity-50' : '' }}">
-
-                {{-- Tanggal --}}
-                <div class="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 text-center min-w-35 shrink-0">
-                    <p class="text-xs text-slate-400 uppercase font-semibold leading-none">
-                        {{ $tanggal->translatedFormat('D') }}
-                    </p>
-                    <p class="text-2xl font-bold text-slate-800 leading-tight">{{ $tanggal->day }}</p>
-                </div>
-
-                {{-- Garis vertikal --}}
-                <div class="w-px h-10 bg-slate-200 shrink-0"></div>
-
-                {{-- Info --}}
-                <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-slate-800 text-sm truncate">{{ $j['label'] ?? '-' }}</p>
-                    <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                        <span>🕐</span> {{ $j['waktu'] ?? '-' }}
-                        @if($isPastItem)
-                        <span class="ml-2 text-slate-300">· Sudah selesai</span>
-                        @endif
-                    </p>
-                </div>
-
-                {{-- Badge --}}
-                <span class="px-3 py-1.5 rounded-2xl text-xs font-bold shrink-0 {{ $badgeCls }}">
-                    {{ $badgeLabel }}
-                </span>
-
-            </div>
-            @endforeach
-        </div>
-        @endif
-
-    </div>
+    @endif
 
 </div>
 

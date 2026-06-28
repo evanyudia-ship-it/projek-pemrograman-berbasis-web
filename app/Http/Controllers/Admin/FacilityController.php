@@ -10,9 +10,6 @@ use Illuminate\Validation\Rule;
 
 class FacilityController extends Controller
 {
-    /**
-     * Display a listing of facilities.
-     */
     public function index()
     {
         $facilities = Facility::withCount(['rooms'])->get();
@@ -27,17 +24,11 @@ class FacilityController extends Controller
         ));
     }
 
-    /**
-     * Show form for creating a new facility.
-     */
     public function create()
     {
         return view('admin.facilities.create');
     }
 
-    /**
-     * Store a newly created facility.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -53,9 +44,6 @@ class FacilityController extends Controller
             ->with('success', "Fasilitas \"{$facility->nama}\" berhasil ditambahkan.");
     }
 
-    /**
-     * Display facility details.
-     */
     public function show(int $id)
     {
         $facility = Facility::with(['rooms' => function ($query) {
@@ -67,18 +55,12 @@ class FacilityController extends Controller
         return view('admin.facilities.show', compact('facility', 'rooms'));
     }
 
-    /**
-     * Show form for editing facility.
-     */
     public function edit(int $id)
     {
         $facility = Facility::findOrFail($id);
         return view('admin.facilities.edit', compact('facility'));
     }
 
-    /**
-     * Update facility.
-     */
     public function update(Request $request, int $id)
     {
         $facility = Facility::findOrFail($id);
@@ -101,16 +83,10 @@ class FacilityController extends Controller
             ->with('success', "Fasilitas \"{$facility->nama}\" berhasil diperbarui.");
     }
 
-    /**
-     * Delete facility.
-     */
     public function destroy(int $id)
     {
         $facility = Facility::findOrFail($id);
-
-        // Detach all room relationships
         $facility->rooms()->detach();
-
         $facilityName = $facility->nama;
         $facility->delete();
 
@@ -118,9 +94,6 @@ class FacilityController extends Controller
             ->with('success', "Fasilitas \"{$facilityName}\" berhasil dihapus.");
     }
 
-    /**
-     * Get rooms with this facility (for AJAX).
-     */
     public function getRooms(int $id)
     {
         $facility = Facility::with(['rooms' => function ($query) {

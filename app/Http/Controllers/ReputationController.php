@@ -30,7 +30,7 @@ class ReputationController extends Controller
 
         // Level saat ini
         $level = ReputationLevel::where('min_points', '<=', $user->reputation_points)
-            ->where(function ($q) {
+            ->where(function ($q) use ($user) {
                 $q->whereNull('max_points')
                   ->orWhere('max_points', '>=', $user->reputation_points);
             })
@@ -81,7 +81,7 @@ class ReputationController extends Controller
     {
         $this->authorizeAdmin();
 
-        $query = ReputationLog::with(['user', 'booking', 'createdBy'])
+        $query = ReputationLog::with(['user', 'booking', 'creator'])
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('user_id')) {

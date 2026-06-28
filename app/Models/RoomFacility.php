@@ -22,13 +22,9 @@ class RoomFacility extends Model
         'status' => 'string',
     ];
 
-    // ========== CONSTANTS ==========
-
     const STATUS_AVAILABLE = 'tersedia';
     const STATUS_BROKEN = 'rusak';
     const STATUS_MAINTENANCE = 'maintenance';
-
-    // ========== RELATIONS ==========
 
     public function room(): BelongsTo
     {
@@ -39,8 +35,6 @@ class RoomFacility extends Model
     {
         return $this->belongsTo(Facility::class);
     }
-
-    // ========== SCOPES ==========
 
     public function scopeAvailable(Builder $query): Builder
     {
@@ -57,8 +51,6 @@ class RoomFacility extends Model
         return $query->where('status', self::STATUS_MAINTENANCE);
     }
 
-    // ========== STATUS CHECKS ==========
-
     public function isAvailable(): bool
     {
         return $this->status === self::STATUS_AVAILABLE;
@@ -73,8 +65,6 @@ class RoomFacility extends Model
     {
         return $this->status === self::STATUS_MAINTENANCE;
     }
-
-    // ========== HELPER METHODS ==========
 
     public function getStatusLabelAttribute(): string
     {
