@@ -38,6 +38,9 @@ class ReputationLevel extends Model
         return $this->is_banned === true;
     }
 
+    /**
+     * Mencari level reputasi berdasarkan poin user.
+     */
     public static function getLevelByPoints(int $points)
     {
         return self::where('status', 'active')
