@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('pesan')->nullable();
 
             // Type & Status
-            $table->enum('tipe', ['info', 'warning', 'success', 'approval'])->default('info');
+            $table->enum('tipe', ['info', 'warning', 'success', 'approval', 'danger'])->default('info');
             $table->enum('status', ['belum_dibaca', 'sudah_dibaca'])->default('belum_dibaca');
 
             // Related Entity (polymorphic-like)

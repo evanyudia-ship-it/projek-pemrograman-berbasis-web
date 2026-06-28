@@ -97,6 +97,16 @@ class Room extends Model
         return $query->where('kapasitas', '>=', $capacity);
     }
 
+    public function scopeSearch(Builder $query, string $keyword): Builder
+    {
+        return $query->where(function ($q) use ($keyword) {
+            $q->where('nama', 'LIKE', "%{$keyword}%")
+                ->orWhere('kode', 'LIKE', "%{$keyword}%")
+                ->orWhere('gedung', 'LIKE', "%{$keyword}%")
+                ->orWhere('alamat', 'LIKE', "%{$keyword}%");
+        });
+    }
+
     // ========== STATUS CHECKS ==========
 
     public function isAvailable(): bool
@@ -128,6 +138,21 @@ class Room extends Model
     public function getLocationAttribute(): string
     {
         return "{$this->gedung} - Lantai {$this->lantai}";
+    }
+
+    public function getFormattedJamBukaAttribute(): string
+    {
+        return $this->jam_buka ? Carbon::parse($this->jam_buka)->format('H:i') : '-';
+    }
+
+    public function getFormattedJamTutupAttribute(): string
+    {
+        return $this->jam_tutup ? Carbon::parse($this->jam_tutup)->format('H:i') : '-';
+    }
+
+    public function getMaxDurasiLabelAttribute(): string
+    {
+        return $this->max_durasi_jam ? "{$this->max_durasi_jam} jam/hari" : '-';
     }
 
     /**
@@ -186,5 +211,42 @@ class Room extends Model
             ->first();
 
         return $pivot ? $pivot->status : null;
+    }
+
+    /**
+     * Get available facilities list.
+     */
+    public function getAvailableFacilities(): array
+    {
+        return $this->roomFacilities()
+            ->where('status', 'tersedia')
+            ->with('facility')
+            ->get()
+            ->pluck('facility.nama')
+            ->toArray();
+    }
+
+    /**
+     * Get all facility names.
+     */
+    public function getFacilityNamesAttribute(): array
+    {
+        return $this->facilities->pluck('nama')->toArray();
+    }
+
+    /**
+     * Get facilities with status.
+     */
+    public function getFacilitiesWithStatus(): array
+    {
+        return $this->facilities->map(function ($facility) {
+            return [
+                'id' => $facility->id,
+                'nama' => $facility->nama,
+                'status' => $facility->pivot->status,
+                'status_label' => $facility->pivot->getStatusLabelAttribute(),
+                'icon' => $facility->icon,
+            ];
+        })->toArray();
     }
 }

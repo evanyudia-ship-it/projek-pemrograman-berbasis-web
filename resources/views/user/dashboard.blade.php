@@ -22,21 +22,21 @@
 
         <div class="stat-card bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-11 h-11 bg-blue-50 rounded-2xl flex items-center justify-center text-xl mb-4">📅</div>
-            <p class="text-3xl font-bold text-slate-900">{{ $booking_aktif }}</p>
+            <p class="text-3xl font-bold text-slate-900">{{ $booking_aktif ?? 0 }}</p>
             <p class="text-xs text-slate-500 mt-1">Booking Disetujui</p>
             <p class="text-xs text-blue-600 mt-3 font-medium">Status: approved</p>
         </div>
 
         <div class="stat-card bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl mb-4">✅</div>
-            <p class="text-3xl font-bold text-slate-900">{{ $booking_selesai }}</p>
+            <p class="text-3xl font-bold text-slate-900">{{ $booking_selesai ?? 0 }}</p>
             <p class="text-xs text-slate-500 mt-1">Booking Selesai</p>
             <p class="text-xs text-emerald-600 mt-3 font-medium">Total riwayat</p>
         </div>
 
         <div class="stat-card bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-11 h-11 bg-amber-50 rounded-2xl flex items-center justify-center text-xl mb-4">⏳</div>
-            <p class="text-3xl font-bold text-slate-900">{{ $booking_pending }}</p>
+            <p class="text-3xl font-bold text-slate-900">{{ $booking_pending ?? 0 }}</p>
             <p class="text-xs text-slate-500 mt-1">Menunggu Approval</p>
             <p class="text-xs text-amber-600 mt-3 font-medium">Perlu diproses</p>
         </div>
@@ -44,7 +44,7 @@
         <div class="stat-card bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-11 h-11 bg-red-50 rounded-2xl flex items-center justify-center text-xl mb-4">⚠️</div>
             <p class="text-3xl font-bold text-slate-900">{{ $booking_no_show ?? 0 }}</p>
-            <p class="text-xs text-slate-500 mt-1">No Show (Perlu Validasi Check-in)</p>
+            <p class="text-xs text-slate-500 mt-1">No Show</p>
             <p class="text-xs text-red-500 mt-3 font-medium">Pengaruhi reputasi</p>
         </div>
 
@@ -52,7 +52,7 @@
 
     {{-- Reputation --}}
     @php
-        $rp = $reputation_point;
+        $rp = $reputation_point ?? 100;
         $rpLabel = $rp >= 80 ? 'Trusted User' : ($rp >= 50 ? 'Normal' : ($rp >= 30 ? 'Dibatasi' : 'Diblokir'));
         $rpColor = $rp >= 80 ? 'from-emerald-400 to-teal-400' : ($rp >= 50 ? 'from-blue-400 to-indigo-400' : 'from-amber-400 to-orange-400');
     @endphp
@@ -70,20 +70,6 @@
         <p class="text-xs text-slate-400 mt-2">{{ $rp }}/100</p>
     </a>
 
-    {{-- Verification Alert --}}
-    @if(!session('is_verified', false))
-    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between fade-up">
-        <div class="flex items-center gap-3">
-            <span class="text-xl">⚠️</span>
-            <p class="text-amber-700 text-sm font-medium">Email Anda belum diverifikasi. Tolong verifikasi akun terlebih dahulu</p>
-        </div>
-        <a href="{{ route('verify.show') }}"
-           class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors shrink-0">
-            Verifikasi Sekarang
-        </a>
-    </div>
-    @endif
-
     {{-- Main Grid --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up delay-2 items-start">
 
@@ -94,13 +80,13 @@
                 <a href="{{ route('bookings.index') }}" class="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">Lihat semua →</a>
             </div>
 
-            @forelse($jadwal_hari_ini as $jadwal)
+            @forelse($jadwal_hari_ini ?? [] as $jadwal)
             <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
                 <div class="relative h-36 overflow-hidden">
                     <img src="{{ $jadwal['foto'] }}" alt="{{ $jadwal['ruangan'] }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                     <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent"></div>
                     <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-sm
-                        {{ $jadwal['status'] === 'Confirmed' ? 'bg-emerald-400/90 text-emerald-900' : 'bg-amber-400/90 text-amber-900' }}">
+                        {{ $jadwal['status'] === 'Disetujui' ? 'bg-emerald-400/90 text-emerald-900' : 'bg-amber-400/90 text-amber-900' }}">
                         {{ $jadwal['status'] }}
                     </span>
                     <div class="absolute bottom-3 left-4 right-4">
@@ -134,7 +120,7 @@
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">
                 <h2 class="text-sm font-bold text-slate-800 mb-4">Notifikasi</h2>
                 <div class="space-y-3">
-                    @forelse($notifikasi as $notif)
+                    @forelse($notifikasi ?? [] as $notif)
                     <div class="flex gap-3 items-start">
                         <span class="text-lg shrink-0">{{ $notif['icon'] }}</span>
                         <div class="flex-1 min-w-0">
@@ -181,4 +167,5 @@
         </div>
     </div>
 </div>
+
 @endsection

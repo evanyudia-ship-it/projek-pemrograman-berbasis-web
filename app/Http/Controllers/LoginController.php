@@ -8,6 +8,24 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+
+    public function showLoginForm()
+    {
+        // Jika sudah login, redirect ke dashboard
+        if (session('logged_in') || Auth::check()) {
+            $role = session('user_role', Auth::user()?->role ?? 'mahasiswa');
+
+            return match ($role) {
+                'superadmin' => redirect()->route('dashboard'),
+                'admin' => redirect()->route('admin.dashboard'),
+                default => redirect()->route('user.dashboard'),
+            };
+        }
+
+        // Tampilkan halaman login (standalone, tanpa layout)
+        return view('auth.login');
+    }
+
     public function process(Request $request)
     {
         $validated = $request->validate(
@@ -83,9 +101,9 @@ class LoginController extends Controller
         }
 
         return match ($user->role) {
-            'superadmin' => redirect()->route('dashboard'),
-            'admin' => redirect()->route('admin.dashboard'),
-            default => redirect()->route('user.dashboard'),
+            'superadmin' => redirect()->route('dashboard')->with('success', 'Selamat datang, ' . $user->name . '!'),
+            'admin' => redirect()->route('admin.dashboard')->with('success', 'Selamat datang, ' . $user->name . '!'),
+            default => redirect()->route('user.dashboard')->with('success', 'Selamat datang, ' . $user->name . '!'),
         };
     }
 
@@ -93,12 +111,18 @@ class LoginController extends Controller
     {
         Auth::logout();
 
+        // Hapus semua session
         $request->session()->flush();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Redirect ke login dengan flash message
         return redirect()
             ->route('login')
             ->with('success', 'Anda berhasil logout.');
     }
+
+
+
+
 }

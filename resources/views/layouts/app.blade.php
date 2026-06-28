@@ -80,10 +80,44 @@
             }, { once: true });
         }
     </script>
+
+    @php
+        // ===== CEK STATUS LOGIN =====
+        $isLoggedIn = session('logged_in', false) || Auth::check();
+
+        // ===== AMBIL ROLE DENGAN AMAN =====
+        if ($isLoggedIn) {
+            $role = session('user_role', 'mahasiswa');
+            $allowedRoles = ['superadmin', 'admin', 'dosen', 'mahasiswa'];
+            $role = in_array($role, $allowedRoles) ? $role : 'mahasiswa';
+            $userName = session('user_name', 'Guest');
+        } else {
+            $role = 'guest';
+            $userName = 'Guest';
+        }
+
+        // ===== HITUNG NOTIFIKASI (HANYA JIKA LOGIN) =====
+        $userId = session('user_id');
+        $unreadCount = 0;
+        if ($userId && $isLoggedIn) {
+            try {
+                $unreadCount = App\Models\Notifikasi::where('user_id', $userId)
+                    ->where('status', 'belum_dibaca')
+                    ->count();
+            } catch (\Exception $e) {
+                $unreadCount = 0;
+            }
+        }
+    @endphp
+
 </head>
 <body>
 <div class="min-h-screen flex overflow-x-hidden">
-    {{-- SIDEBAR --}}
+
+    {{-- ============================================================ --}}
+    {{-- SIDEBAR - HANYA TAMPIL JIKA LOGIN --}}
+    {{-- ============================================================ --}}
+    @if($isLoggedIn && $role !== 'guest')
     <aside id="sidebar"
         class="fixed md:sticky md:top-0 inset-y-0 left-0 z-40
             bg-white border-r border-slate-200 flex flex-col
@@ -108,14 +142,38 @@
             </div>
         </div>
 
+        {{-- NOTIFIKASI & REPUTASI DI SIDEBAR --}}
+        @if(in_array($role, ['mahasiswa', 'dosen', 'admin', 'superadmin']))
+            <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Lainnya</p>
+            <a href="{{ route('notifications.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('notifications*') ? 'active' : '' }}">
+                <span class="nav-icon">🔔</span>
+                <span class="nav-label">Notifikasi</span>
+                @php
+                    $unreadCountSidebar = 0;
+                    if (session('user_id')) {
+                        try {
+                            $unreadCountSidebar = App\Models\Notifikasi::where('user_id', session('user_id'))
+                                ->where('status', 'belum_dibaca')
+                                ->count();
+                        } catch (\Exception $e) {
+                            $unreadCountSidebar = 0;
+                        }
+                    }
+                @endphp
+                @if($unreadCountSidebar > 0)
+                <span class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {{ $unreadCountSidebar > 99 ? '99+' : $unreadCountSidebar }}
+                </span>
+                @endif
+            </a>
+            <a href="{{ route('reputation.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('reputation*') ? 'active' : '' }}">
+                <span class="nav-icon">⭐</span>
+                <span class="nav-label">Reputation Point</span>
+            </a>
+        @endif
+
         {{-- NAVIGATION --}}
         <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
-            @php
-                $role = session('user_role', 'mahasiswa');
-                // Whitelist role (Security - Temuan 4)
-                $allowedRoles = ['superadmin', 'admin', 'dosen', 'mahasiswa'];
-                $role = in_array($role, $allowedRoles) ? $role : 'mahasiswa';
-            @endphp
 
             @php
                 $dashRoute = match($role) {
@@ -162,10 +220,6 @@
                     <span class="nav-icon">🏢</span>
                     <span class="nav-label">Perwakilan Organisasi</span>
                 </a>
-                <a href="{{ route('reputation.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('reputation*') ? 'active' : '' }}">
-                    <span class="nav-icon">⭐</span>
-                    <span class="nav-label">Reputation Point</span>
-                </a>
             @endif
 
             <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Akun</p>
@@ -180,22 +234,35 @@
 
             @if(in_array($role, ['admin', 'superadmin']))
                 <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Administrasi</p>
-                <a href="{{ route('admin.approvals') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/approvals*') ? 'active' : '' }}">
+                <a href="{{ route('admin.approvals.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/approvals*') ? 'active' : '' }}">
                     <span class="nav-icon">✅</span>
                     <span class="nav-label">Approval Booking</span>
                 </a>
                 @if($role === 'superadmin')
-                    <a href="{{ route('admin.organization-approvals.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/organization-approvals*') ? 'active' : '' }}">
-                        <span class="nav-icon">🏢</span>
-                        <span class="nav-label">Approval Organisasi</span>
-                    </a>
+                    <p class="sidebar-section-label px-2 pt-3 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest dark:text-text-muted">Manajemen</p>
                     <a href="{{ route('admin.rooms.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/rooms*') ? 'active' : '' }}">
                         <span class="nav-icon">🏗️</span>
                         <span class="nav-label">Manajemen Ruang</span>
                     </a>
+                    <a href="{{ route('admin.facilities.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/facilities*') ? 'active' : '' }}">
+                        <span class="nav-icon">📦</span>
+                        <span class="nav-label">Manajemen Fasilitas</span>
+                    </a>
+                    <a href="{{ route('admin.room-facilities.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/room-facilities*') ? 'active' : '' }}">
+                        <span class="nav-icon">🔗</span>
+                        <span class="nav-label">Fasilitas Ruang</span>
+                    </a>
                     <a href="{{ route('admin.users.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/users*') ? 'active' : '' }}">
                         <span class="nav-icon">👥</span>
                         <span class="nav-label">Kelola User</span>
+                    </a>
+                    <a href="{{ route('admin.faculties.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/faculties*') ? 'active' : '' }}">
+                        <span class="nav-icon">🏛️</span>
+                        <span class="nav-label">Kelola Fakultas</span>
+                    </a>
+                    <a href="{{ route('admin.admin-faculties.index') }}" class="nav-item focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-lg {{ request()->is('admin/admin-faculties*') ? 'active' : '' }}">
+                        <span class="nav-icon">👤</span>
+                        <span class="nav-label">Admin Fakultas</span>
                     </a>
                 @endif
             @endif
@@ -225,13 +292,21 @@
             </form>
         </div>
     </aside>
+    @endif
+    {{-- ============================================================ --}}
+    {{-- END SIDEBAR --}}
+    {{-- ============================================================ --}}
 
     {{-- MOBILE OVERLAY --}}
     <div id="overlay" class="fixed inset-0 bg-black/30 z-30 md:hidden hidden"></div>
 
+    {{-- ============================================================ --}}
     {{-- MAIN CONTENT --}}
-    <main class="flex-1 min-w-0 flex flex-col md:shadow-lg md:rounded-l-2xl h-screen overflow-hidden">
-        {{-- TOPBAR --}}
+    {{-- ============================================================ --}}
+    <main class="flex-1 min-w-0 flex flex-col {{ $isLoggedIn ? 'md:shadow-lg md:rounded-l-2xl' : '' }} h-screen overflow-hidden">
+
+        {{-- TOPBAR - HANYA TAMPIL JIKA LOGIN --}}
+        @if($isLoggedIn && $role !== 'guest')
         <header class="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 shrink-0 dark:bg-bg-surface dark:border-border">
             <div class="flex items-center gap-3 min-w-0">
                 <!-- Desktop Toggle (hidden on mobile) -->
@@ -282,11 +357,18 @@
                 </div>
             </div>
         </header>
+        @endif
+        {{-- ============================================================ --}}
+        {{-- END TOPBAR --}}
+        {{-- ============================================================ --}}
 
-        <section id="mainContent" class="flex-1 p-4 md:p-8 overflow-y-auto min-h-0">
+        <section id="mainContent" class="flex-1 p-4 md:p-8 overflow-y-auto min-h-0 {{ $isLoggedIn ? '' : 'flex items-center justify-center' }}">
             @yield('content')
         </section>
     </main>
+    {{-- ============================================================ --}}
+    {{-- END MAIN CONTENT --}}
+    {{-- ============================================================ --}}
 
     {{-- Loading Overlay --}}
     <div id="pageLoading" class="fixed inset-0 z-50 items-center justify-center hidden backdrop-blur-sm"

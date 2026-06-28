@@ -54,7 +54,7 @@ class Notifikasi extends Model
     }
 
     /**
-     * Get related entity (polymorphic).
+     * Get related entity (polymorphic-like).
      */
     public function getRelatedEntityAttribute()
     {
@@ -63,6 +63,7 @@ class Notifikasi extends Model
                 'bookings' => Booking::class,
                 'users' => User::class,
                 'rooms' => Room::class,
+                'organizations' => Organization::class,
             ];
 
             if (isset($modelMap[$this->entitas_terkait])) {
@@ -92,6 +93,36 @@ class Notifikasi extends Model
         return $this->status === 'sudah_dibaca';
     }
 
+    /**
+     * Get notification icon by type.
+     */
+    public function getIconAttribute(): string
+    {
+        return match($this->tipe) {
+            'success' => '✅',
+            'warning' => '⚠️',
+            'approval' => '⏳',
+            'danger' => '❌',
+            'info' => 'ℹ️',
+            default => '🔔',
+        };
+    }
+
+    /**
+     * Get notification color class by type.
+     */
+    public function getColorClassAttribute(): string
+    {
+        return match($this->tipe) {
+            'success' => 'border-emerald-200 bg-emerald-50',
+            'warning' => 'border-amber-200 bg-amber-50',
+            'approval' => 'border-blue-200 bg-blue-50',
+            'danger' => 'border-red-200 bg-red-50',
+            'info' => 'border-slate-200 bg-slate-50',
+            default => 'border-slate-200 bg-slate-50',
+        };
+    }
+
     // ========== SCOPES ==========
 
     public function scopeUnread(Builder $query): Builder
@@ -109,4 +140,14 @@ class Notifikasi extends Model
         return $query->where('tipe', $type);
     }
 
+    public function scopeByEntity(Builder $query, string $entity, ?string $entityId = null): Builder
+    {
+        $query->where('entitas_terkait', $entity);
+
+        if ($entityId) {
+            $query->where('entitas_id', $entityId);
+        }
+
+        return $query;
+    }
 }

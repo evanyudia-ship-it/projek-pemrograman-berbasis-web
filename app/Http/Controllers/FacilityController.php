@@ -1,0 +1,143 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Facility;
+use App\Models\Room;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
+class FacilityController extends Controller
+{
+    /**
+     * Display a listing of facilities.
+     */
+    public function index()
+    {
+        $facilities = Facility::withCount(['rooms'])->get();
+
+        $totalFacilities = Facility::count();
+        $totalRoomsWithFacilities = Facility::has('rooms')->count();
+
+        return view('admin.facilities.index', compact(
+            'facilities',
+            'totalFacilities',
+            'totalRoomsWithFacilities'
+        ));
+    }
+
+    /**
+     * Show form for creating a new facility.
+     */
+    public function create()
+    {
+        return view('admin.facilities.create');
+    }
+
+    /**
+     * Store a newly created facility.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:facilities,nama',
+            'icon' => 'nullable|string|max:10',
+            'kategori' => 'nullable|string|max:50',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $facility = Facility::create($validated);
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', "Fasilitas \"{$facility->nama}\" berhasil ditambahkan.");
+    }
+
+    /**
+     * Display facility details.
+     */
+    public function show(int $id)
+    {
+        $facility = Facility::with(['rooms' => function ($query) {
+            $query->withPivot('status');
+        }])->findOrFail($id);
+
+        $rooms = $facility->rooms;
+
+        return view('admin.facilities.show', compact('facility', 'rooms'));
+    }
+
+    /**
+     * Show form for editing facility.
+     */
+    public function edit(int $id)
+    {
+        $facility = Facility::findOrFail($id);
+        return view('admin.facilities.edit', compact('facility'));
+    }
+
+    /**
+     * Update facility.
+     */
+    public function update(Request $request, int $id)
+    {
+        $facility = Facility::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('facilities', 'nama')->ignore($facility->id),
+            ],
+            'icon' => 'nullable|string|max:10',
+            'kategori' => 'nullable|string|max:50',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $facility->update($validated);
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', "Fasilitas \"{$facility->nama}\" berhasil diperbarui.");
+    }
+
+    /**
+     * Delete facility.
+     */
+    public function destroy(int $id)
+    {
+        $facility = Facility::findOrFail($id);
+
+        // Detach all room relationships
+        $facility->rooms()->detach();
+
+        $facilityName = $facility->nama;
+        $facility->delete();
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', "Fasilitas \"{$facilityName}\" berhasil dihapus.");
+    }
+
+    /**
+     * Get rooms with this facility (for AJAX).
+     */
+    public function getRooms(int $id)
+    {
+        $facility = Facility::with(['rooms' => function ($query) {
+            $query->withPivot('status')->select('rooms.id', 'rooms.nama', 'rooms.kode');
+        }])->findOrFail($id);
+
+        return response()->json([
+            'facility' => $facility->nama,
+            'rooms' => $facility->rooms->map(function ($room) {
+                return [
+                    'id' => $room->id,
+                    'nama' => $room->nama,
+                    'kode' => $room->kode,
+                    'status' => $room->pivot->status,
+                    'status_label' => $room->pivot->getStatusLabelAttribute(),
+                ];
+            }),
+        ]);
+    }
+}

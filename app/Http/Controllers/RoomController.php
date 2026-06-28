@@ -2,187 +2,228 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Room;
+use App\Models\Faculty;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
 class RoomController extends Controller
 {
-    private function getRooms(): array
+    /**
+     * Display a listing of rooms.
+     */
+    public function index(Request $request)
     {
-        return session('rooms_data', [
-            [
-                'id'         => 1,
-                'nama'       => 'Ruang Seminar A - Lt. 3',
-                'kapasitas'  => 120,
-                'lantai'     => 3,
-                'gedung'     => 'Gedung A',
-                'fasilitas'  => ['Proyektor HD', 'AC Central', 'Sound System', 'Whiteboard', 'WiFi 100Mbps', 'Podium', 'Webcam 4K'],
-                'status'     => 'Tersedia',
-                'kode'       => 'RSA-301',
-                'jam_buka'   => '07:00',
-                'jam_tutup'  => '21:00',
-                'max_durasi' => '8 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung B (FIP), Lantai 1',
-                'deskripsi'  => 'Ruang seminar luas dengan panggung dan sistem audio premium. Ideal untuk seminar, kuliah umum, dan acara besar kampus.',
-                'jadwal'     => [
-                    '2026-05-05' => ['label' => 'Seminar Nasional IT 2026',  'waktu' => '08:00 - 16:00', 'tipe' => 'penuh'],
-                    '2026-05-08' => ['label' => 'Rapat Dosen Program Studi', 'waktu' => '09:00 - 12:00', 'tipe' => 'sebagian'],
-                    '2026-05-10' => ['label' => 'Workshop UI/UX Design',     'waktu' => '13:00 - 17:00', 'tipe' => 'sebagian'],
-                    '2026-05-21' => ['label' => 'Wisuda Semester Genap',     'waktu' => '07:00 - 15:00', 'tipe' => 'penuh'],
-                ],
-            ],
-            [
-                'id'         => 2,
-                'nama'       => 'Ruang Rapat 205',
-                'kapasitas'  => 25,
-                'lantai'     => 2,
-                'gedung'     => 'Gedung B',
-                'fasilitas'  => ['Meja Rapat', 'AC', 'TV 65"', 'WiFi', 'Whiteboard'],
-                'status'     => 'Dipakai',
-                'kode'       => 'RR-205',
-                'jam_buka'   => '08:00',
-                'jam_tutup'  => '17:00',
-                'max_durasi' => '4 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1604328698692-f76ea9498e76?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung C (FTK), Lantai 2',
-                'deskripsi'  => 'Ruang rapat eksekutif dengan meja oval dan TV layar besar. Cocok untuk rapat dosen, diskusi tim, dan pertemuan pimpinan.',
-                'jadwal'     => [
-                    '2026-05-03' => ['label' => 'Rapat Pimpinan', 'waktu' => '09:00 - 14:00', 'tipe' => 'penuh'],
-                ],
-            ],
-            [
-                'id'         => 3,
-                'nama'       => 'Ruang Kuliah B-12',
-                'kapasitas'  => 60,
-                'lantai'     => 1,
-                'gedung'     => 'Gedung B',
-                'fasilitas'  => ['AC', 'Proyektor', 'Kursi Mahasiswa', 'Papan Tulis'],
-                'status'     => 'Tersedia',
-                'kode'       => 'RKB-12',
-                'jam_buka'   => '07:00',
-                'jam_tutup'  => '20:00',
-                'max_durasi' => '6 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung D , Lantai 1',
-                'deskripsi'  => 'Ruang kuliah standar dengan kursi ergonomis dan proyektor. Lengkap untuk kegiatan belajar mengajar sehari-hari.',
-                'jadwal'     => [],
-            ],
-            [
-                'id'         => 4,
-                'nama'       => 'Lab Komputer C-03',
-                'kapasitas'  => 40,
-                'lantai'     => 3,
-                'gedung'     => 'Gedung C',
-                'fasilitas'  => ['40 PC', 'AC', 'Proyektor', 'WiFi', 'UPS'],
-                'status'     => 'Tersedia',
-                'kode'       => 'LC-303',
-                'jam_buka'   => '07:00',
-                'jam_tutup'  => '20:00',
-                'max_durasi' => '6 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung A (Rektorat), Lantai 1',
-                'deskripsi'  => 'Laboratorium komputer lengkap dengan 40 unit PC. Ideal untuk praktikum pemrograman, ujian online, dan workshop teknologi.',
-                'jadwal'     => [],
-            ],
-            [
-                'id'         => 5,
-                'nama'       => 'Aula Utama Kampus',
-                'kapasitas'  => 500,
-                'lantai'     => 1,
-                'gedung'     => 'Gedung Pusat',
-                'fasilitas'  => ['Panggung', 'Sound System', 'AC Central', 'Kursi 500', 'Lighting'],
-                'status'     => 'Dipakai',
-                'kode'       => 'AUK-101',
-                'jam_buka'   => '07:00',
-                'jam_tutup'  => '22:00',
-                'max_durasi' => '10 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung E (Auditorium), Lantai 1',
-                'deskripsi'  => 'Aula terbesar kampus dengan kapasitas 500 orang. Digunakan untuk wisuda, seminar besar, konser, dan acara kampus skala nasional.',
-                'jadwal'     => [
-                    '2026-05-03' => ['label' => 'Acara Dies Natalis', 'waktu' => '08:00 - 22:00', 'tipe' => 'penuh'],
-                ],
-            ],
-            [
-                'id'         => 6,
-                'nama'       => 'Meeting Room Lt. 4',
-                'kapasitas'  => 12,
-                'lantai'     => 4,
-                'gedung'     => 'Gedung A',
-                'fasilitas'  => ['TV 55"', 'AC', 'WiFi', 'Whiteboard', 'Sofa'],
-                'status'     => 'Tersedia',
-                'kode'       => 'MR-401',
-                'jam_buka'   => '08:00',
-                'jam_tutup'  => '17:00',
-                'max_durasi' => '4 jam/hari',
-                'foto'       => 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&q=80',
-                'alamat'     => 'Kampus Tengah Undiksha, Gedung F (Gedung Kuliah Umum),',
-                'deskripsi'  => 'Ruang meeting kecil dan nyaman dengan sofa. Ideal untuk diskusi tim kecil, interview, dan coaching session.',
-                'jadwal'     => [],
-            ],
-        ]);
+        $query = Room::with(['faculty', 'facilities']);
 
-    }
-
-    private function enrichRoomWithMeta($room)
-    {
-        $fasilitas = $room['fasilitas'] ?? [];
-        $fasilitasJson = json_encode($fasilitas); // Encode sekali saja
-        $displayedMeta = [];
-
-        if(str_contains($fasilitasJson, 'kursi')) $displayedMeta[] = 'kursi tersedia';
-        if(str_contains($fasilitasJson, 'WiFi')) $displayedMeta[] = 'WiFi siap';
-        if(str_contains($fasilitasJson, 'listrik') || str_contains($fasilitasJson, 'UPS')) $displayedMeta[] = 'listrik siap';
-        if(str_contains($fasilitasJson, 'AC')) $displayedMeta[] = 'AC aktif';
-
-        $room['search_keywords'] = addslashes(
-            strtolower($room['nama'] . ' ' . ($room['kode'] ?? '') . ' ' . ($room['gedung'] ?? ''))
-        );
-
-        return $room;
-    }
-
-    public function index()
-    {
-        session()->forget('rooms_data'); // FUNGSI RESET SESSION (KARENA BELUM MEMAKAI DATABASE)
-        $rooms = $this->getRooms();
-
-        // Hitung total tersedia untuk header
-        $totalTersedia = collect($rooms)->where('status', 'Tersedia')->count();
-
-        $rooms = collect($this->getRooms())
-            ->map(fn($room) => $this->enrichRoomWithMeta($room))
-            ->toArray();
-
-        foreach ($rooms as &$room) {
-            $cleanAddress = strip_tags($room['alamat'] ?? '');
-            $room['maps_query'] = urlencode($cleanAddress);
+        // Search
+        if ($request->filled('search')) {
+            $query->search($request->search);
         }
 
-        return view('rooms.index', compact('rooms', 'totalTersedia'));
-    }
-
-    public function show(int $id)
-    {
-        $rooms = $this->getRooms();
-        $room  = collect($rooms)->firstWhere('id', $id);
-
-        if (!$room) {
-            abort(404, 'Ruangan tidak ditemukan.');
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
-        $bulanIni     = now()->format('Y-m');
-        $totalBooking = collect($room['jadwal'])
-            ->filter(fn($_, $tgl) => str_starts_with($tgl, $bulanIni))
+        // Filter by faculty
+        if ($request->filled('faculty_id')) {
+            $query->byFaculty($request->faculty_id);
+        }
+
+        // Filter by building
+        if ($request->filled('gedung')) {
+            $query->byBuilding($request->gedung);
+        }
+
+        // Filter by capacity
+        if ($request->filled('min_capacity')) {
+            $query->minCapacity($request->min_capacity);
+        }
+
+        $rooms = $query->get();
+
+        // Hitung statistik
+        $totalTersedia = Room::available()->count();
+        $totalDipakai = Room::where('status', '!=', 'Tersedia')->count();
+        $totalRooms = Room::count();
+        $totalKapasitas = Room::sum('kapasitas');
+
+        // Ambil daftar gedung untuk filter
+        $buildings = Room::select('gedung')->distinct()->pluck('gedung');
+        $faculties = Faculty::where('status', 'active')->get();
+
+        // Enrich room data untuk view
+        $rooms = $rooms->map(function ($room) {
+            return $this->enrichRoomForView($room);
+        });
+
+        return view('rooms.index', compact(
+            'rooms',
+            'totalTersedia',
+            'totalDipakai',
+            'totalRooms',
+            'totalKapasitas',
+            'buildings',
+            'faculties'
+        ));
+    }
+
+    /**
+     * Display room search page.
+     */
+    public function search(Request $request)
+    {
+        $query = Room::with(['faculty', 'facilities']);
+
+        if ($request->filled('q')) {
+            $query->search($request->q);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('faculty_id')) {
+            $query->byFaculty($request->faculty_id);
+        }
+
+        if ($request->filled('gedung')) {
+            $query->byBuilding($request->gedung);
+        }
+
+        if ($request->filled('min_capacity')) {
+            $query->minCapacity($request->min_capacity);
+        }
+
+        // Filter tanggal dan jam (untuk pencarian ketersediaan)
+        if ($request->filled('tanggal') && $request->filled('jam_mulai') && $request->filled('jam_selesai')) {
+            $query->whereDoesntHave('bookings', function ($q) use ($request) {
+                $q->whereDate('tanggal', $request->tanggal)
+                    ->where('status', '!=', Booking::STATUS_CANCELLED)
+                    ->where('status', '!=', Booking::STATUS_REJECTED)
+                    ->where('status', '!=', Booking::STATUS_COMPLETED)
+                    ->where(function ($sub) use ($request) {
+                        $sub->where('jam_mulai', '<', $request->jam_selesai)
+                            ->where('jam_selesai', '>', $request->jam_mulai);
+                    });
+            });
+        }
+
+        $rooms = $query->get()->map(function ($room) {
+            return $this->enrichRoomForView($room);
+        });
+
+        $faculties = Faculty::where('status', 'active')->get();
+        $buildings = Room::select('gedung')->distinct()->pluck('gedung');
+
+        return view('rooms.search', compact('rooms', 'faculties', 'buildings'));
+    }
+
+    /**
+     * Display room detail.
+     */
+    public function show(Request $request, int $id)
+    {
+        $room = Room::with(['faculty', 'facilities', 'bookings' => function ($query) {
+            $query->where('status', '!=', Booking::STATUS_CANCELLED)
+                  ->where('status', '!=', Booking::STATUS_REJECTED)
+                  ->orderBy('tanggal')
+                  ->orderBy('jam_mulai');
+        }])->findOrFail($id);
+
+        // Parse jadwal dari bookings untuk kalender
+        $jadwal = [];
+        foreach ($room->bookings as $booking) {
+            $tgl = $booking->tanggal->format('Y-m-d');
+            if (!isset($jadwal[$tgl])) {
+                $jadwal[$tgl] = [];
+            }
+            $jadwal[$tgl][] = [
+                'label' => $booking->kegiatan,
+                'waktu' => Carbon::parse($booking->jam_mulai)->format('H:i') . ' - ' . Carbon::parse($booking->jam_selesai)->format('H:i'),
+                'tipe' => $booking->status === 'approved' ? 'penuh' : 'sebagian',
+                'status' => $booking->status,
+            ];
+        }
+
+        // Sederhanakan jadwal untuk view
+        $jadwalSimplified = [];
+        foreach ($jadwal as $tgl => $items) {
+            $isFull = collect($items)->every(fn($item) => $item['tipe'] === 'penuh');
+            $jadwalSimplified[$tgl] = [
+                'label' => collect($items)->pluck('label')->implode(', '),
+                'waktu' => collect($items)->pluck('waktu')->implode(', '),
+                'tipe' => $isFull ? 'penuh' : 'sebagian',
+                'count' => count($items),
+            ];
+        }
+
+        $roomData = $this->enrichRoomForView($room);
+        $roomData['jadwal'] = $jadwalSimplified;
+
+        // Hitung total booking bulan ini
+        $bulanIni = now()->format('Y-m');
+        $totalBooking = $room->bookings()
+            ->where('tanggal', 'LIKE', $bulanIni . '%')
+            ->where('status', '!=', Booking::STATUS_CANCELLED)
             ->count();
 
-        $tahun = request('tahun', now()->year);
-        $bulan = request('bulan', now()->month);
+        $tahun = $request->input('tahun', now()->year);
+        $bulan = $request->input('bulan', now()->month);
 
-        $tahun = max(2020, min(2030, $tahun));
-        $bulan = max(1, min(12, $bulan));
+        $tahun = max(2020, min(2030, (int)$tahun));
+        $bulan = max(1, min(12, (int)$bulan));
 
-        $cleanAddress = strip_tags($room['alamat'] ?? '');
-        $mapsQuery = urlencode($cleanAddress);
+        $roomData['foto'] = $roomData['foto'] ?? asset('images/default-room.jpg');
 
-        return view('rooms.show', compact('room', 'totalBooking', 'tahun', 'bulan'));
+        return view('rooms.show', compact('roomData', 'totalBooking', 'tahun', 'bulan'));
+    }
+
+    /**
+     * Enrich room data for view.
+     */
+    private function enrichRoomForView($room): array
+    {
+        $fasilitas = $room->facilities->pluck('nama')->toArray();
+        $fasilitasJson = json_encode($fasilitas);
+
+        $displayedMeta = [];
+        if (str_contains($fasilitasJson, 'kursi') || str_contains($fasilitasJson, 'Kursi')) {
+            $displayedMeta[] = 'kursi tersedia';
+        }
+        if (str_contains($fasilitasJson, 'WiFi') || str_contains($fasilitasJson, 'wifi')) {
+            $displayedMeta[] = 'WiFi siap';
+        }
+        if (str_contains($fasilitasJson, 'listrik') || str_contains($fasilitasJson, 'UPS') || str_contains($fasilitasJson, 'stop')) {
+            $displayedMeta[] = 'listrik siap';
+        }
+        if (str_contains($fasilitasJson, 'AC') || str_contains($fasilitasJson, 'ac')) {
+            $displayedMeta[] = 'AC aktif';
+        }
+
+        return [
+            'id' => $room->id,
+            'nama' => $room->nama,
+            'kode' => $room->kode,
+            'kapasitas' => $room->kapasitas,
+            'lantai' => $room->lantai,
+            'gedung' => $room->gedung,
+            'fasilitas' => $fasilitas,
+            'status' => $room->status,
+            'status_label' => $room->getStatusLabelAttribute(),
+            'jam_buka' => $room->getFormattedJamBukaAttribute(),
+            'jam_tutup' => $room->getFormattedJamTutupAttribute(),
+            'max_durasi' => $room->getMaxDurasiLabelAttribute(),
+            'max_durasi_jam' => $room->max_durasi_jam,
+            'foto' => $room->foto ?? asset('images/default-room.jpg'),
+            'alamat' => $room->alamat,
+            'deskripsi' => $room->deskripsi,
+            'displayed_meta' => $displayedMeta,
+            'faculty_id' => $room->faculty_id,
+            'faculty_name' => $room->faculty?->name,
+            'search_keywords' => strtolower($room->nama . ' ' . $room->kode . ' ' . $room->gedung),
+            'maps_query' => urlencode(strip_tags($room->alamat ?? '')),
+        ];
     }
 }

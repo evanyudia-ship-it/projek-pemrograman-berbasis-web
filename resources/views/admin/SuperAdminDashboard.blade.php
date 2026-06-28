@@ -1,10 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - Smart Classroom')
+@section('title', 'Super Admin Dashboard - Smart Classroom')
 @section('page_title', 'Dashboard')
 @section('page_subtitle')
     Selamat datang kembali, {{ session('user_name', 'Guest') }}
 @endsection
+
+@php
+    use App\Models\Booking;
+@endphp
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-8 font-sora">
@@ -44,7 +48,7 @@
             </div>
             <p class="text-3xl font-bold text-slate-900">{{ $menunggu_approval }}</p>
             <p class="text-xs text-slate-500 mt-1">Menunggu Approval</p>
-            <a href="{{ route('admin.approvals') }}"
+            <a href="{{ route('admin.approvals.index') }}"
                class="text-xs text-amber-600 mt-3 font-medium block hover:underline">
                 Lihat semua →
             </a>
@@ -52,7 +56,7 @@
 
         {{-- Reputation Point --}}
         @php
-            $rp = $reputation_point;
+            $rp = $reputation_point ?? 100;
             if ($rp >= 80) {
                 $rpLabel = 'Trusted User';
                 $rpColor = 'from-emerald-400 to-teal-400';
@@ -98,6 +102,31 @@
 
     </div>
 
+    {{-- ===== STATISTIK TAMBAHAN ===== --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 fade-up delay-1">
+        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+            <p class="text-xs text-slate-400 mb-1">Total User</p>
+            <p class="text-2xl font-bold text-slate-900">{{ $total_users ?? 0 }}</p>
+            <p class="text-xs text-slate-400 mt-1">terdaftar</p>
+        </div>
+        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+            <p class="text-xs text-slate-400 mb-1">Dosen</p>
+            <p class="text-2xl font-bold text-blue-600">{{ $total_dosen ?? 0 }}</p>
+            <p class="text-xs text-slate-400 mt-1">akun dosen</p>
+        </div>
+        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+            <p class="text-xs text-slate-400 mb-1">Mahasiswa</p>
+            <p class="text-2xl font-bold text-emerald-600">{{ $total_mahasiswa ?? 0 }}</p>
+            <p class="text-xs text-slate-400 mt-1">akun mahasiswa</p>
+        </div>
+        <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+            <p class="text-xs text-slate-400 mb-1">Total Booking</p>
+            {{-- SEKARANG SUDAH BISA KARENA ADA use App\Models\Booking; --}}
+            <p class="text-2xl font-bold text-purple-600">{{ Booking::count() }}</p>
+            <p class="text-xs text-slate-400 mt-1">sepanjang waktu</p>
+        </div>
+    </div>
+
     {{-- ===== MAIN GRID: Jadwal + Sidebar ===== --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-up delay-2">
 
@@ -110,7 +139,7 @@
                    class="text-xs text-blue-600 hover:underline font-medium">Lihat semua →</a>
             </div>
 
-            @forelse($jadwal_hari_ini as $jadwal)
+            @forelse($jadwal_hari_ini ?? [] as $jadwal)
             <div class="room-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
 
                 <div class="relative h-40 overflow-hidden">
@@ -120,11 +149,11 @@
                     <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent"></div>
 
                     <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5
-                        {{ $jadwal['status'] == 'Confirmed'
+                        {{ $jadwal['status'] == 'Disetujui'
                             ? 'bg-emerald-400/90 text-emerald-900'
                             : 'bg-amber-400/90 text-amber-900' }}">
                         <span class="w-1.5 h-1.5 rounded-full
-                            {{ $jadwal['status'] == 'Confirmed' ? 'bg-emerald-700' : 'bg-amber-700' }}"></span>
+                            {{ $jadwal['status'] == 'Disetujui' ? 'bg-emerald-700' : 'bg-amber-700' }}"></span>
                         {{ $jadwal['status'] }}
                     </span>
 
@@ -169,7 +198,7 @@
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-base font-bold text-slate-800">Notifikasi</h2>
-                    @if(count($notifikasi) > 0)
+                    @if(count($notifikasi ?? []) > 0)
                     <span class="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">
                         {{ count($notifikasi) }} baru
                     </span>
@@ -177,7 +206,7 @@
                 </div>
 
                 <div class="space-y-3">
-                    @forelse($notifikasi as $notif)   {{-- Ubah ke @forelse biar konsisten --}}
+                    @forelse($notifikasi ?? [] as $notif)
                         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex gap-3">
                             <span class="text-xl shrink-0 mt-0.5">{{ $notif['icon'] }}</span>
                             <div>
@@ -207,7 +236,7 @@
                     </div>
                     <div>
                         <div class="flex justify-between text-xs text-slate-500 mb-1.5">
-                            <span>Dipakai</span>
+                            <span>Dipakai / Maintenance</span>
                             <span class="font-semibold text-red-500">{{ $total_ruang - $ruang_tersedia }} ruang</span>
                         </div>
                         <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -236,7 +265,7 @@
                         <span class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center">🏫</span>
                         Ketersediaan Ruang
                     </a>
-                    <a href="{{ route('admin.approvals') }}"
+                    <a href="{{ route('admin.approvals.index') }}"
                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition text-sm text-slate-700 font-medium">
                         <span class="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">✅</span>
                         Approval Admin
@@ -246,10 +275,15 @@
                         </span>
                         @endif
                     </a>
-                    <a href="{{ route('bookings.index') }}"
+                    <a href="{{ route('admin.rooms.index') }}"
                        class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition text-sm text-slate-700 font-medium">
-                        <span class="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center">📋</span>
-                        Riwayat Booking
+                        <span class="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">🏗️</span>
+                        Manajemen Ruang
+                    </a>
+                    <a href="{{ route('admin.facilities.index') }}"
+                       class="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition text-sm text-slate-700 font-medium">
+                        <span class="w-8 h-8 bg-purple-50 rounded-xl flex items-center justify-center">📦</span>
+                        Manajemen Fasilitas
                     </a>
                 </div>
             </div>
