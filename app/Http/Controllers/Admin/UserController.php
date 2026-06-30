@@ -124,8 +124,12 @@ class UserController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             'faculty_id' => ['nullable', 'exists:faculties,id'],
             'status' => ['required', Rule::in(['pending', 'active', 'inactive', 'banned'])],
-            'reputation_points' => ['nullable', 'integer', 'min:0'],
+            'reputation_points' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
+
+        if (isset($validated['reputation_points'])) {
+            $user->reputation_points = $validated['reputation_points'];
+        }
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);

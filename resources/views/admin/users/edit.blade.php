@@ -102,9 +102,24 @@
         </div>
 
         <div>
-            <label class="block text-sm font-semibold mb-2">Poin Reputasi</label>
-            <input type="number" name="reputation_points" value="{{ old('reputation_points', $user->reputation_points) }}"
-                   class="w-full px-4 py-3 rounded-xl border border-slate-200">
+            <label class="block text-sm font-semibold mb-2">
+                Poin Reputasi
+            </label>
+
+            <input
+                type="number"
+                name="reputation_points"
+                value="{{ old('reputation_points', $user->reputation_points) }}"
+                min="0"
+                max="100"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+            <p class="text-xs text-slate-400 mt-1">
+                Nilai 0–100. Gunakan dengan bijak karena mempengaruhi hak booking user.
+            </p>
+            @if($user->reputation_points == 100)
+                <p class="text-xs text-emerald-600 mt-1">✅ Reputasi maksimal (100 poin)</p>
+            @endif
         </div>
 
         <div class="md:col-span-2 flex justify-end gap-3 pt-4">

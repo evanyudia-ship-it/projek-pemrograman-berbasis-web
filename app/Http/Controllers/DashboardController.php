@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Traits\AuthenticatesUser;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    use AuthenticatesUser;
+
     public function index()
     {
         if ($this->currentRole() !== 'superadmin') {
@@ -184,25 +187,4 @@ class DashboardController extends Controller
         return Carbon::parse($time)->format('H:i');
     }
 
-    private function currentUser(): ?User
-    {
-        if (Auth::check()) {
-            return Auth::user();
-        }
-
-        if (session()->has('user_id')) {
-            return User::find(session('user_id'));
-        }
-
-        return null;
-    }
-
-    private function currentRole(): ?string
-    {
-        if (Auth::check()) {
-            return Auth::user()->role;
-        }
-
-        return session('user_role');
-    }
 }

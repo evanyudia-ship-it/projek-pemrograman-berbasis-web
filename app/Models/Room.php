@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,8 @@ use Carbon\Carbon;
 
 class Room extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'rooms';
 
     protected $fillable = [
@@ -26,7 +29,8 @@ class Room extends Model
         'jam_tutup',
         'max_durasi_jam',
         'status',
-        'faculty_id'
+        'faculty_id',
+        'deleted_at',
     ];
 
     protected $casts = [

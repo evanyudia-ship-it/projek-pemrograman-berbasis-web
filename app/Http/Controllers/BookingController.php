@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\RoomSchedule;
+use App\Traits\AuthenticatesUser;
+use App\Helpers\PriorityHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -12,12 +14,14 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    use AuthenticatesUser;
+
     /**
      * Display a listing of user's bookings.
      */
     public function index()
     {
-        $userId = session('user_id');
+        $userId = $this->currentUserId();
         if (!$userId) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
@@ -38,12 +42,34 @@ class BookingController extends Controller
     }
 
     /**
+     * Check if user can create booking based on reputation.
+     */
+    private function checkReputation(User $user): ?string
+    {
+        $reputationService = app(\App\Services\ReputationService::class);
+
+        // Cek apakah user bisa booking
+        if (!$reputationService->canBook($user)) {
+            return 'Akun Anda diblokir karena reputasi rendah. Hubungi admin untuk informasi lebih lanjut.';
+        }
+
+        // Cek apakah sudah mencapai max active bookings
+        if ($reputationService->hasReachedMaxActiveBookings($user)) {
+            $max = $reputationService->getMaxActiveBookings($user);
+            return "Anda sudah mencapai batas maksimal booking aktif ({$max} booking). Selesaikan booking yang sedang berjalan terlebih dahulu.";
+        }
+
+        return null;
+    }
+
+    /**
      * Show form to create a new booking.
      */
     public function create()
     {
         $rooms = Room::where('status', 'Tersedia')->get();
-        return view('bookings.create', compact('rooms'));
+        $prioritas = PriorityHelper::getActivitiesGroupedByPriority();
+        return view('bookings.create', compact('rooms', 'prioritas'));
     }
 
     /**
@@ -54,15 +80,24 @@ class BookingController extends Controller
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'kegiatan' => 'required|string|max:150',
+            'jenis_kegiatan' => 'required|string|in:' . implode(',', array_keys(PriorityHelper::getPriorities())),
             'tujuan' => 'required|string|max:500',
             'tanggal' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
         ]);
 
-        $userId = session('user_id');
+        $userId = $this->currentUserId();
         if (!$userId) {
             return redirect()->route('login')->with('error', 'Silakan login.');
+        }
+
+        $user = User::find($userId);
+
+        // CEK REPUTASI
+        $reputationError = $this->checkReputation($user);
+        if ($reputationError) {
+            return back()->withInput()->with('error', $reputationError);
         }
 
         // Cek ketersediaan ruang
@@ -71,37 +106,9 @@ class BookingController extends Controller
             return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
         }
 
-        // Generate booking code
-        $lastBooking = Booking::orderBy('id', 'desc')->first();
-        $nextId = $lastBooking ? $lastBooking->id + 1 : 1;
-        $bookingCode = 'BK-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
-
-        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
-        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
-        $durasiMenit = $start->diffInMinutes($end);
-
-        // Deadline check-in: 30 menit setelah jam mulai
-        $checkinDeadline = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai)->addMinutes(30);
-
-        $booking = Booking::create([
-            'booking_code' => $bookingCode,
-            'user_id' => $userId,
-            'room_id' => $request->room_id,
-            'kegiatan' => $request->kegiatan,
-            'tujuan' => $request->tujuan,
-            'tanggal' => $request->tanggal,
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'durasi_menit' => $durasiMenit,
-            'priority_level' => 'Medium', // default
-            'status' => 'pending',
-            'check_in_status' => 'belum_checkin',
-            'checkin_deadline' => $checkinDeadline,
-            'is_penalty_applied' => false,
-        ]);
-
-        // Catat histori (opsional)
-        // BookingHistory::create([...]);
+        // Gunakan BookingService dengan transaction
+        $bookingService = app(\App\Services\BookingService::class);
+        $booking = $bookingService->create($request->all(), $userId);
 
         return redirect()->route('bookings.index')
             ->with('success', 'Booking berhasil diajukan! Menunggu persetujuan admin.');
@@ -115,8 +122,10 @@ class BookingController extends Controller
         $booking = Booking::with(['room', 'user', 'approvedBy', 'cancelledBy'])
             ->findOrFail($id);
 
-        // Pastikan hanya pemilik atau admin yang bisa melihat
-        if (session('user_id') != $booking->user_id && !in_array(session('user_role'), ['admin', 'superadmin'])) {
+        $userId = $this->currentUserId();
+        $role = $this->currentRole();
+
+        if ($userId != $booking->user_id && !in_array($role, ['admin', 'superadmin'])) {
             abort(403);
         }
 
@@ -129,8 +138,9 @@ class BookingController extends Controller
     public function edit($id)
     {
         $booking = Booking::findOrFail($id);
+        $userId = $this->currentUserId();
         // Hanya bisa edit jika status pending dan milik sendiri
-        if (session('user_id') != $booking->user_id || $booking->status != 'pending') {
+        if ($userId != $booking->user_id || $booking->status != 'pending') {
             abort(403);
         }
         $rooms = Room::where('status', 'Tersedia')->get();
@@ -143,7 +153,9 @@ class BookingController extends Controller
     public function update(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
-        if (session('user_id') != $booking->user_id || $booking->status != 'pending') {
+        $userId = $this->currentUserId();
+
+        if ($userId != $booking->user_id || $booking->status != 'pending') {
             abort(403);
         }
 
@@ -156,27 +168,15 @@ class BookingController extends Controller
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
         ]);
 
-        // Cek ketersediaan (kecuali jika ruang dan waktu sama persis)
+        // Cek ketersediaan
         $room = Room::find($request->room_id);
         if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai, $booking->id)) {
             return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
         }
 
-        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
-        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
-        $durasiMenit = $start->diffInMinutes($end);
-
-        $booking->update([
-            'room_id' => $request->room_id,
-            'kegiatan' => $request->kegiatan,
-            'tujuan' => $request->tujuan,
-            'tanggal' => $request->tanggal,
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'durasi_menit' => $durasiMenit,
-            // deadline check-in diupdate juga
-            'checkin_deadline' => Carbon::parse($request->tanggal . ' ' . $request->jam_mulai)->addMinutes(30),
-        ]);
+        // Gunakan BookingService dengan transaction
+        $bookingService = app(\App\Services\BookingService::class);
+        $booking = $bookingService->update($booking, $request->all());
 
         return redirect()->route('bookings.show', $booking->id)
             ->with('success', 'Booking berhasil diperbarui.');
@@ -188,7 +188,9 @@ class BookingController extends Controller
     public function checkin(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
-        if (session('user_id') != $booking->user_id) {
+        $userId = $this->currentUserId();
+
+        if ($userId != $booking->user_id) {
             abort(403);
         }
 
@@ -196,21 +198,38 @@ class BookingController extends Controller
             return back()->with('error', 'Booking tidak dapat di-check-in. Status: ' . $booking->status);
         }
 
-        $now = Carbon::now();
-        $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai->format('H:i:s'));
-        $checkinStatus = $now->lte($startTime) ? 'checkin_tepat_waktu' : 'checkin_terlambat';
-
-        $booking->update([
-            'check_in_status' => $checkinStatus,
-            'check_in_at' => $now,
-            'status' => 'approved', // tetap approved, atau bisa lanjut
-        ]);
-
-        // Tambahkan reputasi jika check-in tepat waktu (contoh)
-        // $booking->user->addReputationPoints(5, 'Check-in tepat waktu', null, $booking->id);
+        // Gunakan BookingService dengan transaction
+        $bookingService = app(\App\Services\BookingService::class);
+        $booking = $bookingService->checkIn($booking);
 
         return redirect()->route('bookings.show', $booking->id)
             ->with('success', 'Check-in berhasil!');
+    }
+
+    /**
+     * Complete booking (after usage).
+     */
+    public function complete(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+        $userId = $this->currentUserId();
+
+        // Cek apakah booking milik user yang sedang login
+        if ($userId != $booking->user_id) {
+            abort(403);
+        }
+
+        // Cek apakah booking sedang berlangsung
+        if ($booking->status !== 'ongoing') {
+            return back()->with('error', 'Booking tidak dapat diselesaikan. Status: ' . $booking->status);
+        }
+
+        // Complete booking dengan transaction
+        $bookingService = app(\App\Services\BookingService::class);
+        $booking = $bookingService->complete($booking);
+
+        return redirect()->route('bookings.show', $booking->id)
+            ->with('success', 'Booking berhasil diselesaikan! Terima kasih telah menggunakan ruangan.');
     }
 
     /**
@@ -218,7 +237,11 @@ class BookingController extends Controller
      */
     public function history()
     {
-        $userId = session('user_id');
+        $userId = $this->currentUserId();
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
         $bookings = Booking::with(['room'])
             ->where('user_id', $userId)
             ->whereIn('status', ['completed', 'cancelled', 'no_show', 'rejected'])
@@ -235,7 +258,9 @@ class BookingController extends Controller
     public function cancel(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
-        if (session('user_id') != $booking->user_id) {
+        $userId = $this->currentUserId();
+
+        if ($userId != $booking->user_id) {
             abort(403);
         }
 
@@ -243,11 +268,11 @@ class BookingController extends Controller
             return back()->with('error', 'Booking tidak dapat dibatalkan.');
         }
 
-        $booking->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->input('reason', 'Dibatalkan oleh pemohon'),
-            'cancelled_by' => session('user_id'),
-        ]);
+        $reason = $request->input('reason', 'Dibatalkan oleh pemohon');
+
+        // Gunakan BookingService dengan transaction
+        $bookingService = app(\App\Services\BookingService::class);
+        $bookingService->cancel($booking, $reason, $userId);
 
         return redirect()->route('bookings.index')->with('success', 'Booking dibatalkan.');
     }

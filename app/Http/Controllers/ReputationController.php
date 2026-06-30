@@ -41,7 +41,12 @@ class ReputationController extends Controller
             ->orderBy('min_points', 'asc')
             ->first();
 
-        return view('reputation.index', compact('user', 'logs', 'level', 'nextLevel'));
+        // Cek apakah reputasi sudah maksimal
+        $isMax = $user->reputation_points >= 100;
+        $isMin = $user->reputation_points <= 0;
+
+        return view('reputation.index', compact('user', 'logs', 'level', 'nextLevel', 'isMax', 'isMin'));
+
     }
 
     /**

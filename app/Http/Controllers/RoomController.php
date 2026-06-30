@@ -217,7 +217,7 @@ class RoomController extends Controller
             'jam_tutup' => $room->getFormattedJamTutupAttribute(),
             'max_durasi' => $room->getMaxDurasiLabelAttribute(),
             'max_durasi_jam' => $room->max_durasi_jam,
-            'foto' => $room->foto ?? asset('images/default-room.jpg'),
+            'foto' => $room->foto ? asset('storage/' . $room->foto) : asset('images/default-room.jpg'),
             'alamat' => $room->alamat,
             'deskripsi' => $room->deskripsi,
             'displayed_meta' => $displayedMeta,

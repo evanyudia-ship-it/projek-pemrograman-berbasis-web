@@ -190,4 +190,42 @@ class RoomFacilityController extends Controller
             'available' => $available->values(),
         ]);
     }
+
+        /**
+     * Restore a soft-deleted facility from room.
+     */
+    public function restore(int $roomId, int $facilityId)
+    {
+        $roomFacility = RoomFacility::where('room_id', $roomId)
+            ->where('facility_id', $facilityId)
+            ->withTrashed()
+            ->firstOrFail();
+
+        $roomFacility->restore();
+
+        $room = Room::find($roomId);
+        $facility = Facility::find($facilityId);
+
+        return redirect()->back()
+            ->with('success', "Fasilitas \"{$facility->nama}\" berhasil dipulihkan di ruang \"{$room->nama}\".");
+    }
+
+        /**
+     * Permanently delete a facility from room.
+     */
+    public function forceDetach(int $roomId, int $facilityId)
+    {
+        $roomFacility = RoomFacility::where('room_id', $roomId)
+            ->where('facility_id', $facilityId)
+            ->withTrashed()
+            ->firstOrFail();
+
+        $roomFacility->forceDelete();
+
+        $room = Room::find($roomId);
+        $facility = Facility::find($facilityId);
+
+        return redirect()->back()
+            ->with('success', "Fasilitas \"{$facility->nama}\" berhasil dihapus permanen dari ruang \"{$room->nama}\".");
+    }
 }

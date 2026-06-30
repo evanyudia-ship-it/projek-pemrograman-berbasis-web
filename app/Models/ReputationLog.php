@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReputationLog extends Model
 {
@@ -20,6 +21,7 @@ class ReputationLog extends Model
         'reason',
         'description',
         'created_by',
+        'deleted_at',
     ];
 
     protected function casts(): array

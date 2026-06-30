@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +24,7 @@ class Booking extends Model
         'user_id',
         'room_id',
         'kegiatan',
+        'jenis_kegiatan',
         'tujuan',
         'tanggal',
         'jam_mulai',
@@ -39,6 +41,7 @@ class Booking extends Model
         'is_penalty_applied',
         'cancellation_reason',
         'cancelled_by',
+        'deleted_at',
     ];
 
     /**
@@ -63,6 +66,7 @@ class Booking extends Model
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_ONGOING = 'ongoing';
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_NO_SHOW = 'no_show';
@@ -135,6 +139,33 @@ class Booking extends Model
     public function reputationLogs(): HasMany
     {
         return $this->hasMany(ReputationLog::class);
+    }
+
+    /**
+     * Get jenis kegiatan label.
+     */
+    public function getJenisKegiatanLabelAttribute(): string
+    {
+        if ($this->jenis_kegiatan === null || $this->jenis_kegiatan === '') {
+            return '-';
+        }
+        return \App\Helpers\PriorityHelper::getLabel($this->jenis_kegiatan);
+    }
+
+    /**
+     * Get priority label.
+     */
+    public function getPriorityLabelAttribute(): string
+    {
+        return \App\Helpers\PriorityHelper::getPriorityLabel($this->priority_level);
+    }
+
+    /**
+     * Get priority color.
+     */
+    public function getPriorityColorAttribute(): string
+    {
+        return \App\Helpers\PriorityHelper::getPriorityColor($this->priority_level);
     }
 
     /**
@@ -310,6 +341,7 @@ class Booking extends Model
             self::STATUS_PENDING => 'Menunggu',
             self::STATUS_APPROVED => 'Disetujui',
             self::STATUS_REJECTED => 'Ditolak',
+            self::STATUS_ONGOING => 'Sedang Berlangsung',
             self::STATUS_COMPLETED => 'Selesai',
             self::STATUS_CANCELLED => 'Dibatalkan',
             self::STATUS_NO_SHOW => 'Tidak Hadir',
@@ -327,20 +359,6 @@ class Booking extends Model
             self::CHECKIN_TEPAT => 'Check-in Tepat Waktu',
             self::CHECKIN_TERLAMBAT => 'Check-in Terlambat',
             self::CHECKIN_NO_SHOW => 'No Show',
-            default => 'Unknown',
-        };
-    }
-
-    /**
-     * Get priority label.
-     */
-    public function getPriorityLabelAttribute(): string
-    {
-        return match($this->priority_level) {
-            self::PRIORITY_HIGH => 'Tinggi',
-            self::PRIORITY_MEDIUM_HIGH => 'Sedang Tinggi',
-            self::PRIORITY_MEDIUM => 'Sedang',
-            self::PRIORITY_LOW => 'Rendah',
             default => 'Unknown',
         };
     }

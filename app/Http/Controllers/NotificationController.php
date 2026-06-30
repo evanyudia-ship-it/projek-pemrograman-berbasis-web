@@ -103,10 +103,26 @@ class NotificationController extends Controller
         $notification = Notifikasi::where('user_id', session('user_id'))
             ->findOrFail($id);
 
+        // Gunakan soft delete
         $notification->delete();
 
         return redirect()->back()
             ->with('success', 'Notifikasi berhasil dihapus.');
+    }
+
+    /**
+     * Permanently delete a notification (hard delete).
+     */
+    public function forceDelete(int $id)
+    {
+        $notification = Notifikasi::where('user_id', session('user_id'))
+            ->withTrashed()
+            ->findOrFail($id);
+
+        $notification->forceDelete();
+
+        return redirect()->back()
+            ->with('success', 'Notifikasi berhasil dihapus permanen.');
     }
 
     /**
@@ -122,6 +138,21 @@ class NotificationController extends Controller
 
         return redirect()->back()
             ->with('success', 'Semua notifikasi yang sudah dibaca telah dihapus.');
+    }
+
+    /**
+     * Permanently delete all read notifications.
+     */
+    public function forceDeleteAllRead()
+    {
+        $userId = session('user_id');
+
+        Notifikasi::where('user_id', $userId)
+            ->where('status', 'sudah_dibaca')
+            ->forceDelete();
+
+        return redirect()->back()
+            ->with('success', 'Semua notifikasi yang sudah dibaca telah dihapus permanen.');
     }
 
     /**

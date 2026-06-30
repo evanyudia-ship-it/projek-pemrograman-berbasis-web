@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RoomFacility extends Model
 {
+    use SoftDeletes;
+
     public $timestamps = false;
 
     protected $table = 'room_facilities';
@@ -15,7 +18,8 @@ class RoomFacility extends Model
     protected $fillable = [
         'room_id',
         'facility_id',
-        'status'
+        'status',
+        'deleted_at',
     ];
 
     protected $casts = [

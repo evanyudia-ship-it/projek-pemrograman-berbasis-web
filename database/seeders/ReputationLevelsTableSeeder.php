@@ -49,7 +49,10 @@ class ReputationLevelsTableSeeder extends Seeder
         ];
 
         foreach ($levels as $level) {
-            ReputationLevel::create($level);
+            ReputationLevel::updateOrCreate(
+                ['name' => $level['name']],
+                $level
+            );
         }
     }
 }

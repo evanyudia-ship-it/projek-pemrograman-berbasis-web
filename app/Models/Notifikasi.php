@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notifikasi extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -32,6 +33,7 @@ class Notifikasi extends Model
         'entitas_terkait',
         'entitas_id',
         'dibaca_at',
+        'deleted_at',
     ];
 
     /**
@@ -44,6 +46,8 @@ class Notifikasi extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+
 
     /**
      * Get the user that owns the notification.

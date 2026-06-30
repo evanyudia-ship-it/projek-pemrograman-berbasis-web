@@ -119,6 +119,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/cancel', [BookingController::class, 'cancel'])->name('cancel');
         Route::get('/{id}/cancel-form', [BookingCancellationController::class, 'create'])->name('cancel.create');
         Route::post('/{id}/cancel-process', [BookingCancellationController::class, 'store'])->name('cancel.store');
+        Route::post('/{id}/complete', [BookingController::class, 'complete'])->name('complete');
     });
 
 
@@ -178,12 +179,18 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+
+        // Route spesifik harus DI ATAS route dengan parameter {id}
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         Route::delete('/delete-read', [NotificationController::class, 'deleteAllRead'])->name('delete-read');
+        Route::delete('/delete-read/force', [NotificationController::class, 'forceDeleteAllRead'])->name('force-delete-read');
         Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('unread-count');
         Route::get('/latest', [NotificationController::class, 'getLatest'])->name('latest');
+
+        // Route dengan parameter {id} HARUS DI BAWAH route spesifik
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+        Route::delete('/{id}/force', [NotificationController::class, 'forceDelete'])->name('force-delete');
     });
 
 
@@ -229,6 +236,8 @@ Route::middleware(['auth'])->group(function () {
             Route::prefix('bookings')->name('bookings.')->group(function () {
                 Route::get('/', [BookingAdminController::class, 'index'])->name('index');
                 Route::get('/{id}', [BookingAdminController::class, 'show'])->name('show');
+                Route::post('/{id}/mark-no-show', [BookingAdminController::class, 'markNoShow'])->name('mark-no-show');
+                Route::post('/{id}/mark-fake', [BookingAdminController::class, 'markFakeBooking'])->name('mark-fake');
             });
 
 
@@ -298,6 +307,16 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/{roomId}/{facilityId}', [RoomFacilityController::class, 'detach'])->name('detach');
                 Route::get('/{roomId}/facilities', [RoomFacilityController::class, 'getRoomFacilities'])->name('get-room-facilities');
                 Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
+                Route::post('/{roomId}/{facilityId}/restore', [RoomFacilityController::class, 'restore'])->name('restore');
+                Route::delete('/{roomId}/{facilityId}/force', [RoomFacilityController::class, 'forceDetach'])->name('force-detach');
+                Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
+            });
+
+            // Tambahkan routes untuk notification force delete
+            Route::prefix('notifications')->name('notifications.')->group(function () {
+                // ... routes existing
+                Route::delete('/{id}/force', [NotificationController::class, 'forceDelete'])->name('force-delete');
+                Route::delete('/delete-read/force', [NotificationController::class, 'forceDeleteAllRead'])->name('force-delete-read');
             });
 
 

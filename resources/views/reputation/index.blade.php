@@ -38,14 +38,51 @@
 
         {{-- Circle Reputasi --}}
         <div class="flex items-center justify-center">
-            <div class="w-44 h-44 rounded-full flex items-center justify-center"
-                 style="border: 8px solid {{ $rpColor }}">
+            <div class="w-44 h-44 rounded-full flex items-center justify-center relative"
+                style="border: 8px solid {{ $rpColor }}">
+
                 <div class="text-center">
-                    <p class="text-5xl font-extrabold" style="color: {{ $rpColor }}">{{ $rp }}</p>
+                    <p class="text-5xl font-extrabold" style="color: {{ $rpColor }}">
+                        {{ $rp }}
+                    </p>
                     <p class="text-xs text-slate-500">Point</p>
                 </div>
+
+                @if($rp >= 100)
+                    <span class="absolute -top-2 -right-2 text-2xl">⭐</span>
+                @endif
+
+                @if($rp <= 0)
+                    <span class="absolute -top-2 -right-2 text-2xl">🚫</span>
+                @endif
+
             </div>
         </div>
+
+        {{-- Info Maksimal / Minimal --}}
+        @if($rp >= 100)
+        <div class="mt-4 text-center">
+            <span class="px-4 py-2 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
+                🏆 Reputasi Maksimal!
+            </span>
+
+            <p class="text-xs text-slate-500 mt-1">
+                Anda telah mencapai reputasi tertinggi.
+            </p>
+        </div>
+        @endif
+
+        @if($rp <= 0)
+        <div class="mt-4 text-center">
+            <span class="px-4 py-2 rounded-full text-sm font-bold bg-red-100 text-red-700">
+                ⚠️ Reputasi Minimal!
+            </span>
+
+            <p class="text-xs text-slate-500 mt-1">
+                Hubungi admin untuk pemulihan akun.
+            </p>
+        </div>
+        @endif
 
         {{-- Label Level --}}
         <div class="mt-6 text-center">

@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Services\BookingService;
+use App\Traits\AuthenticatesUser;
 use Illuminate\Http\Request;
 
 class BookingCancellationController extends Controller
 {
-    /**
-     * Show cancellation form.
-     */
+    use AuthenticatesUser;
+
     public function create($id)
     {
         $booking = Booking::findOrFail($id);
-        // Pastikan milik user dan bisa dibatalkan
-        if (session('user_id') != $booking->user_id) {
+        $userId = $this->currentUserId();
+
+        if ($userId != $booking->user_id) {
             abort(403);
         }
+
         if (!$booking->canBeCancelledByUser()) {
             return redirect()->route('bookings.index')->with('error', 'Booking tidak dapat dibatalkan.');
         }
@@ -24,13 +27,12 @@ class BookingCancellationController extends Controller
         return view('bookings.cancel', compact('booking'));
     }
 
-    /**
-     * Process cancellation with reason.
-     */
     public function store(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
-        if (session('user_id') != $booking->user_id) {
+        $userId = $this->currentUserId();
+
+        if ($userId != $booking->user_id) {
             abort(403);
         }
 
@@ -42,11 +44,9 @@ class BookingCancellationController extends Controller
             return back()->with('error', 'Booking tidak dapat dibatalkan.');
         }
 
-        $booking->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->reason,
-            'cancelled_by' => session('user_id'),
-        ]);
+        // Gunakan BookingService dengan transaction
+        $bookingService = app(BookingService::class);
+        $bookingService->cancel($booking, $request->reason, $userId);
 
         return redirect()->route('bookings.index')->with('success', 'Booking berhasil dibatalkan.');
     }

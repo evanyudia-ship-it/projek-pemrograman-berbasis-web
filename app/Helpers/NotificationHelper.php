@@ -4,7 +4,8 @@ namespace App\Helpers;
 
 use App\Models\Notifikasi;
 use App\Models\User;
-use App\Http\Controllers\NotificationController;
+use App\Jobs\SendNotification;
+use App\Jobs\SendBulkNotification;
 
 class NotificationHelper
 {
@@ -19,7 +20,16 @@ class NotificationHelper
         ?string $entitasTerkait = null,
         ?string $entitasId = null
     ): void {
-        NotificationController::create($userId, $judul, $pesan, $tipe, $entitasTerkait, $entitasId);
+        // Simplified: langsung create tanpa queue dulu
+        Notifikasi::create([
+            'user_id' => $userId,
+            'judul' => $judul,
+            'pesan' => $pesan,
+            'tipe' => $tipe,
+            'status' => 'belum_dibaca',
+            'entitas_terkait' => $entitasTerkait,
+            'entitas_id' => $entitasId,
+        ]);
     }
 
     /**
@@ -33,7 +43,9 @@ class NotificationHelper
         ?string $entitasTerkait = null,
         ?string $entitasId = null
     ): void {
-        NotificationController::sendToMany($userIds, $judul, $pesan, $tipe, $entitasTerkait, $entitasId);
+        foreach ($userIds as $userId) {
+            self::send($userId, $judul, $pesan, $tipe, $entitasTerkait, $entitasId);
+        }
     }
 
     /**
@@ -45,7 +57,19 @@ class NotificationHelper
         string $tipe = 'info',
         ?int $bookingId = null
     ): void {
-        NotificationController::notifyAdmins($judul, $pesan, $tipe, $bookingId);
+        $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+        $userIds = $admins->pluck('id')->toArray();
+
+        if (!empty($userIds)) {
+            self::sendToMany(
+                $userIds,
+                $judul,
+                $pesan,
+                $tipe,
+                'bookings',
+                $bookingId ? (string) $bookingId : null
+            );
+        }
     }
 
     /**
@@ -58,7 +82,14 @@ class NotificationHelper
         string $tipe = 'info',
         ?int $bookingId = null
     ): void {
-        NotificationController::sendBookingNotification($userId, $judul, $pesan, $tipe, $bookingId);
+        self::send(
+            $userId,
+            $judul,
+            $pesan,
+            $tipe,
+            'bookings',
+            $bookingId ? (string) $bookingId : null
+        );
     }
 
     /**
@@ -132,25 +163,6 @@ class NotificationHelper
             "Booking {$bookingCode} di ruang {$roomName} dinyatakan No Show. Reputasi Anda berkurang.",
             'danger',
             'bookings',
-            null
-        );
-    }
-
-    /**
-     * Send notification about reputation change.
-     */
-    public static function reputationChanged(int $userId, int $points, string $reason): void
-    {
-        $type = $points > 0 ? 'success' : 'danger';
-        $emoji = $points > 0 ? '⭐' : '⚠️';
-        $action = $points > 0 ? 'bertambah' : 'berkurang';
-
-        self::send(
-            $userId,
-            "Reputasi {$action} {$points} poin",
-            "{$emoji} Poin reputasi Anda {$action} {$points} poin. {$reason}",
-            $type,
-            'reputation',
             null
         );
     }

@@ -28,6 +28,21 @@
                         <label class="text-sm font-semibold text-slate-700">Judul Kegiatan</label>
                         <input type="text" name="kegiatan" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-blue-400" placeholder="Contoh: Diskusi Tugas Kelompok" required>
                     </div>
+
+                    {{-- JENIS KEGIATAN --}}
+                    <div class="md:col-span-2">
+                        <label class="text-sm font-semibold text-slate-700">Jenis Kegiatan <span class="text-red-500">*</span></label>
+                        <select name="jenis_kegiatan" id="jenis_kegiatan" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-blue-400" required>
+                            <option value="">Pilih Jenis Kegiatan</option>
+                            @foreach($prioritas as $priority => $items)
+                                @foreach($items as $key => $label)
+                                    <option value="{{ $key }}" {{ old('jenis_kegiatan') == $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
                         <label class="text-sm font-semibold text-slate-700">Tanggal</label>
                         <input type="date" name="tanggal" id="date" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-blue-400" min="{{ now()->toDateString() }}" required>

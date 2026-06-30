@@ -16,6 +16,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 3,
             'room_id' => 1,
             'kegiatan' => 'Seminar Nasional Teknologi Pendidikan',
+            'jenis_kegiatan' => 'seminar_nasional', // <-- TAMBAHKAN
             'tujuan' => 'Menyelenggarakan seminar nasional untuk dosen dan mahasiswa se-Bali',
             'tanggal' => Carbon::now()->addDays(5)->toDateString(),
             'jam_mulai' => '08:00:00',
@@ -36,6 +37,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 4,
             'room_id' => 2,
             'kegiatan' => 'Rapat Koordinasi HMTI',
+            'jenis_kegiatan' => 'organisasi_mahasiswa', // <-- TAMBAHKAN
             'tujuan' => 'Membahas persiapan acara Dies Natalis HMTI ke-15',
             'tanggal' => Carbon::now()->addDays(3)->toDateString(),
             'jam_mulai' => '10:00:00',
@@ -54,6 +56,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 5,
             'room_id' => 3,
             'kegiatan' => 'Belajar Kelompok Metode Numerik',
+            'jenis_kegiatan' => 'diskusi_kelompok', // <-- TAMBAHKAN
             'tujuan' => 'Diskusi dan pengerjaan tugas Metode Numerik bersama 5 teman',
             'tanggal' => Carbon::now()->addDays(2)->toDateString(),
             'jam_mulai' => '13:00:00',
@@ -75,6 +78,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 6,
             'room_id' => 4,
             'kegiatan' => 'Praktikum Pemrograman Web',
+            'jenis_kegiatan' => 'praktikum', // <-- TAMBAHKAN
             'tujuan' => 'Praktikum membuat aplikasi web menggunakan Laravel',
             'tanggal' => Carbon::now()->subDays(2)->toDateString(),
             'jam_mulai' => '09:00:00',
@@ -96,6 +100,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 7,
             'room_id' => 5,
             'kegiatan' => 'Persiapan Konser Musik',
+            'jenis_kegiatan' => 'organisasi_mahasiswa', // <-- TAMBAHKAN
             'tujuan' => 'Latihan dan persiapan konser musik mahasiswa',
             'tanggal' => Carbon::now()->subDays(1)->toDateString(),
             'jam_mulai' => '14:00:00',
@@ -116,6 +121,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 4,
             'room_id' => 8,
             'kegiatan' => 'Praktikum Kimia Dasar',
+            'jenis_kegiatan' => 'praktikum', // <-- TAMBAHKAN
             'tujuan' => 'Praktikum titrasi asam-basa untuk mata kuliah Kimia Dasar',
             'tanggal' => Carbon::now()->addDays(1)->toDateString(),
             'jam_mulai' => '07:00:00',
@@ -136,6 +142,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 3,
             'room_id' => 7,
             'kegiatan' => 'Rekaman Video Pembelajaran',
+            'jenis_kegiatan' => 'kuliah_reguler', // <-- TAMBAHKAN
             'tujuan' => 'Merekam video pembelajaran untuk mata kuliah Desain Grafis',
             'tanggal' => Carbon::now()->addDays(4)->toDateString(),
             'jam_mulai' => '09:00:00',
@@ -157,6 +164,7 @@ class BookingsTableSeeder extends Seeder
             'user_id' => 5,
             'room_id' => 2,
             'kegiatan' => 'Rapat Pimpinan HMTI',
+            'jenis_kegiatan' => 'organisasi_mahasiswa', // <-- TAMBAHKAN
             'tujuan' => 'Membahas program kerja HMTI periode 2025/2026',
             'tanggal' => Carbon::now()->addDays(7)->toDateString(),
             'jam_mulai' => '15:00:00',

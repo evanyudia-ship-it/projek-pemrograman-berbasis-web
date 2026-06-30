@@ -73,14 +73,11 @@
                     <td class="px-6 py-4 text-slate-600">{{ $bk['waktu'] }}</td>
                     <td class="px-6 py-4">
                         @php
-                            $pColor = match($bk['prioritas']) {
-                                'High'   => 'bg-blue-100 text-blue-700',
-                                'Medium' => 'bg-indigo-100 text-indigo-700',
-                                default  => 'bg-slate-100 text-slate-600',
-                            };
+                            $priorityColor = App\Helpers\PriorityHelper::getPriorityColor($bk['prioritas'] ?? 'Medium');
+                            $priorityLabel = App\Helpers\PriorityHelper::getPriorityLabel($bk['prioritas'] ?? 'Medium');
                         @endphp
-                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $pColor }}">
-                            {{ $bk['prioritas'] }}
+                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $priorityColor }}">
+                            {{ $priorityLabel }}
                         </span>
                     </td>
                     <td class="px-6 py-4">

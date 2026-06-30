@@ -3,35 +3,71 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Booking;
+use App\Services\BookingService;
+use App\Traits\AuthenticatesUser;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class ApprovalController extends Controller
 {
+    use AuthenticatesUser;
+
     /**
      * Menampilkan daftar booking pending dan riwayat approval.
      */
     public function index()
     {
-        // Booking yang masih pending (menunggu persetujuan)
         $pending = Booking::with(['user', 'room'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'pemohon' => $booking->user->name,
+                    'tipe' => $booking->user->role,
+                    'ruang' => $booking->room->nama,
+                    'kegiatan' => $booking->kegiatan,
+                    'waktu' => $booking->tanggal->format('d M Y') . ' ' . $booking->jam_mulai->format('H:i'),
+                    'prioritas' => $booking->priority_level,
+                    'jam_mulai' => $booking->jam_mulai->format('H:i'),
+                    'jam_selesai' => $booking->jam_selesai->format('H:i'),
+                    'tanggal' => $booking->tanggal,
+                    'tujuan' => $booking->tujuan,
+                    'status' => $booking->status,
+                ];
+            });
 
-        // Riwayat booking yang sudah diproses (approved, rejected, cancelled, completed)
         $history = Booking::with(['user', 'room'])
             ->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
             ->orderBy('updated_at', 'desc')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'pemohon' => $booking->user->name,
+                    'tipe' => $booking->user->role,
+                    'ruang' => $booking->room->nama,
+                    'kegiatan' => $booking->kegiatan,
+                    'waktu' => $booking->tanggal->format('d M Y') . ' ' . $booking->jam_mulai->format('H:i'),
+                    'status' => $booking->status,
+                    'catatan' => $booking->catatan_admin ?? $booking->cancellation_reason ?? '-',
+                    'diproses' => $booking->updated_at->format('d M Y, H:i'),
+                    'jam_mulai' => $booking->jam_mulai->format('H:i'),
+                    'jam_selesai' => $booking->jam_selesai->format('H:i'),
+                    'tanggal' => $booking->tanggal,
+                    'tujuan' => $booking->tujuan,
+                ];
+            });
 
-        // Statistik
         $stats = [
-            'pending'  => Booking::where('status', 'pending')->count(),
+            'pending' => Booking::where('status', 'pending')->count(),
             'approved' => Booking::where('status', 'approved')->count(),
             'rejected' => Booking::where('status', 'rejected')->count(),
-            'expired'  => Booking::where('status', 'no_show')->count(), // atau expired jika ada
+            'expired' => Booking::where('status', 'no_show')->count(),
         ];
 
         return view('admin.bookings.approvals', compact('pending', 'history', 'stats'));
@@ -48,14 +84,9 @@ class ApprovalController extends Controller
             return back()->with('error', 'Booking sudah diproses.');
         }
 
-        $booking->update([
-            'status'          => 'approved',
-            'disetujui_oleh'  => session('user_id'),
-            'disetujui_at'    => now(),
-        ]);
-
-        // (Opsional) Tambah reputasi +2 poin untuk user
-        // $booking->user->addReputationPoints(2, 'Booking disetujui', null, $booking->id);
+        $adminId = $this->currentUserId();
+        $bookingService = app(BookingService::class);
+        $bookingService->approve($booking, $adminId);
 
         return back()->with('success', "Booking {$booking->booking_code} berhasil disetujui.");
     }
@@ -75,13 +106,9 @@ class ApprovalController extends Controller
             return back()->with('error', 'Booking sudah diproses.');
         }
 
-        $booking->update([
-            'status'               => 'rejected',
-            'catatan_admin'        => $request->reason,
-            'cancellation_reason'  => $request->reason,
-            'disetujui_oleh'       => session('user_id'),
-            'disetujui_at'         => now(),
-        ]);
+        $adminId = $this->currentUserId();
+        $bookingService = app(BookingService::class);
+        $bookingService->reject($booking, $request->reason, $adminId);
 
         return back()->with('success', "Booking {$booking->booking_code} berhasil ditolak.");
     }

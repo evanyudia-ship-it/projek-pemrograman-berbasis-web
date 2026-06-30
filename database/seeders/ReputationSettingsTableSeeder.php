@@ -10,12 +10,13 @@ class ReputationSettingsTableSeeder extends Seeder
     public function run(): void
     {
         $settings = [
+            // REWARDS
             [
                 'code' => 'CHECK_IN_ON_TIME',
                 'name' => 'Check-in Tepat Waktu',
                 'type' => 'reward',
                 'point' => 5,
-                'description' => 'Bonus reputasi karena melakukan check-in tepat waktu',
+                'description' => 'Bonus reputasi karena melakukan check-in tepat waktu (≤ 15 menit dari jam mulai)',
                 'is_active' => true,
             ],
             [
@@ -23,17 +24,19 @@ class ReputationSettingsTableSeeder extends Seeder
                 'name' => 'Penggunaan Ruang Baik',
                 'type' => 'reward',
                 'point' => 10,
-                'description' => 'Bonus reputasi karena menggunakan ruang sesuai jadwal',
+                'description' => 'Bonus reputasi karena menyelesaikan booking tepat waktu',
                 'is_active' => true,
             ],
             [
-                'code' => 'ROOM_CONDITION_GOOD',
-                'name' => 'Kondisi Ruang Terjaga',
+                'code' => 'BOOKING_APPROVED',
+                'name' => 'Booking Disetujui',
                 'type' => 'reward',
-                'point' => 2,
-                'description' => 'Bonus reputasi karena menjaga kondisi ruang tetap baik',
+                'point' => 5,
+                'description' => 'Bonus reputasi karena booking disetujui admin',
                 'is_active' => true,
             ],
+
+            // PENALTIES
             [
                 'code' => 'NO_SHOW',
                 'name' => 'No Show',
@@ -69,7 +72,10 @@ class ReputationSettingsTableSeeder extends Seeder
         ];
 
         foreach ($settings as $setting) {
-            ReputationSetting::create($setting);
+            ReputationSetting::updateOrCreate(
+                ['code' => $setting['code']],
+                $setting
+            );
         }
     }
 }
