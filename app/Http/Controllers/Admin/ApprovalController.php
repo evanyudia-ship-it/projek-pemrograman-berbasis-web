@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Booking;
 use App\Models\AdminFaculty;
+use App\Models\User;
 use App\Services\BookingService;
 use App\Traits\AuthenticatesUser;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ApprovalController extends Controller
 {
@@ -17,33 +19,40 @@ class ApprovalController extends Controller
     /**
      * Menampilkan daftar booking pending dan riwayat approval.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $query = Booking::with(['user', 'room']);
 
-        // Jika SuperAdmin, lihat semua
-        if ($user->role === 'superadmin') {
-            // Tidak ada filter
+        // Role lain tidak boleh akses
+        if (!in_array($user->role, ['superadmin', 'admin'])) {
+            abort(403, 'Akses tidak diizinkan.');
         }
+
         // Jika Admin, hanya lihat booking di fakultas yang dikelola
-        else if ($user->role === 'admin') {
+        $facultyIds = [];
+        if ($user->role === 'admin') {
             $facultyIds = $user->adminFaculties()
                 ->where('status', 'active')
                 ->pluck('faculty_id')
                 ->toArray();
-
-            $query->whereHas('room', function ($q) use ($facultyIds) {
-                $q->whereIn('faculty_id', $facultyIds);
-            });
-        }
-        // Role lain tidak boleh akses
-        else {
-            abort(403, 'Akses tidak diizinkan.');
         }
 
-        // Pending bookings
-        $pending = $query->where('status', 'pending')
+        $baseQuery = function () use ($user, $facultyIds) {
+            $q = Booking::with(['user', 'room']);
+
+            if ($user->role === 'admin') {
+                $q->whereHas('room', function ($q2) use ($facultyIds) {
+                    $q2->whereIn('faculty_id', $facultyIds);
+                });
+            }
+
+            return $q;
+        };
+
+        // ============================================================
+        // PENDING BOOKINGS - LENGKAPI DATA
+        // ============================================================
+        $pending = $baseQuery()->where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($booking) {
@@ -51,49 +60,84 @@ class ApprovalController extends Controller
                     'id' => $booking->id,
                     'booking_code' => $booking->booking_code,
                     'pemohon' => $booking->user->name,
+                    'email' => $booking->user->email,
+                    'fakultas' => $booking->user->faculty->name ?? '-',
                     'tipe' => $booking->user->role,
                     'ruang' => $booking->room->nama,
+                    'gedung' => $booking->room->gedung ?? '-',
+                    'lantai' => $booking->room->lantai ?? '-',
+                    'kapasitas' => $booking->room->kapasitas ?? '-',
                     'kegiatan' => $booking->kegiatan,
-                    'waktu' => $booking->tanggal->format('d M Y') . ' ' . $booking->jam_mulai->format('H:i'),
-                    'prioritas' => $booking->priority_level,
-                    'jam_mulai' => $booking->jam_mulai->format('H:i'),
-                    'jam_selesai' => $booking->jam_selesai->format('H:i'),
+                    'jenis_kegiatan' => $booking->jenis_kegiatan ? \App\Helpers\PriorityHelper::getLabel($booking->jenis_kegiatan) : '-',
+                    'prioritas' => $booking->priority_level ?? '-',
+                    'priority_color' => \App\Helpers\PriorityHelper::getPriorityColor($booking->priority_level ?? 'Medium'),
+                    'priority_label' => \App\Helpers\PriorityHelper::getPriorityLabel($booking->priority_level ?? 'Medium'),
+                    'waktu' => $booking->tanggal->format('d M Y') . ' ' . Carbon::parse($booking->jam_mulai)->format('H:i'),
+                    'jam_mulai' => Carbon::parse($booking->jam_mulai)->format('H:i'),
+                    'jam_selesai' => Carbon::parse($booking->jam_selesai)->format('H:i'),
+                    'durasi' => $booking->durasi_menit . ' menit',
                     'tanggal' => $booking->tanggal,
                     'tujuan' => $booking->tujuan,
                     'status' => $booking->status,
+                    'check_in_status' => $booking->check_in_status ?? '-',
+                    'check_in_at' => $booking->check_in_at ? Carbon::parse($booking->check_in_at)->format('d M Y H:i') : '-',
+                    'checkin_deadline' => $booking->checkin_deadline ? Carbon::parse($booking->checkin_deadline)->format('H:i') : '-',
+                    'disetujui_oleh' => $booking->approvedBy->name ?? '-',
+                    'disetujui_at' => $booking->disetujui_at ? Carbon::parse($booking->disetujui_at)->format('d M Y H:i') : '-',
                 ];
             });
 
         // ============================================================
-        // PERBAIKAN: Riwayat - Hapus limit(20) dan gunakan paginate atau semua data
+        // HISTORY APPROVAL - LENGKAPI DATA
         // ============================================================
-        $history = $query->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
-            ->orderBy('updated_at', 'desc')
-            ->get()  // Ambil SEMUA data
-            ->map(function ($booking) {
-                return [
-                    'id' => $booking->id,
-                    'booking_code' => $booking->booking_code,
-                    'pemohon' => $booking->user->name,
-                    'tipe' => $booking->user->role,
-                    'ruang' => $booking->room->nama,
-                    'kegiatan' => $booking->kegiatan,
-                    'waktu' => $booking->tanggal->format('d M Y') . ' ' . $booking->jam_mulai->format('H:i'),
-                    'status' => $booking->status,
-                    'catatan' => $booking->catatan_admin ?? $booking->cancellation_reason ?? '-',
-                    'diproses' => $booking->updated_at->format('d M Y, H:i'),
-                    'jam_mulai' => $booking->jam_mulai->format('H:i'),
-                    'jam_selesai' => $booking->jam_selesai->format('H:i'),
-                    'tanggal' => $booking->tanggal,
-                    'tujuan' => $booking->tujuan,
-                ];
-            });
+        $statusFilter = $request->input('status');
+
+        $historyQuery = $baseQuery()->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
+            ->orderBy('updated_at', 'desc');
+
+        if ($statusFilter && $statusFilter !== 'all') {
+            $historyQuery->where('status', $statusFilter);
+        }
+
+        $history = $historyQuery->get()->map(function ($booking) {
+            return [
+                'id' => $booking->id,
+                'booking_code' => $booking->booking_code,
+                'pemohon' => $booking->user->name,
+                'email' => $booking->user->email,
+                'fakultas' => $booking->user->faculty->name ?? '-',
+                'tipe' => $booking->user->role,
+                'ruang' => $booking->room->nama,
+                'gedung' => $booking->room->gedung ?? '-',
+                'lantai' => $booking->room->lantai ?? '-',
+                'kapasitas' => $booking->room->kapasitas ?? '-',
+                'kegiatan' => $booking->kegiatan,
+                'jenis_kegiatan' => $booking->jenis_kegiatan ? \App\Helpers\PriorityHelper::getLabel($booking->jenis_kegiatan) : '-',
+                'prioritas' => $booking->priority_level ?? '-',
+                'priority_color' => \App\Helpers\PriorityHelper::getPriorityColor($booking->priority_level ?? 'Medium'),
+                'priority_label' => \App\Helpers\PriorityHelper::getPriorityLabel($booking->priority_level ?? 'Medium'),
+                'waktu' => $booking->tanggal->format('d M Y') . ' ' . Carbon::parse($booking->jam_mulai)->format('H:i'),
+                'jam_mulai' => Carbon::parse($booking->jam_mulai)->format('H:i'),
+                'jam_selesai' => Carbon::parse($booking->jam_selesai)->format('H:i'),
+                'durasi' => $booking->durasi_menit . ' menit',
+                'tanggal' => $booking->tanggal,
+                'tujuan' => $booking->tujuan,
+                'status' => $booking->status,
+                'catatan' => $booking->catatan_admin ?? $booking->cancellation_reason ?? '-',
+                'diproses' => $booking->updated_at->format('d M Y, H:i'),
+                'check_in_status' => $booking->check_in_status ?? '-',
+                'check_in_at' => $booking->check_in_at ? Carbon::parse($booking->check_in_at)->format('d M Y H:i') : '-',
+                'checkin_deadline' => $booking->checkin_deadline ? Carbon::parse($booking->checkin_deadline)->format('H:i') : '-',
+                'disetujui_oleh' => $booking->approvedBy->name ?? '-',
+                'disetujui_at' => $booking->disetujui_at ? Carbon::parse($booking->disetujui_at)->format('d M Y H:i') : '-',
+            ];
+        });
 
         $stats = [
             'pending' => $pending->count(),
-            'approved' => $query->where('status', 'approved')->count(),
-            'rejected' => $query->where('status', 'rejected')->count(),
-            'expired' => $query->where('status', 'no_show')->count(),
+            'approved' => $baseQuery()->where('status', 'approved')->count(),
+            'rejected' => $baseQuery()->where('status', 'rejected')->count(),
+            'expired' => $baseQuery()->where('status', 'no_show')->count(),
         ];
 
         return view('admin.bookings.approvals', compact('pending', 'history', 'stats'));

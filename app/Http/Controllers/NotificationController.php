@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Notifikasi;
 use App\Models\Booking;
+use App\Services\NotificationService;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class NotificationController extends Controller
 {
+
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display all notifications for current user.
      */

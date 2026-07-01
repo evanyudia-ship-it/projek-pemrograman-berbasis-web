@@ -156,7 +156,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-slate-500">Jam</span>
-                            <span class="font-semibold text-slate-800">{{ $booking->jam_mulai->format('H:i') }} - {{ $booking->jam_selesai->format('H:i') }}</span>
+                            <span class="font-semibold text-slate-800">{{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-slate-500">Durasi</span>

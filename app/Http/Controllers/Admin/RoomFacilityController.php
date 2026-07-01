@@ -28,7 +28,7 @@ class RoomFacilityController extends Controller
             }])->where('id', $request->room_id)->get();
         }
 
-        return view('admin.room-facilities.index', compact('rooms', 'facilities'));
+        return redirect()->route('admin.rooms.index')->with('info', 'Fasilitas ruang dapat dikelola di halaman Edit Ruang.');
     }
 
     /**

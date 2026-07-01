@@ -85,10 +85,6 @@ class RoomController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('faculty_id')) {
-            $query->byFaculty($request->faculty_id);
-        }
-
         if ($request->filled('gedung')) {
             $query->byBuilding($request->gedung);
         }

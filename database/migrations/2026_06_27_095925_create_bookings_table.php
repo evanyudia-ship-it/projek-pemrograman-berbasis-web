@@ -6,16 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->string('booking_code', 20)->unique()->comment('Format: BK-XXXXX');
 
-            // Foreign Keys
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('room_id')->constrained()->onDelete('cascade');
 
@@ -30,10 +26,17 @@ return new class extends Migration
             // Prioritas berdasarkan Jenis/Keperluan
             $table->enum('priority_level', ['High', 'Medium-High', 'Medium', 'Low'])->default('Medium');
 
-            // Status Booking
-            $table->enum('status', ['pending', 'approved', 'rejected', 'completed', 'cancelled', 'no_show'])->default('pending');
+
+            $table->string('status')->default('pending');
+            // pending, approved, rejected, ongoing, completed, cancelled, no_show
+
             $table->text('catatan_admin')->nullable();
-            $table->foreignId('disetujui_oleh')->nullable()->constrained('users')->onDelete('set null');
+
+            $table->foreignId('disetujui_oleh')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
             $table->timestamp('disetujui_at')->nullable();
 
             // Check-in System
@@ -44,10 +47,15 @@ return new class extends Migration
             // Penalty & Cancellation
             $table->boolean('is_penalty_applied')->default(false);
             $table->string('cancellation_reason', 255)->nullable()->comment('Wajib diisi di app layer jika status = cancelled/rejected');
-            $table->foreignId('cancelled_by')->nullable()->constrained('users')->onDelete('set null');
+
+            $table->foreignId('cancelled_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
             // Timestamps
             $table->timestamps();
+            $table->softDeletes();
 
             // Indexes
             $table->index(['room_id', 'tanggal', 'jam_mulai']);
@@ -60,9 +68,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('bookings');

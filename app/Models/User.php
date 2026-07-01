@@ -82,6 +82,7 @@ class User extends Authenticatable
         return $this->hasMany(ReputationLog::class, 'created_by');
     }
 
+
     // ============================================================
     // ROLE CHECKS
     // ============================================================
@@ -106,20 +107,30 @@ class User extends Authenticatable
         return $this->role === 'mahasiswa';
     }
 
-    /**
-     * PERBAIKAN: Tambahkan method untuk role organisasi
-     */
     public function isOrganisasi(): bool
     {
         return $this->role === 'organisasi';
     }
 
-    /**
-     * PERBAIKAN: Cek apakah user adalah role umum (bukan superadmin/admin)
-     */
     public function isRegularUser(): bool
     {
         return in_array($this->role, ['mahasiswa', 'dosen', 'organisasi']);
+    }
+
+    public static function getValidRoles(): array
+    {
+        return ['superadmin', 'admin', 'dosen', 'mahasiswa', 'organisasi'];
+    }
+    public static function getRoleLabel(string $role): string
+    {
+        return match($role) {
+            'superadmin' => 'Super Admin',
+            'admin' => 'Admin',
+            'dosen' => 'Dosen',
+            'mahasiswa' => 'Mahasiswa',
+            'organisasi' => 'Organisasi',
+            default => ucfirst($role),
+        };
     }
 
     // ============================================================

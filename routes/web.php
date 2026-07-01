@@ -23,7 +23,6 @@ use App\Http\Controllers\Admin\OrganizationApprovalController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\AdminFacultyController;
 use App\Http\Controllers\Admin\FacilityController;
-use App\Http\Controllers\Admin\RoomFacilityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -176,14 +175,12 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
 
-        // Route spesifik harus DI ATAS route dengan parameter {id}
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::delete('/delete-read', [NotificationController::class, 'deleteAllRead'])->name('delete-read');
         Route::delete('/delete-read/force', [NotificationController::class, 'forceDeleteAllRead'])->name('force-delete-read');
         Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('unread-count');
         Route::get('/latest', [NotificationController::class, 'getLatest'])->name('latest');
 
-        // Route dengan parameter {id} HARUS DI BAWAH route spesifik
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         Route::delete('/{id}/force', [NotificationController::class, 'forceDelete'])->name('force-delete');
@@ -200,12 +197,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
         ->prefix('admin')
         ->name('admin.')
         ->group(function () {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Admin Dashboard
-            |--------------------------------------------------------------------------
-            */
 
             Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
 
@@ -239,7 +230,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
 
             /*
             |--------------------------------------------------------------------------
-            | Manage Rooms - Admin & SuperAdmin
+            | Manage Rooms
             |--------------------------------------------------------------------------
             */
 
@@ -258,26 +249,14 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
 
             /*
             |--------------------------------------------------------------------------
-            | SUPER ADMIN ONLY - Manajemen User, Fasilitas, Fakultas, dll
+            | SUPER ADMIN ONLY
             |--------------------------------------------------------------------------
             */
 
             Route::middleware(['role:superadmin'])->group(function () {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Manage Users
-                |--------------------------------------------------------------------------
-                */
-
                 Route::resource('users', UserController::class);
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Manage Facilities
-                |--------------------------------------------------------------------------
-                */
 
                 Route::prefix('facilities')->name('facilities.')->group(function () {
                     Route::get('/', [FacilityController::class, 'index'])->name('index');
@@ -291,67 +270,24 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
                 });
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Manage Room Facilities
-                |--------------------------------------------------------------------------
-                */
+                // ✅ PERBAIKAN: Hapus ->except(['show'])
+                Route::get('/faculties', [FacultyController::class, 'index'])->name('faculties.index');
+                Route::get('/faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
+                Route::post('/faculties', [FacultyController::class, 'store'])->name('faculties.store');
+                Route::get('/faculties/{faculty}', [FacultyController::class, 'show'])->name('faculties.show');
+                Route::get('/faculties/{faculty}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
+                Route::put('/faculties/{faculty}', [FacultyController::class, 'update'])->name('faculties.update');
+                Route::delete('/faculties/{faculty}', [FacultyController::class, 'destroy'])->name('faculties.destroy');
 
-                Route::prefix('room-facilities')->name('room-facilities.')->group(function () {
-                    Route::get('/', [RoomFacilityController::class, 'index'])->name('index');
-                    Route::post('/attach', [RoomFacilityController::class, 'attach'])->name('attach');
-                    Route::post('/bulk-attach', [RoomFacilityController::class, 'bulkAttach'])->name('bulk-attach');
-                    Route::put('/{roomId}/{facilityId}', [RoomFacilityController::class, 'update'])->name('update');
-                    Route::delete('/{roomId}/{facilityId}', [RoomFacilityController::class, 'detach'])->name('detach');
-                    Route::get('/{roomId}/facilities', [RoomFacilityController::class, 'getRoomFacilities'])->name('get-room-facilities');
-                    Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
-                    Route::post('/{roomId}/{facilityId}/restore', [RoomFacilityController::class, 'restore'])->name('restore');
-                    Route::delete('/{roomId}/{facilityId}/force', [RoomFacilityController::class, 'forceDetach'])->name('force-detach');
-                });
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Manage Faculties
-                |--------------------------------------------------------------------------
-                */
-
-                Route::resource('faculties', FacultyController::class)->except(['show']);
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Manage Admin Faculties
-                |--------------------------------------------------------------------------
-                */
 
                 Route::prefix('admin-faculties')->name('admin-faculties.')->group(function () {
                     Route::get('/', [AdminFacultyController::class, 'index'])->name('index');
                     Route::post('/', [AdminFacultyController::class, 'store'])->name('store');
+                    Route::get('/{adminFaculty}/edit', [AdminFacultyController::class, 'edit'])->name('edit');
+                    Route::put('/{adminFaculty}', [AdminFacultyController::class, 'update'])->name('update');
                     Route::delete('/{adminFaculty}', [AdminFacultyController::class, 'destroy'])->name('destroy');
                 });
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Organization Approval
-                |--------------------------------------------------------------------------
-                */
-
-                Route::prefix('organization-approvals')->name('organization-approvals.')->group(function () {
-                    Route::get('/', [OrganizationApprovalController::class, 'index'])->name('index');
-                    Route::get('/{id}', [OrganizationApprovalController::class, 'show'])->name('show');
-                    Route::post('/{id}/approve', [OrganizationApprovalController::class, 'approve'])->name('approve');
-                    Route::post('/{id}/reject', [OrganizationApprovalController::class, 'reject'])->name('reject');
-                    Route::get('/{id}/download', [OrganizationApprovalController::class, 'downloadFile'])->name('download');
-                });
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reputation Management
-                |--------------------------------------------------------------------------
-                */
 
                 Route::prefix('reputation')->name('reputation.')->group(function () {
                     Route::get('/settings', [ReputationController::class, 'settings'])->name('settings');
@@ -362,12 +298,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
                 });
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Appeals Management (Admin)
-                |--------------------------------------------------------------------------
-                */
-
                 Route::prefix('appeals')->name('appeals.')->group(function () {
                     Route::get('/', [BannedController::class, 'adminIndex'])->name('index');
                     Route::get('/{id}', [BannedController::class, 'adminShow'])->name('show');
@@ -377,6 +307,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(func
 
             }); // End SuperAdmin Only
 
-        }); // End Admin Section
+        });
 
-}); // End Auth Required
+});

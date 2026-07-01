@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('booking_histories', function (Blueprint $table) {
@@ -16,7 +13,12 @@ return new class extends Migration
 
             // Foreign Keys
             $table->foreignId('booking_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null')->comment('NULL jika perubahan dilakukan oleh sistem (cron/otomatis)');
+
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete()
+                ->comment('NULL jika perubahan dilakukan oleh sistem (cron/otomatis)');
 
             // Actor & Status
             $table->enum('actor_type', ['user', 'admin', 'system'])->default('user');
@@ -26,6 +28,7 @@ return new class extends Migration
 
             // Timestamps
             $table->timestamps();
+            $table->softDeletes();
 
             // Indexes
             $table->index('booking_id');
@@ -36,9 +39,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('booking_histories');

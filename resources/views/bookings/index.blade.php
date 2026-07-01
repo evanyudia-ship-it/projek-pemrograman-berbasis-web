@@ -170,7 +170,7 @@
                         {{-- Tanggal & Jam --}}
                         <td class="px-6 py-4">
                             <p class="font-semibold text-slate-700 dark:text-slate-300">{{ $bk->tanggal->translatedFormat('d M Y') }}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $bk->jam_mulai->format('H:i') }} - {{ $bk->jam_selesai->format('H:i') }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ \Carbon\Carbon::parse($bk->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($bk->jam_selesai)->format('H:i') }}</p>
                             <p class="text-xs text-slate-400 dark:text-slate-500">{{ $bk->durasi_menit }} menit</p>
                         </td>
 

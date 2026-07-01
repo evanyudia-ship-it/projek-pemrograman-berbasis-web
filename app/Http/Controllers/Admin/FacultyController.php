@@ -62,6 +62,12 @@ class FacultyController extends Controller
             ->with('success', 'Fakultas berhasil ditambahkan.');
     }
 
+    public function show(Faculty $faculty)
+    {
+        $faculty->load('users');
+        return view('admin.faculties.show', compact('faculty'));
+    }
+
     public function edit(Faculty $faculty)
     {
         return view('admin.faculties.edit', compact('faculty'));

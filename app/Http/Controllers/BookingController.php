@@ -76,71 +76,18 @@ class BookingController extends Controller
         $user = User::find($userId);
         $room = Room::find($request->room_id);
 
-        // ================================================================
-        // VALIDASI A: CEK KAPASITAS RUANG
-        // ================================================================
-        if ($request->has('participant_count') && $request->participant_count > $room->kapasitas) {
-            return back()
-                ->withInput()
-                ->with('error', 'Jumlah peserta (' . $request->participant_count . ') melebihi kapasitas ruang (Max: ' . $room->kapasitas . ' orang)');
-        }
+        // ✅ INISIALISASI BOOKING SERVICE DI AWAL
+        $bookingService = app(\App\Services\BookingService::class);
 
-        // ================================================================
-        // VALIDASI B: CEK DURASI MAKSIMAL BERDASARKAN ROLE
-        // ================================================================
-        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
-        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
-        $durasiJam = $start->diffInHours($end);
-
-        $maxDurasi = match($user->role) {
-            'mahasiswa' => 3,
-            'dosen' => 6,
-            'organisasi' => 9,
-            default => 5,
-        };
-
-        if ($durasiJam > $maxDurasi) {
-            return back()
-                ->withInput()
-                ->with('error', 'Durasi booking (' . $durasiJam . ' jam) melebihi batas maksimal untuk ' . ucfirst($user->role) . ' (Max: ' . $maxDurasi . ' jam)');
-        }
-
-        // ================================================================
-        // VALIDASI C: CEK MAKSIMAL BOOKING AKTIF (3 booking/hari)
-        // ================================================================
-        $todayBookings = Booking::where('user_id', $userId)
-            ->whereDate('tanggal', $request->tanggal)
-            ->whereIn('status', ['pending', 'approved', 'ongoing'])
-            ->count();
-
-        if ($todayBookings >= 3) {
-            return back()
-                ->withInput()
-                ->with('error', 'Anda sudah mencapai batas maksimal 3 booking untuk hari ini (' . $request->tanggal . ').');
-        }
-
-        // ================================================================
-        // VALIDASI D: CEK REPUTASI USER MINIMAL 30
-        // ================================================================
-        if ($user->reputation_points < 30) {
-            return back()
-                ->withInput()
-                ->with('error', 'Reputasi Anda rendah (' . $user->reputation_points . '). Minimal 30 poin untuk melakukan booking.');
-        }
-
-        // ================================================================
-        // VALIDASI E: CEK BENTROK JADWAL (Method isAvailableAt di Room.php)
-        // ================================================================
-        if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai)) {
-            return back()
-                ->withInput()
-                ->with('error', 'Ruang tidak tersedia pada waktu yang dipilih. Silakan pilih waktu lain.');
+        // ✅ VALIDASI MENGGUNAKAN SERVICE
+        $errors = $bookingService->validateBooking($request->all(), $user, $room);
+        if (!empty($errors)) {
+            return back()->withInput()->with('error', implode(' ', $errors));
         }
 
         // ================================================================
         // SIMPAN BOOKING
         // ================================================================
-        $bookingService = app(\App\Services\BookingService::class);
         $booking = $bookingService->create($request->all(), $userId);
 
         return redirect()

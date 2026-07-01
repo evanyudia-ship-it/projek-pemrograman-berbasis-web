@@ -68,11 +68,15 @@ class ReputationController extends Controller
 
         $request->validate([
             'settings.*.id' => 'required|exists:reputation_settings,id',
-            'settings.*.points' => 'required|integer|min:0',
+            'settings.*.points' => 'required|integer|min:-100|max:100',
         ]);
 
         foreach ($request->settings as $item) {
-            ReputationSetting::where('id', $item['id'])->update(['points' => $item['points']]);
+            $setting = ReputationSetting::find($item['id']);
+            if ($setting) {
+                $setting->point = (int) $item['points'];
+                $setting->save();
+            }
         }
 
         return redirect()->route('admin.reputation.settings')
@@ -126,9 +130,12 @@ class ReputationController extends Controller
             'min_points' => 'required|integer|min:0',
             'max_points' => 'nullable|integer|gt:min_points',
             'color' => 'nullable|string|max:20',
+            'description' => 'nullable|string',
+            'is_banned' => 'nullable|boolean',
+            'status' => 'required|in:active,inactive',
         ]);
 
-        $level->update($request->only(['name', 'min_points', 'max_points', 'color']));
+        $level->update($request->only(['name', 'min_points', 'max_points', 'color','description','is_banned','status']));
 
         return redirect()->route('admin.reputation.levels')
             ->with('success', 'Level reputasi berhasil diperbarui.');

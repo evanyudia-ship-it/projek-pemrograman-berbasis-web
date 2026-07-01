@@ -86,7 +86,12 @@ class FacilityController extends Controller
     public function destroy(int $id)
     {
         $facility = Facility::findOrFail($id);
-        $facility->rooms()->detach();
+
+        // Cek apakah fasilitas masih digunakan di ruangan
+        if ($facility->rooms()->count() > 0) {
+            return back()->with('error', 'Fasilitas "' . $facility->nama . '" masih digunakan oleh ' . $facility->rooms()->count() . ' ruangan. Hapus relasi terlebih dahulu.');
+        }
+
         $facilityName = $facility->nama;
         $facility->delete();
 

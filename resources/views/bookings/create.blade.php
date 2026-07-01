@@ -8,7 +8,7 @@
 
 <div class="max-w-7xl mx-auto font-sora space-y-6">
 
-    {{-- ===== FLASH MESSAGES ===== --}}
+
     @if(session('error'))
     <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 font-semibold text-sm flex items-center gap-3">
         <span class="text-lg">❌</span>

@@ -45,15 +45,12 @@
                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition">
                     ✏️ Edit
                 </a>
-                <form action="{{ route('admin.facilities.destroy', $facility->id) }}" method="POST"
-                      onsubmit="return confirm('Hapus fasilitas {{ addslashes($facility->nama) }}?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition">
-                        🗑 Hapus
-                    </button>
-                </form>
+                <button type="button"
+                        class="btn-delete-facility-show px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition"
+                        data-name="{{ $facility->nama }}"
+                        data-url="{{ route('admin.facilities.destroy', $facility->id) }}">
+                    🗑 Hapus
+                </button>
             </div>
         </div>
     </div>
@@ -65,9 +62,9 @@
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ruangan dengan Fasilitas Ini</p>
                 <p class="text-sm text-slate-600 mt-1">{{ $rooms->count() }} ruangan terpasang</p>
             </div>
-            <a href="{{ route('admin.room-facilities.index') }}?room_id="
+            <a href="{{ route('admin.rooms.index') }}"
                class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                Kelola Fasilitas Ruang →
+                Kelola di Manajemen Ruang →
             </a>
         </div>
 
@@ -90,7 +87,8 @@
                     default => 'bg-slate-100 text-slate-500',
                 };
             @endphp
-            <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <a href="{{ route('admin.rooms.edit', $room->id) }}"
+               class="flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 transition">
                 <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 shrink-0">
                     <img src="{{ $room->foto ? asset('storage/' . $room->foto) : asset('images/default-room.jpg') }}"
                          alt="{{ $room->nama }}"
@@ -100,20 +98,21 @@
                     <p class="font-semibold text-slate-800 text-sm truncate">{{ $room->nama }}</p>
                     <p class="text-xs text-slate-400 font-mono">{{ $room->kode }}</p>
                 </div>
-                <span class="px-2 py-1 rounded-lg text-xs font-bold {{ $statusColor }}">
+                <span class="px-2 py-1 rounded-lg text-xs font-bold {{ $statusColor }} shrink-0">
                     {{ $statusLabel }}
                 </span>
-            </div>
+            </a>
             @endforeach
         </div>
+        <p class="text-xs text-slate-400 mt-3">Klik salah satu ruangan untuk mengubah status fasilitasnya di halaman edit ruang.</p>
         @else
         <div class="text-center py-12">
             <p class="text-4xl mb-3">🏠</p>
             <p class="text-slate-500 font-semibold">Belum ada ruangan yang menggunakan fasilitas ini</p>
-            <p class="text-sm text-slate-400 mt-1">Tambahkan fasilitas ke ruangan melalui menu Kelola Fasilitas Ruang</p>
-            <a href="{{ route('admin.room-facilities.index') }}"
+            <p class="text-sm text-slate-400 mt-1">Tambahkan fasilitas ke ruangan melalui menu Manajemen Ruang (edit ruang)</p>
+            <a href="{{ route('admin.rooms.index') }}"
                class="inline-block mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition">
-                Kelola Fasilitas Ruang →
+                Ke Manajemen Ruang →
             </a>
         </div>
         @endif
@@ -144,3 +143,42 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    $('.btn-delete-facility-show').on('click', function(e) {
+    e.preventDefault();
+    const name = $(this).data('name');
+    const url = $(this).data('url');
+
+    Swal.fire({
+        title: 'Hapus ' + name + '?',
+        text: 'Tindakan ini akan menghapus semua relasi dengan ruangan dan tidak dapat dibatalkan!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _method: 'DELETE',
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function() {
+                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                },
+                error: function() {
+                    Swal.fire('Gagal!', 'Terjadi kesalahan, coba lagi.', 'error');
+                }
+            });
+        }
+    });
+});
+
+</script>

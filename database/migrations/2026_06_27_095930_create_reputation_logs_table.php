@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('reputation_logs', function (Blueprint $table) {
             $table->id();
 
+
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
@@ -20,9 +21,10 @@ return new class extends Migration
                 ->constrained('reputation_settings')
                 ->nullOnDelete();
 
-            // Booking dibuat unsignedBigInteger agar tidak error
-            // jika tabel bookings dibuat oleh bagian lain setelah migration ini.
-            $table->unsignedBigInteger('booking_id')->nullable()->index();
+            $table->foreignId('booking_id')
+                ->nullable()
+                ->constrained('bookings')
+                ->nullOnDelete();
 
             $table->integer('point_before')->default(0);
             $table->integer('point_change')->default(0);
@@ -34,10 +36,13 @@ return new class extends Migration
             $table->string('reason')->nullable();
             $table->text('description')->nullable();
 
-            // Admin/sistem yang memberi perubahan poin
-            $table->unsignedBigInteger('created_by')->nullable()->index();
+            $table->foreignId('created_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

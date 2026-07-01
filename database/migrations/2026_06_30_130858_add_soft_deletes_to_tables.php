@@ -8,51 +8,58 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Admin Faculties
-        if (!Schema::hasColumn('admin_faculties', 'deleted_at')) {
-            Schema::table('admin_faculties', function (Blueprint $table) {
+        // Users
+        if (!Schema::hasColumn('users', 'deleted_at')) {
+            Schema::table('users', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Reputation Levels
-        if (!Schema::hasColumn('reputation_levels', 'deleted_at')) {
-            Schema::table('reputation_levels', function (Blueprint $table) {
+        // Faculties
+        if (!Schema::hasColumn('faculties', 'deleted_at')) {
+            Schema::table('faculties', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Reputation Settings
-        if (!Schema::hasColumn('reputation_settings', 'deleted_at')) {
-            Schema::table('reputation_settings', function (Blueprint $table) {
+        // Rooms
+        if (!Schema::hasColumn('rooms', 'deleted_at')) {
+            Schema::table('rooms', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Booking Histories
-        if (!Schema::hasColumn('booking_histories', 'deleted_at')) {
-            Schema::table('booking_histories', function (Blueprint $table) {
+        // Bookings
+        if (!Schema::hasColumn('bookings', 'deleted_at')) {
+            Schema::table('bookings', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Booking Cancellations
-        if (!Schema::hasColumn('booking_cancellations', 'deleted_at')) {
-            Schema::table('booking_cancellations', function (Blueprint $table) {
+        // Facilities
+        if (!Schema::hasColumn('facilities', 'deleted_at')) {
+            Schema::table('facilities', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Room Schedules
-        if (!Schema::hasColumn('room_schedules', 'deleted_at')) {
-            Schema::table('room_schedules', function (Blueprint $table) {
+        // Notifikasi
+        if (!Schema::hasColumn('notifikasi', 'deleted_at')) {
+            Schema::table('notifikasi', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
 
-        // Riwayat
-        if (!Schema::hasColumn('riwayat', 'deleted_at')) {
-            Schema::table('riwayat', function (Blueprint $table) {
+        // RoomFacility
+        if (!Schema::hasColumn('room_facilities', 'deleted_at')) {
+            Schema::table('room_facilities', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
+
+        // ReputationLogs
+        if (!Schema::hasColumn('reputation_logs', 'deleted_at')) {
+            Schema::table('reputation_logs', function (Blueprint $table) {
                 $table->softDeletes();
             });
         }
@@ -60,25 +67,28 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('admin_faculties', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('reputation_levels', function (Blueprint $table) {
+        Schema::table('faculties', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('reputation_settings', function (Blueprint $table) {
+        Schema::table('rooms', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('booking_histories', function (Blueprint $table) {
+        Schema::table('bookings', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('booking_cancellations', function (Blueprint $table) {
+        Schema::table('facilities', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('room_schedules', function (Blueprint $table) {
+        Schema::table('notifikasi', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
-        Schema::table('riwayat', function (Blueprint $table) {
+        Schema::table('room_facilities', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
+        Schema::table('reputation_logs', function (Blueprint $table) {
             $table->dropSoftDeletes();
         });
     }

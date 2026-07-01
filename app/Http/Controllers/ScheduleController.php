@@ -62,7 +62,7 @@ class ScheduleController extends Controller
 
                 $bookingsGrouped[$tanggal][] = [
                     'ruang' => $bk->room->nama ?? '-',
-                    'jam'   => $bk->jam_mulai->format('H:i') . '-' . $bk->jam_selesai->format('H:i'),
+                    'jam'   => Carbon::parse($bk->jam_mulai)->format('H:i') . '-' . Carbon::parse($bk->jam_selesai)->format('H:i'),
                     'title' => $bk->kegiatan,
                     'warna' => $warna,
                     'status' => $bk->status,

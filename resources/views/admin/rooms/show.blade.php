@@ -138,15 +138,12 @@
                     </button>
                 </form>
 
-                <form action="{{ route('admin.rooms.destroy', $room->id) }}" method="POST"
-                      onsubmit="return confirm('Hapus ruang {{ $room->nama }}? Tindakan ini tidak dapat dibatalkan.')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="block w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white text-center rounded-xl font-semibold text-sm transition">
-                        🗑 Hapus Ruang
-                    </button>
-                </form>
+                <button type="button"
+                        class="btn-delete-room-show block w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white text-center rounded-xl font-semibold text-sm transition"
+                        data-name="{{ $room->nama }}"
+                        data-url="{{ route('admin.rooms.destroy', $room->id) }}">
+                    🗑 Hapus Ruang
+                </button>
             </div>
 
             {{-- Faculty Info --}}
@@ -223,3 +220,80 @@
 </div>
 
 @endsection
+
+@push('scripts')
+// Di bagian @push('scripts') atau di file JS terpisah
+$(document).ready(function() {
+    // Delete Facility
+    $('.btn-delete-facility').on('click', function(e) {
+        e.preventDefault();
+        const name = $(this).data('name');
+        const url = $(this).data('url');
+
+        Swal.fire({
+            title: 'Hapus ' + name + '?',
+            text: 'Tindakan ini akan menghapus semua relasi dengan ruangan dan tidak dapat dibatalkan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function() {
+                        Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    },
+                    error: function() {
+                        Swal.fire('Gagal!', 'Terjadi kesalahan, coba lagi.', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    // Delete Room
+    $('.btn-delete-room, .btn-delete-room-show').on('click', function(e) {
+        e.preventDefault();
+        const name = $(this).data('name');
+        const url = $(this).data('url');
+
+        Swal.fire({
+            title: 'Hapus ' + name + '?',
+            text: 'Tindakan ini tidak dapat dibatalkan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function() {
+                        Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    },
+                    error: function() {
+                        Swal.fire('Gagal!', 'Terjadi kesalahan, coba lagi.', 'error');
+                    }
+                });
+            }
+        });
+    });
+});
+@endpush

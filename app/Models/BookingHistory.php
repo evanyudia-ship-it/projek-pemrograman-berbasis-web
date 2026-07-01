@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Booking;
-use App\Models\BookingHistory; // ← TAMBAHKAN
 use App\Models\Room;
 use App\Models\RoomSchedule;
 use App\Helpers\NotificationHelper;
@@ -13,10 +14,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Traits\HasActor;
 
 class BookingHistory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasActor;
 
     protected $fillable = [
         'booking_id',

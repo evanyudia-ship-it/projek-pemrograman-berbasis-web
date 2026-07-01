@@ -97,22 +97,32 @@ class RoomSchedule extends Model
     {
         $start = Carbon::parse($this->waktu_mulai);
         $end = Carbon::parse($this->waktu_selesai);
-
         return $start->diffInMinutes($end);
+    }
+
+    /**
+     * Validasi durasi booking berdasarkan role user
+     */
+    public function validateDuration(int $userId): void
+    {
         $user = User::find($userId);
+        if (!$user) {
+            throw new \Exception('User tidak ditemukan.');
+        }
 
+        $durasiJam = $this->getDurationInMinutes() / 60;
         $maxDurasi = match ($user->role) {
-        'mahasiswa' => 3,
-        'organisasi' => 3,
-        'dosen' => 4,
-        default => 4,
-    };
+            'mahasiswa', 'organisasi' => 3,
+            'dosen' => 4,
+            'admin', 'superadmin' => 24,
+            default => 4,
+        };
 
-if (($durasiMenit / 60) > $maxDurasi) {
-    throw new \Exception(
-        "Durasi booking maksimal {$maxDurasi} jam untuk role {$user->role}."
-    );
-}
+        if ($durasiJam > $maxDurasi) {
+            throw new \Exception(
+                "Durasi booking maksimal {$maxDurasi} jam untuk role {$user->role}."
+            );
+        }
     }
 
 

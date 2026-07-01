@@ -52,6 +52,7 @@ class DashboardController extends Controller
             ->where('status', 'belum_dibaca')
             ->orderBy('created_at', 'desc')
             ->limit(5)
+            ->select('id', 'judul', 'pesan', 'tipe', 'created_at')
             ->get()
             ->map(function ($notif) {
                 $iconMap = [

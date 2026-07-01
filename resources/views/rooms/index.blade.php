@@ -51,9 +51,9 @@
     {{-- FILTER & SEARCH --}}
     {{-- ============================================================ --}}
     <div class="fade-up bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-        <div class="flex flex-col md:flex-row gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             {{-- Search --}}
-            <div class="relative flex-1">
+            <div class="relative md:col-span-2">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fas fa-search text-slate-400 dark:text-slate-500"></i>
                 </div>
@@ -65,23 +65,32 @@
             </div>
 
             {{-- Filter status --}}
-            <div class="flex gap-2 flex-wrap">
-                <button class="filter-btn active px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 text-sm font-semibold transition
-                       bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-600 dark:border-indigo-600"
-                       data-filter="semua">
-                    <i class="fas fa-th-list mr-1.5"></i> Semua
-                </button>
-                <button class="filter-btn px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 text-sm font-semibold transition
-                       hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-700 text-slate-600 dark:text-slate-400"
-                       data-filter="Tersedia">
-                    <i class="fas fa-check-circle text-emerald-500 mr-1.5"></i> Tersedia
-                </button>
-                <button class="filter-btn px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 text-sm font-semibold transition
-                       hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-300 dark:hover:border-red-700 text-slate-600 dark:text-slate-400"
-                       data-filter="Dipakai">
-                    <i class="fas fa-times-circle text-red-500 mr-1.5"></i> Dipakai
-                </button>
+            <div>
+                <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</label>
+                <select id="filterStatus" class="w-full mt-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm bg-white dark:bg-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition">
+                    <option value="semua">Semua Status</option>
+                    <option value="Tersedia">Tersedia</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
             </div>
+
+            {{-- Filter kapasitas --}}
+            <div>
+                <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kapasitas Minimal</label>
+                <input type="number"
+                    id="minCapacity"
+                    placeholder="Minimal orang"
+                    min="0"
+                    class="w-full mt-1 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm bg-white dark:bg-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition">
+            </div>
+        </div>
+
+        {{-- Reset Filter --}}
+        <div class="mt-3 flex justify-end">
+            <button id="resetFiltersBtn"
+                    class="px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-xl font-semibold transition">
+                <i class="fas fa-undo mr-1"></i> Reset Filter
+            </button>
         </div>
     </div>
 
@@ -93,13 +102,16 @@
         @forelse(($rooms ?? []) as $i => $room)
         <div class="room-card fade-up bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
              data-status="{{ $room['status'] ?? '' }}"
-             data-nama="{{ $room['search_keywords'] ?? $room['nama'] }}">
+             data-nama="{{ strtolower($room['search_keywords'] ?? $room['nama'] ?? '') }}"
+             data-kapasitas="{{ $room['kapasitas'] ?? 0 }}"
+             data-faculty="{{ $room['faculty_id'] ?? '' }}">
 
             {{-- ===== FOTO ===== --}}
             <div class="relative h-52 overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0">
                 <img src="{{ $room['foto'] ?? asset('images/default-room.jpg') }}"
                      alt="{{ $room['nama'] ?? 'Ruangan' }}"
-                     class="room-img w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                     class="room-img w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                     loading="lazy">
 
                 {{-- Overlay gradient --}}
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
@@ -254,106 +266,64 @@ $(document).ready(function () {
     // ================================================================
     // VARIABLES
     // ================================================================
-    let currentFilter = 'semua';
-    let currentSearch = '';
-    let isLoading = false;
+    const $searchInput = $('#searchInput');
+    const $filterStatus = $('#filterStatus');
+    const $minCapacity = $('#minCapacity');
+    const $resetBtn = $('#resetFiltersBtn');
+    const $roomGrid = $('#roomGrid');
+    const $emptyState = $('#emptyState');
+    const $roomCards = $('.room-card');
+
     let searchTimeout = null;
 
-    const $roomGrid = $('#roomGrid');
-    const $searchInput = $('#searchInput');
-    const $emptyState = $('#emptyState');
-
     // ================================================================
-    // FILTER FUNCTIONS
+    // FILTER FUNCTION (SATU FUNGSI SAJA)
     // ================================================================
     function filterRooms() {
-        if (isLoading) return;
-        isLoading = true;
+        const keyword = $searchInput.val().toLowerCase().trim();
+        const status = $filterStatus.val();
+        const minCapacity = parseInt($minCapacity.val()) || 0;
 
-        // Show loading skeleton
-        showLoading();
+        let visibleCount = 0;
 
-        setTimeout(() => {
-            let visible = 0;
-            const searchLower = currentSearch.toLowerCase().trim();
+        $roomCards.each(function () {
+            const $card = $(this);
+            const nama = $card.data('nama') || '';
+            const cardStatus = $card.data('status') || '';
+            const capacity = parseInt($card.data('kapasitas')) || 0;
 
-            $roomGrid.find('.room-card').each(function () {
-                const $card = $(this);
-                const status = $card.data('status') || '';
-                const namaAttr = ($card.data('nama') || '').toString().toLowerCase();
+            // Match conditions
+            const matchSearch = keyword === '' || nama.includes(keyword);
+            const matchStatus = status === 'semua' || cardStatus === status;
+            const matchCapacity = capacity >= minCapacity;
 
-                const matchFilter = currentFilter === 'semua' ||
-                                   status.toLowerCase() === currentFilter.toLowerCase();
+            const show = matchSearch && matchStatus && matchCapacity;
 
-                let matchSearch = true;
-                if (searchLower !== '') {
-                    const keywords = searchLower.split(/\s+/).filter(Boolean);
-                    matchSearch = keywords.every(k => namaAttr.includes(k));
-                }
-
-                if (matchFilter && matchSearch) {
-                    $card.removeClass('hidden').fadeIn(200);
-                    visible++;
-                } else {
-                    $card.addClass('hidden').hide();
-                }
-            });
-
-            // Show/hide empty state
-            if (visible === 0) {
-                $emptyState.removeClass('hidden').hide().fadeIn(200);
+            if (show) {
+                $card.removeClass('hidden').show();
+                visibleCount++;
             } else {
-                $emptyState.fadeOut(200, function() {
-                    $(this).addClass('hidden');
-                });
+                $card.addClass('hidden').hide();
             }
+        });
 
-            hideLoading();
-            isLoading = false;
-        }, 150);
-    }
-
-    // ================================================================
-    // LOADING SKELETON
-    // ================================================================
-    function showLoading() {
-        if ($('.skeleton-loader').length === 0) {
-            const skeleton = `
-                <div class="skeleton-loader grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${Array(6).fill(0).map(() => `
-                        <div class="bg-slate-100 dark:bg-slate-800 rounded-2xl h-96 animate-pulse">
-                            <div class="h-52 bg-slate-200 dark:bg-slate-700 rounded-t-2xl"></div>
-                            <div class="p-5 space-y-3">
-                                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                                <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
-                                <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                                <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-2/3"></div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            $roomGrid.before(skeleton).hide();
+        // Show/hide empty state
+        if (visibleCount === 0 && $roomCards.length > 0) {
+            $emptyState.removeClass('hidden').show();
+        } else {
+            $emptyState.hide();
         }
-    }
-
-    function hideLoading() {
-        $('.skeleton-loader').remove();
-        $roomGrid.show();
     }
 
     // ================================================================
     // RESET FILTERS
     // ================================================================
     window.resetFilters = function() {
-        currentSearch = '';
-        currentFilter = 'semua';
         $searchInput.val('');
-        $('.filter-btn').removeClass('bg-indigo-600 text-white border-indigo-600')
-                        .addClass('text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600');
-        $('.filter-btn[data-filter="semua"]').addClass('bg-indigo-600 text-white border-indigo-600')
-                                             .removeClass('text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600');
+        $filterStatus.val('semua');
+        $minCapacity.val('');
         filterRooms();
+        $searchInput.focus();
     };
 
     // ================================================================
@@ -363,29 +333,17 @@ $(document).ready(function () {
     // Search with debounce
     $searchInput.on('input', function () {
         clearTimeout(searchTimeout);
-        currentSearch = $(this).val();
-        searchTimeout = setTimeout(filterRooms, 300);
+        searchTimeout = setTimeout(filterRooms, 200);
     });
 
-    // Filter buttons
-    $('.filter-btn').on('click', function () {
-        const $btn = $(this);
-        const filter = $btn.data('filter');
+    // Status filter
+    $filterStatus.on('change', filterRooms);
 
-        // Update active state
-        $('.filter-btn').removeClass('bg-indigo-600 text-white border-indigo-600')
-                        .addClass('text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600');
-        $btn.addClass('bg-indigo-600 text-white border-indigo-600')
-            .removeClass('text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600');
+    // Capacity filter
+    $minCapacity.on('input', filterRooms);
 
-        currentFilter = filter;
-        filterRooms();
-    });
-
-    // ================================================================
-    // INITIAL LOAD
-    // ================================================================
-    filterRooms();
+    // Reset button
+    $resetBtn.on('click', resetFilters);
 
     // ================================================================
     // KEYBOARD SHORTCUT: ESC to reset
@@ -398,6 +356,11 @@ $(document).ready(function () {
             }
         }
     });
+
+    // ================================================================
+    // INITIAL FILTER
+    // ================================================================
+    setTimeout(filterRooms, 100);
 
 });
 </script>

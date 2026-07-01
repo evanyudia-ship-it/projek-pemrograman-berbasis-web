@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\BookingHistory;
 use App\Models\Booking;
+use App\Models\BookingHistory;
 use App\Models\Room;
 use App\Models\RoomSchedule;
-use App\Helpers\NotificationHelper;
+use App\Models\User;
+use App\Models\ReputationSetting;
 use App\Helpers\PriorityHelper;
+use App\Services\NotificationService;
 use App\Services\ReputationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,13 @@ use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Create a new booking with transaction.
      */
@@ -43,15 +52,8 @@ class BookingService
             // ============================================================
             // ✅ CEK DURASI MAKSIMAL BERDASARKAN ROLE
             // ============================================================
-            $user = \App\Models\User::find($userId);
-            $maxDurasi = match($user->role ?? 'mahasiswa') {
-                'mahasiswa' => 3,
-                'dosen' => 6,
-                'organisasi' => 9,
-                'admin' => 24,
-                'superadmin' => 24,
-                default => 5,
-            };
+            $user = User::find($userId);
+            $maxDurasi = config('booking.max_duration.' . ($user->role ?? 'default'), 5);
 
             // Validasi durasi (jika melebihi max, throw error)
             if ($durasiJam > $maxDurasi) {
@@ -100,20 +102,20 @@ class BookingService
             ]);
 
             // Send notification to admins
-            NotificationHelper::notifyAdmins(
+            $this->notificationService->notifyAdmins(
                 'Booking Baru Menunggu Approval',
                 "Booking {$bookingCode} oleh {$booking->user->name} menunggu persetujuan.",
                 'approval',
-                $booking->id
+                $booking
             );
 
             // Send notification to user
-            NotificationHelper::bookingNotification(
+            $this->notificationService->send(
                 $userId,
                 'Booking Berhasil Diajukan',
                 "Booking {$bookingCode} berhasil diajukan. Menunggu persetujuan admin.",
                 'info',
-                $booking->id
+                $booking
             );
 
             return $booking;
@@ -165,25 +167,39 @@ class BookingService
     public function cancel(Booking $booking, string $reason, int $cancelledBy): Booking
     {
         return DB::transaction(function () use ($booking, $reason, $cancelledBy) {
+            // Cek penalti
+            $shouldPenalty = $this->shouldApplyPenalty($booking);
+            $penaltyPoint = 0;
+
+            if ($shouldPenalty) {
+                $penaltySetting = ReputationSetting::where('code', 'CANCEL_SUDDEN')
+                    ->where('is_active', true)
+                    ->first();
+                $penaltyPoint = $penaltySetting ? abs($penaltySetting->point) : 10;
+            }
+
+            // Update booking
             $booking->update([
                 'status' => 'cancelled',
                 'cancellation_reason' => $reason,
                 'cancelled_by' => $cancelledBy,
             ]);
 
+            // Create history
             $this->createHistory($booking, 'cancelled', $reason, 'user');
 
-            // Update schedule status
-            $booking->schedule()->delete();
+            // Delete schedule
+            if ($booking->schedule) {
+                $booking->schedule()->delete();
+            }
 
             // Create cancellation record
-            $shouldPenalty = $this->shouldApplyPenalty($booking);
             $booking->cancellation()->create([
                 'cancelled_by' => $cancelledBy,
                 'actor_type' => 'user',
                 'alasan' => $reason,
                 'kena_penalti' => $shouldPenalty,
-                'penalti_point' => $shouldPenalty ? 10 : 0,
+                'penalti_point' => $penaltyPoint,
             ]);
 
             // Apply penalty if needed
@@ -199,14 +215,55 @@ class BookingService
             }
 
             // Send notification
-            NotificationHelper::bookingCancelled(
-                $booking->user_id,
-                $booking->booking_code,
-                $reason
-            );
+            $this->notificationService->bookingCancelled($booking, $reason);
 
             return $booking;
         });
+    }
+
+    /**
+     * Validasi booking sebelum create
+     */
+    public function validateBooking(array $data, User $user, Room $room): array
+    {
+        $errors = [];
+
+        // 1. Validasi Kapasitas
+        if (isset($data['participant_count']) && $data['participant_count'] > $room->kapasitas) {
+            $errors[] = 'Jumlah peserta (' . $data['participant_count'] . ') melebihi kapasitas ruang (Max: ' . $room->kapasitas . ' orang)';
+        }
+
+        // 2. Validasi Durasi
+        $start = Carbon::parse($data['tanggal'] . ' ' . $data['jam_mulai']);
+        $end = Carbon::parse($data['tanggal'] . ' ' . $data['jam_selesai']);
+        $durasiJam = $start->diffInHours($end);
+
+        $maxDurasi = config('booking.max_duration.' . ($user->role ?? 'default'), 5);
+        if ($durasiJam > $maxDurasi) {
+            $errors[] = 'Durasi booking (' . $durasiJam . ' jam) melebihi batas maksimal untuk ' . ucfirst($user->role) . ' (Max: ' . $maxDurasi . ' jam)';
+        }
+
+        // 3. Validasi Max Booking per hari
+        $todayBookings = Booking::where('user_id', $user->id)
+            ->whereDate('tanggal', $data['tanggal'])
+            ->whereIn('status', ['pending', 'approved', 'ongoing'])
+            ->count();
+
+        if ($todayBookings >= 3) {
+            $errors[] = 'Anda sudah mencapai batas maksimal 3 booking untuk hari ini (' . $data['tanggal'] . ').';
+        }
+
+        // 4. Validasi Reputasi
+        if ($user->reputation_points < 30) {
+            $errors[] = 'Reputasi Anda rendah (' . $user->reputation_points . '). Minimal 30 poin untuk melakukan booking.';
+        }
+
+        // 5. Validasi Bentrok Jadwal
+        if (!$room->isAvailableAt($data['tanggal'], $data['jam_mulai'], $data['jam_selesai'])) {
+            $errors[] = 'Ruang tidak tersedia pada waktu yang dipilih. Silakan pilih waktu lain.';
+        }
+
+        return $errors;
     }
 
     /**
@@ -215,25 +272,17 @@ class BookingService
     public function approve(Booking $booking, int $adminId): Booking
     {
         return DB::transaction(function () use ($booking, $adminId) {
-            $oldStatus = $booking->status; // Simpan status lama
-
             $booking->update([
                 'status' => 'approved',
                 'disetujui_oleh' => $adminId,
                 'disetujui_at' => now(),
             ]);
 
-            // ============================================================
-            // ✅ TAMBAHKAN: Buat history
-            // ============================================================
+            // Create history
             $this->createHistory($booking, 'approved', 'Booking disetujui oleh admin', 'admin');
 
             // Send notification
-            NotificationHelper::bookingApproved(
-                $booking->user_id,
-                $booking->booking_code,
-                $booking->room->nama
-            );
+            $this->notificationService->bookingApproved($booking);
 
             // Apply reputation
             $reputationService = app(ReputationService::class);
@@ -263,20 +312,16 @@ class BookingService
                 'disetujui_at' => now(),
             ]);
 
-            // ============================================================
-            // ✅ TAMBAHKAN: Buat history
-            // ============================================================
+            // Create history
             $this->createHistory($booking, 'rejected', $reason, 'admin');
 
             // Delete schedule
-            $booking->schedule()->delete();
+            if ($booking->schedule) {
+                $booking->schedule()->delete();
+            }
 
             // Send notification
-            NotificationHelper::bookingRejected(
-                $booking->user_id,
-                $booking->booking_code,
-                $reason
-            );
+            $this->notificationService->bookingRejected($booking, $reason);
 
             return $booking;
         });
@@ -304,7 +349,8 @@ class BookingService
     {
         return DB::transaction(function () use ($booking) {
             $now = now();
-            $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai->format('H:i:s'));
+            // ✅ PERBAIKAN: Gunakan Carbon::parse() langsung pada string jam_mulai
+            $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai);
             $checkinStatus = $now->lte($startTime) ? 'checkin_tepat_waktu' : 'checkin_terlambat';
 
             $booking->update([
@@ -326,11 +372,7 @@ class BookingService
                     'Check-in tepat waktu'
                 );
 
-                NotificationHelper::checkInSuccess(
-                    $booking->user_id,
-                    $booking->booking_code,
-                    $booking->room->nama
-                );
+                $this->notificationService->checkInSuccess($booking);
             } else {
                 $reputationService->apply(
                     $booking->user,
@@ -366,13 +408,12 @@ class BookingService
             );
 
             // Send notification
-            NotificationHelper::send(
+            $this->notificationService->send(
                 $booking->user_id,
                 'Booking Selesai ✅',
                 "Booking {$booking->booking_code} di ruang {$booking->room->nama} telah selesai. Terima kasih telah menggunakan ruangan dengan baik.",
                 'success',
-                'bookings',
-                (string) $booking->id
+                $booking
             );
 
             return $booking;
@@ -385,36 +426,7 @@ class BookingService
     public function processNoShow(Booking $booking): Booking
     {
         return DB::transaction(function () use ($booking) {
-            // Update booking status
-            $booking->update([
-                'status' => 'no_show',
-                'check_in_status' => 'no_show',
-            ]);
-
-            // Delete schedule
-            if ($booking->schedule) {
-                $booking->schedule()->delete();
-            }
-
-            // Apply reputation penalty
-            $reputationService = app(ReputationService::class);
-            $reputationService->apply(
-                $booking->user,
-                'NO_SHOW',
-                $booking,
-                'No Show (admin)',
-                auth()->id() ?? session('user_id')
-            );
-
-            // Send notification to user
-            NotificationHelper::noShow(
-                $booking->user_id,
-                $booking->booking_code,
-                $booking->room->nama
-            );
-
-            Log::info("Booking marked as no-show by admin: " . $booking->booking_code);
-
+            $this->applyNoShowPenalty($booking, 'No Show (admin)');
             return $booking;
         });
     }
@@ -452,13 +464,12 @@ class BookingService
                         );
 
                         // Send notification
-                        NotificationHelper::send(
+                        $this->notificationService->send(
                             $booking->user_id,
                             'Booking Selesai Otomatis ✅',
                             "Booking {$booking->booking_code} di ruang {$booking->room->nama} telah selesai otomatis. Terima kasih telah menggunakan ruangan dengan baik.",
                             'success',
-                            'bookings',
-                            (string) $booking->id
+                            $booking
                         );
 
                         $count++;
@@ -483,52 +494,51 @@ class BookingService
     public function processNoShows(): int
     {
         $count = 0;
+        $bookings = Booking::where('status', 'approved')
+            ->where('check_in_status', 'belum_checkin')
+            ->where('checkin_deadline', '<', now())
+            ->get();
 
-        try {
-            $bookings = Booking::where('status', 'approved')
-                ->where('check_in_status', 'belum_checkin')
-                ->where('checkin_deadline', '<', now())
-                ->get();
-
-            Log::info("Found " . $bookings->count() . " bookings to process as no-show.");
-
-            foreach ($bookings as $booking) {
-                try {
-                    DB::transaction(function () use ($booking, &$count) {
-                        $booking->update([
-                            'status' => 'no_show',
-                            'check_in_status' => 'no_show',
-                        ]);
-
-                        // Apply reputation using ReputationService
-                        $reputationService = app(ReputationService::class);
-                        $reputationService->apply(
-                            $booking->user,
-                            'NO_SHOW',
-                            $booking,
-                            'No Show'
-                        );
-
-                        // Send notification
-                        NotificationHelper::noShow(
-                            $booking->user_id,
-                            $booking->booking_code,
-                            $booking->room->nama
-                        );
-
-                        $count++;
-                        Log::info("Processed no-show for booking: " . $booking->booking_code);
-                    });
-                } catch (\Exception $e) {
-                    Log::error("Error processing no-show for booking {$booking->id}: " . $e->getMessage());
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Error in processNoShows: " . $e->getMessage());
-            throw $e;
+        foreach ($bookings as $booking) {
+            DB::transaction(function () use ($booking, &$count) {
+                $this->applyNoShowPenalty($booking, 'No Show');
+                $count++;
+            });
         }
 
         return $count;
+    }
+
+    /**
+     * PRIVAT METHOD: Terapkan penalty No Show ke booking
+     */
+    private function applyNoShowPenalty(Booking $booking, string $reason): void
+    {
+        // Update booking status
+        $booking->update([
+            'status' => 'no_show',
+            'check_in_status' => 'no_show',
+        ]);
+
+        // Delete schedule
+        if ($booking->schedule) {
+            $booking->schedule()->delete();
+        }
+
+        // Apply reputation penalty
+        $reputationService = app(ReputationService::class);
+        $reputationService->apply(
+            $booking->user,
+            'NO_SHOW',
+            $booking,
+            $reason,
+            auth()->id() ?? session('user_id')
+        );
+
+        // Send notification
+        $this->notificationService->noShow($booking);
+
+        Log::info("Booking marked as no-show: " . $booking->booking_code);
     }
 
     /**

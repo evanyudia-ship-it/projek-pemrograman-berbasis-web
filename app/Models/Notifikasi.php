@@ -2,156 +2,213 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notifikasi extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'notifikasi';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'judul',
         'pesan',
         'tipe',
-        'status',
         'entitas_terkait',
         'entitas_id',
         'dibaca_at',
         'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'dibaca_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
+    // ========== CONSTANTS ==========
+
+    const TYPE_INFO = 'info';
+    const TYPE_WARNING = 'warning';
+    const TYPE_SUCCESS = 'success';
+    const TYPE_APPROVAL = 'approval';
+    const TYPE_DANGER = 'danger';
+
+    const STATUS_UNREAD = 'belum_dibaca';
+    const STATUS_READ = 'sudah_dibaca';
+
+    protected static function booted()
+    {
+        static::saving(function ($notifikasi) {
+            // Validasi tipe (hanya jika tipe tidak null)
+            if ($notifikasi->tipe && !in_array($notifikasi->tipe, self::getValidTypes())) {
+                throw new \InvalidArgumentException(
+                    "Tipe '{$notifikasi->tipe}' tidak valid. Gunakan: " . implode(', ', self::getValidTypes())
+                );
+            }
+
+            // Validasi status (hanya jika status tidak null)
+            if ($notifikasi->status && !in_array($notifikasi->status, self::getValidStatuses())) {
+                throw new \InvalidArgumentException(
+                    "Status '{$notifikasi->status}' tidak valid. Gunakan: " . implode(', ', self::getValidStatuses())
+                );
+            }
+        });
+    }
 
 
-    /**
-     * Get the user that owns the notification.
-     */
+    public static function getValidTypes(): array
+    {
+        return [
+            self::TYPE_INFO,
+            self::TYPE_WARNING,
+            self::TYPE_SUCCESS,
+            self::TYPE_APPROVAL,
+            self::TYPE_DANGER,
+        ];
+    }
+
+    public static function getValidStatuses(): array
+    {
+        return [
+            self::STATUS_UNREAD,
+            self::STATUS_READ,
+        ];
+    }
+
+    // ========== RELATIONS ==========
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get related entity (polymorphic-like).
+    // ========== SCOPES ==========
+
+    public function scopeUnread($query)
+    {
+        return $query->where('status', self::STATUS_UNREAD);
+    }
+
+    public function scopeRead($query)
+    {
+        return $query->where('status', self::STATUS_READ);
+    }
+
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('tipe', $type);
+    }
+
+    // ========== HELPERS ==========
+
+        /**
+     * Set entitas dengan polymorphic style (tanpa migration)
      */
-    public function getRelatedEntityAttribute()
+    public function setEntity($model): void
+    {
+        if ($model) {
+            $this->entitas_terkait = $model->getTable();
+            $this->entitas_id = (string) $model->id;
+        }
+    }
+
+    /**
+     * Get entitas dengan polymorphic style
+     */
+    public function getEntity()
     {
         if ($this->entitas_terkait && $this->entitas_id) {
             $modelMap = [
                 'bookings' => Booking::class,
                 'users' => User::class,
                 'rooms' => Room::class,
-                'organizations' => Organization::class,
+                'faculties' => Faculty::class,
             ];
 
             if (isset($modelMap[$this->entitas_terkait])) {
                 return $modelMap[$this->entitas_terkait]::find($this->entitas_id);
             }
         }
-
         return null;
     }
 
     /**
-     * Mark notification as read.
+     * Helper untuk membuat notifikasi dengan entitas
      */
+    public static function createWithEntity(
+        int $userId,
+        string $judul,
+        string $pesan,
+        string $tipe = 'info',
+        ?Model $entity = null
+    ): self {
+        $notif = new self([
+            'user_id' => $userId,
+            'judul' => $judul,
+            'pesan' => $pesan,
+            'tipe' => $tipe,
+            'status' => self::STATUS_UNREAD,
+        ]);
+
+        if ($entity) {
+            $notif->setEntity($entity);
+        }
+
+        $notif->save();
+        return $notif;
+    }
+
     public function markAsRead(): bool
     {
-        $this->status = 'sudah_dibaca';
+        $this->status = self::STATUS_READ;
         $this->dibaca_at = now();
-
         return $this->save();
     }
 
-    /**
-     * Check if notification is read.
-     */
     public function isRead(): bool
     {
-        return $this->status === 'sudah_dibaca';
+        return $this->status === self::STATUS_READ;
     }
 
-    /**
-     * Get notification icon by type.
-     */
     public function getIconAttribute(): string
     {
         return match($this->tipe) {
-            'success' => '✅',
-            'warning' => '⚠️',
-            'approval' => '⏳',
-            'danger' => '❌',
-            'info' => 'ℹ️',
+            self::TYPE_SUCCESS => '✅',
+            self::TYPE_WARNING => '⚠️',
+            self::TYPE_APPROVAL => '⏳',
+            self::TYPE_DANGER => '❌',
+            self::TYPE_INFO => 'ℹ️',
             default => '🔔',
         };
     }
 
-    /**
-     * Get notification color class by type.
-     */
     public function getColorClassAttribute(): string
     {
         return match($this->tipe) {
-            'success' => 'border-emerald-200 bg-emerald-50',
-            'warning' => 'border-amber-200 bg-amber-50',
-            'approval' => 'border-blue-200 bg-blue-50',
-            'danger' => 'border-red-200 bg-red-50',
-            'info' => 'border-slate-200 bg-slate-50',
+            self::TYPE_SUCCESS => 'border-emerald-200 bg-emerald-50',
+            self::TYPE_WARNING => 'border-amber-200 bg-amber-50',
+            self::TYPE_APPROVAL => 'border-blue-200 bg-blue-50',
+            self::TYPE_DANGER => 'border-red-200 bg-red-50',
+            self::TYPE_INFO => 'border-slate-200 bg-slate-50',
             default => 'border-slate-200 bg-slate-50',
         };
     }
 
-    // ========== SCOPES ==========
-
-    public function scopeUnread(Builder $query): Builder
+    public function getRelatedEntityAttribute()
     {
-        return $query->where('status', 'belum_dibaca');
-    }
+        if ($this->entitas_terkait && $this->entitas_id) {
+            $modelMap = [
+                'bookings' => Booking::class,
+                'users' => User::class,
+                'rooms' => Room::class
+            ];
 
-    public function scopeRead(Builder $query): Builder
-    {
-        return $query->where('status', 'sudah_dibaca');
-    }
-
-    public function scopeOfType(Builder $query, string $type): Builder
-    {
-        return $query->where('tipe', $type);
-    }
-
-    public function scopeByEntity(Builder $query, string $entity, ?string $entityId = null): Builder
-    {
-        $query->where('entitas_terkait', $entity);
-
-        if ($entityId) {
-            $query->where('entitas_id', $entityId);
+            if (isset($modelMap[$this->entitas_terkait])) {
+                return $modelMap[$this->entitas_terkait]::find($this->entitas_id);
+            }
         }
-
-        return $query;
+        return null;
     }
 }

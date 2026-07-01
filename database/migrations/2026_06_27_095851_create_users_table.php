@@ -25,15 +25,17 @@ return new class extends Migration
             $table->string('nidn')->nullable()->unique();
             $table->string('phone')->nullable();
 
-            // Fakultas, dibuat nullable agar tidak error jika tabel faculties dibuat setelah users
-            $table->unsignedBigInteger('faculty_id')->nullable()->index();
+            $table->foreignId('faculty_id')
+                ->nullable()
+                ->constrained('faculties')
+                ->nullOnDelete();
 
             // Status akun
             $table->string('status')->default('pending');
             // pending, active, inactive, banned
 
             // Reputasi awal user
-            $table->integer('reputation_points')->default(100);
+            $table->integer('reputation_points')->default(60);
 
             $table->rememberToken();
             $table->timestamps();

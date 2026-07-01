@@ -2,28 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Riwayat extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'riwayat';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'jenis_aktivitas',
@@ -33,19 +21,13 @@ class Riwayat extends Model
         'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Activity types constants.
-     */
+    // ========== CONSTANTS ==========
+
     const ACTIVITY_BOOKING = 'peminjaman_ruangan';
     const ACTIVITY_UPDATE_PROFILE = 'update_profil';
     const ACTIVITY_CHECKIN = 'checkin';
@@ -53,18 +35,24 @@ class Riwayat extends Model
     const ACTIVITY_APPROVAL = 'approval';
     const ACTIVITY_REJECTION = 'penolakan';
 
-    /**
-     * Get the user that owns the activity.
-     */
+    // ========== RELATIONS ==========
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get related entity (polymorphic).
-     */
-    public function getRelatedEntityAttribute()
+    // ========== HELPERS ==========
+
+    public function setEntity($model): void
+    {
+        if ($model) {
+            $this->entitas_terkait = $model->getTable();
+            $this->entitas_id = (string) $model->id;
+        }
+    }
+
+    public function getEntity()
     {
         if ($this->entitas_terkait && $this->entitas_id) {
             $modelMap = [
@@ -77,25 +65,43 @@ class Riwayat extends Model
                 return $modelMap[$this->entitas_terkait]::find($this->entitas_id);
             }
         }
-
         return null;
+    }
+
+    public static function log(
+        int $userId,
+        string $jenisAktivitas,
+        string $deskripsi = null,
+        $entity = null
+    ): self {
+        $log = new self([
+            'user_id' => $userId,
+            'jenis_aktivitas' => $jenisAktivitas,
+            'deskripsi' => $deskripsi,
+        ]);
+
+        if ($entity) {
+            $log->setEntity($entity);
+        }
+
+        $log->save();
+        return $log;
     }
 
     // ========== SCOPES ==========
 
-    public function scopeOfType(Builder $query, string $type): Builder
+    public function scopeOfType($query, string $type)
     {
         return $query->where('jenis_aktivitas', $type);
     }
 
-    public function scopeBookingActivities(Builder $query): Builder
+    public function scopeBookingActivities($query)
     {
         return $query->where('jenis_aktivitas', self::ACTIVITY_BOOKING);
     }
 
-    public function scopeCheckinActivities(Builder $query): Builder
+    public function scopeCheckinActivities($query)
     {
         return $query->where('jenis_aktivitas', self::ACTIVITY_CHECKIN);
     }
-
 }

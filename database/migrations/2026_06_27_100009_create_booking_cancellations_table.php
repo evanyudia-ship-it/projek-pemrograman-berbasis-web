@@ -28,6 +28,7 @@ return new class extends Migration
 
             // Timestamps
             $table->timestamps();
+            $table->softDeletes();
 
             // Indexes
             $table->index('booking_id');

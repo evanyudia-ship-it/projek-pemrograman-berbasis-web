@@ -2,23 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 class Booking extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'booking_code',
         'user_id',
@@ -31,7 +26,7 @@ class Booking extends Model
         'jam_selesai',
         'durasi_menit',
         'priority_level',
-        'status',
+        'status',  // ✅ Sekarang string, bukan enum
         'catatan_admin',
         'disetujui_oleh',
         'disetujui_at',
@@ -44,15 +39,8 @@ class Booking extends Model
         'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'tanggal' => 'date',
-        'jam_mulai' => 'datetime:H:i:s',
-        'jam_selesai' => 'datetime:H:i:s',
         'disetujui_at' => 'datetime',
         'check_in_at' => 'datetime',
         'checkin_deadline' => 'datetime',
@@ -60,6 +48,23 @@ class Booking extends Model
         'durasi_menit' => 'integer',
         'priority_level' => 'string',
     ];
+
+    // ========== ACCESSORS ==========
+
+    public function getJamMulaiFormattedAttribute(): string
+    {
+        return $this->jam_mulai ? Carbon::parse($this->jam_mulai)->format('H:i') : '-';
+    }
+
+    public function getJamSelesaiFormattedAttribute(): string
+    {
+        return $this->jam_selesai ? Carbon::parse($this->jam_selesai)->format('H:i') : '-';
+    }
+
+    public function getTimeRangeAttribute(): string
+    {
+        return $this->getJamMulaiFormattedAttribute() . ' - ' . $this->getJamSelesaiFormattedAttribute();
+    }
 
     // ========== CONSTANTS ==========
 
@@ -81,96 +86,85 @@ class Booking extends Model
     const PRIORITY_MEDIUM = 'Medium';
     const PRIORITY_LOW = 'Low';
 
+    protected static function booted()
+    {
+        static::saving(function ($booking) {
+            // Validasi status
+            if (!in_array($booking->status, self::getValidStatuses())) {
+                throw new \InvalidArgumentException(
+                    "Status '{$booking->status}' tidak valid. Gunakan: " . implode(', ', self::getValidStatuses())
+                );
+            }
 
+            // Validasi check_in_status
+            if (!in_array($booking->check_in_status, self::getValidCheckinStatuses())) {
+                throw new \InvalidArgumentException(
+                    "Check-in status '{$booking->check_in_status}' tidak valid. Gunakan: " . implode(', ', self::getValidCheckinStatuses())
+                );
+            }
+        });
+    }
+
+    public static function getValidStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING,
+            self::STATUS_APPROVED,
+            self::STATUS_REJECTED,
+            self::STATUS_ONGOING,
+            self::STATUS_COMPLETED,
+            self::STATUS_CANCELLED,
+            self::STATUS_NO_SHOW,
+        ];
+    }
+
+    public static function getValidCheckinStatuses(): array
+    {
+        return [
+            self::CHECKIN_BELUM,
+            self::CHECKIN_TEPAT,
+            self::CHECKIN_TERLAMBAT,
+            self::CHECKIN_NO_SHOW,
+        ];
+    }
 
     // ========== RELATIONS ==========
 
-    /**
-     * Get the user that owns the booking.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the room that owns the booking.
-     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
 
-    /**
-     * Get the admin who approved the booking.
-     */
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'disetujui_oleh');
     }
 
-    /**
-     * Get the user who cancelled the booking.
-     */
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');
     }
 
-    /**
-     * Get the booking histories for the booking.
-     */
     public function histories(): HasMany
     {
         return $this->hasMany(BookingHistory::class);
     }
 
-    /**
-     * Get the booking cancellation for the booking.
-     */
     public function cancellation(): HasOne
     {
         return $this->hasOne(BookingCancellation::class);
     }
 
-    /**
-     * Get the reputation logs for the booking.
-     */
     public function reputationLogs(): HasMany
     {
         return $this->hasMany(ReputationLog::class);
     }
 
-    /**
-     * Get jenis kegiatan label.
-     */
-    public function getJenisKegiatanLabelAttribute(): string
-    {
-        if ($this->jenis_kegiatan === null || $this->jenis_kegiatan === '') {
-            return '-';
-        }
-        return \App\Helpers\PriorityHelper::getLabel($this->jenis_kegiatan);
-    }
-
-    /**
-     * Get priority label.
-     */
-    public function getPriorityLabelAttribute(): string
-    {
-        return \App\Helpers\PriorityHelper::getPriorityLabel($this->priority_level);
-    }
-
-    /**
-     * Get priority color.
-     */
-    public function getPriorityColorAttribute(): string
-    {
-        return \App\Helpers\PriorityHelper::getPriorityColor($this->priority_level);
-    }
-
-    /**
-     * Get the room schedule for the booking.
-     */
     public function schedule(): HasOne
     {
         return $this->hasOne(RoomSchedule::class);
@@ -208,95 +202,62 @@ class Booking extends Model
         return $query->where('status', self::STATUS_NO_SHOW);
     }
 
+    public function scopeOngoing(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ONGOING);
+    }
+
     public function scopeToday(Builder $query): Builder
     {
         return $query->whereDate('tanggal', today());
     }
 
-    public function scopeDate(Builder $query, string $date): Builder
-    {
-        return $query->whereDate('tanggal', $date);
-    }
-
-    public function scopeByRoom(Builder $query, int $roomId): Builder
-    {
-        return $query->where('room_id', $roomId);
-    }
-
-    public function scopeByUser(Builder $query, int $userId): Builder
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    public function scopeCheckinPending(Builder $query): Builder
-    {
-        return $query->where('check_in_status', self::CHECKIN_BELUM);
-    }
-
     // ========== STATUS CHECKS ==========
 
-    /**
-     * Check if booking is pending.
-     */
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
     }
 
-    /**
-     * Check if booking is approved.
-     */
     public function isApproved(): bool
     {
         return $this->status === self::STATUS_APPROVED;
     }
 
-    /**
-     * Check if booking is completed.
-     */
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
     }
 
-    /**
-     * Check if booking is cancelled.
-     */
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;
     }
 
-    /**
-     * Check if booking is rejected.
-     */
     public function isRejected(): bool
     {
         return $this->status === self::STATUS_REJECTED;
     }
 
-    /**
-     * Check if booking is no_show.
-     */
     public function isNoShow(): bool
     {
         return $this->status === self::STATUS_NO_SHOW;
     }
 
-    /**
-     * Check if booking is active (approved and not completed/cancelled).
-     */
+    public function isOngoing(): bool
+    {
+        return $this->status === self::STATUS_ONGOING;
+    }
+
     public function isActive(): bool
     {
         return in_array($this->status, [
             self::STATUS_APPROVED,
-            self::STATUS_PENDING
+            self::STATUS_PENDING,
+            self::STATUS_ONGOING,
         ]);
     }
 
-    /**
-     * Check if booking can be checked in.
-     */
     public function canCheckIn(): bool
     {
         return $this->status === self::STATUS_APPROVED
@@ -304,9 +265,12 @@ class Booking extends Model
             && now()->lessThanOrEqualTo($this->checkin_deadline);
     }
 
-    /**
-     * Check if booking is expired (no check-in).
-     */
+    public function canBeCancelledByUser(): bool
+    {
+        return $this->status === self::STATUS_PENDING
+            || ($this->status === self::STATUS_APPROVED && !$this->isExpired());
+    }
+
     public function isExpired(): bool
     {
         return $this->status === self::STATUS_APPROVED
@@ -314,27 +278,8 @@ class Booking extends Model
             && now()->greaterThan($this->checkin_deadline);
     }
 
-    /**
-     * Check if booking is check-in timely.
-     */
-    public function isCheckinOnTime(): bool
-    {
-        return $this->check_in_status === self::CHECKIN_TEPAT;
-    }
+    // ========== HELPERS ==========
 
-    /**
-     * Check if booking is check-in late.
-     */
-    public function isCheckinLate(): bool
-    {
-        return $this->check_in_status === self::CHECKIN_TERLAMBAT;
-    }
-
-    // ========== HELPER METHODS ==========
-
-    /**
-     * Get status label.
-     */
     public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
@@ -349,9 +294,20 @@ class Booking extends Model
         };
     }
 
-    /**
-     * Get check-in status label.
-     */
+    public function getStatusColorAttribute(): string
+    {
+        return match($this->status) {
+            self::STATUS_PENDING => 'bg-amber-100 text-amber-700',
+            self::STATUS_APPROVED => 'bg-emerald-100 text-emerald-700',
+            self::STATUS_ONGOING => 'bg-blue-100 text-blue-700',
+            self::STATUS_COMPLETED => 'bg-slate-100 text-slate-700',
+            self::STATUS_CANCELLED => 'bg-slate-100 text-slate-400',
+            self::STATUS_REJECTED => 'bg-red-100 text-red-700',
+            self::STATUS_NO_SHOW => 'bg-red-200 text-red-800',
+            default => 'bg-slate-100 text-slate-500',
+        };
+    }
+
     public function getCheckinStatusLabelAttribute(): string
     {
         return match($this->check_in_status) {
@@ -361,25 +317,5 @@ class Booking extends Model
             self::CHECKIN_NO_SHOW => 'No Show',
             default => 'Unknown',
         };
-    }
-
-    /**
-     * Check if booking can be cancelled by user.
-     */
-    public function canBeCancelledByUser(): bool
-    {
-        return $this->status === self::STATUS_PENDING
-            || ($this->status === self::STATUS_APPROVED && $this->isExpired() === false);
-    }
-
-    /**
-     * Calculate duration in minutes.
-     */
-    public function calculateDuration(): int
-    {
-        $start = \Carbon\Carbon::parse($this->tanggal->format('Y-m-d') . ' ' . $this->jam_mulai->format('H:i:s'));
-        $end = \Carbon\Carbon::parse($this->tanggal->format('Y-m-d') . ' ' . $this->jam_selesai->format('H:i:s'));
-
-        return $start->diffInMinutes($end);
     }
 }

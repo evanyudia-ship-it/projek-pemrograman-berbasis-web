@@ -96,7 +96,7 @@ class RegisterController extends Controller
             'phone' => $validated['phone'] ?? null,
             'faculty_id' => $validated['faculty_id'] ?? null,
             'status' => 'pending',
-            'reputation_points' => 100,
+            'reputation_points' => 60,
         ]);
 
         Auth::login($user);

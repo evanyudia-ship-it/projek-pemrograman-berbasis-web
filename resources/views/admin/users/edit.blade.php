@@ -36,7 +36,9 @@
         <div>
             <label class="block text-sm font-semibold mb-2">Email</label>
             <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                   class="w-full px-4 py-3 rounded-xl border border-slate-200" required>
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-100 cursor-not-allowed"
+                readonly required>
+            <p class="text-xs text-slate-400 mt-1">Email tidak dapat diubah setelah akun dibuat.</p>
         </div>
 
         <div>

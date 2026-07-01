@@ -66,6 +66,11 @@ class Room extends Model
         return $this->hasMany(RoomFacility::class);
     }
 
+    public function scopeMinCapacity($query, $capacity)
+    {
+        return $query->where('kapasitas', '>=', $capacity);
+    }
+
     public function schedules(): HasMany
     {
         return $this->hasMany(RoomSchedule::class);
@@ -96,11 +101,6 @@ class Room extends Model
     public function scopeByBuilding(Builder $query, string $building): Builder
     {
         return $query->where('gedung', $building);
-    }
-
-    public function scopeMinCapacity(Builder $query, int $capacity): Builder
-    {
-        return $query->where('kapasitas', '>=', $capacity);
     }
 
     public function scopeSearch(Builder $query, string $keyword): Builder

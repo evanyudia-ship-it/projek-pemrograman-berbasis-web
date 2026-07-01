@@ -554,7 +554,7 @@
             @endif
 
             {{-- ===== BOOKING ===== --}}
-            @if(in_array($role, ['mahasiswa', 'dosen', 'organisasi', 'superadmin']))  {{-- ← TAMBAHKAN organisasi --}}
+            @if(in_array($role, ['mahasiswa', 'dosen', 'organisasi']))
                 <p class="sidebar-section-label pt-3">Booking</p>
 
                 <a href="{{ route('bookings.create') }}"
@@ -645,16 +645,22 @@
                     <span class="nav-label">Manajemen Fasilitas</span>
                 </a>
 
-                <a href="{{ route('admin.room-facilities.index') }}"
-                   class="nav-item {{ request()->is('admin/room-facilities*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="fas fa-link"></i></span>
-                    <span class="nav-label">Fasilitas Ruang</span>
-                </a>
-
                 <a href="{{ route('admin.users.index') }}"
                    class="nav-item {{ request()->is('admin/users*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="fas fa-users"></i></span>
                     <span class="nav-label">Kelola User</span>
+                </a>
+
+                <a href="{{ route('admin.appeals.index') }}"
+                class="nav-item {{ request()->is('admin/appeals*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="fas fa-gavel"></i></span>
+                    <span class="nav-label">Manajemen Banding</span>
+                    @php
+                        $pendingAppeals = \App\Models\Appeal::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingAppeals > 0)
+                    <span class="nav-badge">{{ $pendingAppeals }}</span>
+                    @endif
                 </a>
 
                 <a href="{{ route('admin.faculties.index') }}"
@@ -667,12 +673,6 @@
                    class="nav-item {{ request()->is('admin/admin-faculties*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="fas fa-user-tie"></i></span>
                     <span class="nav-label">Admin Fakultas</span>
-                </a>
-
-                <a href="{{ route('admin.organization-approvals.index') }}"
-                   class="nav-item {{ request()->is('admin/organization-approvals*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="fas fa-users-cog"></i></span>
-                    <span class="nav-label">Approval Organisasi</span>
                 </a>
 
                 <p class="sidebar-section-label pt-3">Reputasi</p>

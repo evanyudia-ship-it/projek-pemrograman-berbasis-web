@@ -142,6 +142,8 @@ class RoomManageController extends Controller
             'foto' => 'nullable|image|max:2048',
             'facilities' => 'array',
             'facilities.*' => 'exists:facilities,id',
+            'facility_status' => 'array',
+            'facility_status.*' => 'in:tersedia,rusak,maintenance',
         ]);
 
         // Upload foto baru
@@ -158,20 +160,20 @@ class RoomManageController extends Controller
 
         // Sync facilities
         if ($request->filled('facilities')) {
+            // Hapus semua relasi lama
             RoomFacility::where('room_id', $room->id)->delete();
+
             foreach ($request->facilities as $facilityId) {
+                $status = $request->facility_status[$facilityId] ?? 'tersedia';
                 RoomFacility::create([
                     'room_id' => $room->id,
                     'facility_id' => $facilityId,
-                    'status' => 'tersedia',
+                    'status' => $status,
                 ]);
             }
         } else {
             RoomFacility::where('room_id', $room->id)->delete();
         }
-
-        return redirect()->route('admin.rooms.index')
-            ->with('success', "Ruang \"{$room->nama}\" berhasil diperbarui.");
     }
 
     /**

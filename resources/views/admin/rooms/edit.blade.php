@@ -145,20 +145,39 @@
 
                 {{-- Fasilitas --}}
                 <div class="md:col-span-2">
-                    <label class="text-sm font-semibold text-slate-700">Fasilitas</label>
-                    <div class="mt-1.5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <label class="text-sm font-semibold text-slate-700">Fasilitas & Status</label>
+                    <p class="text-xs text-slate-400 mb-3">Centang untuk menambahkan, ubah status dengan dropdown</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         @php
                             $selectedFacilities = old('facilities', $room->facilities->pluck('id')->toArray());
+                            $facilityStatuses = [];
+                            foreach ($room->facilities as $f) {
+                                $facilityStatuses[$f->id] = $f->pivot->status ?? 'tersedia';
+                            }
                         @endphp
+
                         @foreach($allFacilities ?? [] as $facility)
-                        <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                        <div class="flex items-center gap-2 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition {{ in_array($facility->id, $selectedFacilities) ? 'bg-blue-50 border-blue-300' : '' }}">
                             <input type="checkbox" name="facilities[]" value="{{ $facility->id }}"
-                                   {{ in_array($facility->id, $selectedFacilities) ? 'checked' : '' }}>
-                            <span class="text-sm text-slate-700">
-                                @if($facility->icon)<span class="mr-1">{{ $facility->icon }}</span>@endif
-                                {{ $facility->nama }}
-                            </span>
-                        </label>
+                                {{ in_array($facility->id, $selectedFacilities) ? 'checked' : '' }}
+                                class="facility-checkbox w-4 h-4 text-blue-600 rounded">
+
+                            <div class="flex-1 min-w-0">
+                                <span class="text-sm text-slate-700">
+                                    @if($facility->icon)<span class="mr-1">{{ $facility->icon }}</span>@endif
+                                    {{ $facility->nama }}
+                                </span>
+
+                                {{-- Status Dropdown (hanya muncul jika fasilitas terpilih) --}}
+                                <select name="facility_status[{{ $facility->id }}]"
+                                        class="facility-status mt-1 text-xs rounded-lg border-slate-200 py-0.5 px-2 {{ in_array($facility->id, $selectedFacilities) ? '' : 'hidden' }}">
+                                    <option value="tersedia" {{ (isset($facilityStatuses[$facility->id]) && $facilityStatuses[$facility->id] == 'tersedia') ? 'selected' : '' }}>✅ Tersedia</option>
+                                    <option value="rusak" {{ (isset($facilityStatuses[$facility->id]) && $facilityStatuses[$facility->id] == 'rusak') ? 'selected' : '' }}>❌ Rusak</option>
+                                    <option value="maintenance" {{ (isset($facilityStatuses[$facility->id]) && $facilityStatuses[$facility->id] == 'maintenance') ? 'selected' : '' }}>🔧 Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
                         @endforeach
                     </div>
                     @error('facilities')
