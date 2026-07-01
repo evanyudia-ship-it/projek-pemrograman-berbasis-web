@@ -40,7 +40,7 @@ class UserController extends Controller
         $totalAdmin = User::where('role', 'admin')->count();
         $totalDosen = User::where('role', 'dosen')->count();
         $totalMahasiswa = User::where('role', 'mahasiswa')->count();
-        $totalOrganisasi = 0;
+        $totalOrganisasi = User::where('role', 'organisasi')->count();
 
         return view('admin.users.index', compact(
             'users',
@@ -65,7 +65,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa'])],
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa', 'organisasi'])],
             'nim' => ['nullable', 'string', 'max:30', 'unique:users,nim'],
             'nidn' => ['nullable', 'string', 'max:30', 'unique:users,nidn'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -108,7 +108,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa'])],
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa', organisasi])],
             'nim' => [
                 'nullable',
                 'string',

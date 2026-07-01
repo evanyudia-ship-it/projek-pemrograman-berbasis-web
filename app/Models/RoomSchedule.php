@@ -95,7 +95,23 @@ class RoomSchedule extends Model
         $end = Carbon::parse($this->waktu_selesai);
 
         return $start->diffInMinutes($end);
+        $user = User::find($userId);
+
+        $maxDurasi = match ($user->role) {
+        'mahasiswa' => 3,
+        'organisasi' => 3,
+        'dosen' => 4,
+        default => 4,
+    };
+
+if (($durasiMenit / 60) > $maxDurasi) {
+    throw new \Exception(
+        "Durasi booking maksimal {$maxDurasi} jam untuk role {$user->role}."
+    );
+}
     }
+
+    
 
     public function getTimeRangeAttribute(): string
     {

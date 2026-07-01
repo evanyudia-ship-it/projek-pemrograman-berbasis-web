@@ -30,7 +30,7 @@ class RegisterController extends Controller
             [
                 'name' => ['required', 'string', 'min:3', 'max:100'],
                 'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-                'role' => ['required', Rule::in(['mahasiswa', 'dosen'])],
+                'role' => ['required', Rule::in(['mahasiswa', 'dosen', 'organisasi'])],
                 'nim_nip' => ['required', 'string', 'max:30'],
                 'phone' => ['nullable', 'string', 'max:30'],
                 'faculty_id' => ['nullable', 'exists:faculties,id'],
@@ -72,6 +72,9 @@ class RegisterController extends Controller
                     ->withErrors(['nim_nip' => 'NIDN sudah terdaftar.'])
                     ->withInput();
             }
+        }
+        if ($validated['role'] === 'organisasi') {
+            $nim = $validated['nim_nip'];
         }
 
         $user = User::create([

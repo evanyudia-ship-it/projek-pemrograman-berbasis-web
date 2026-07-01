@@ -62,20 +62,22 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-2">
                     Role
                 </label>
-                <select name="role"
+                <select name="role" id=role"
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required>
                     <option value="">Pilih Role</option>
                     <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                     <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>Dosen</option>
+                    <option value="organisasi" {{ old('role') == 'organisasi' ? 'selected' : '' }}>Organisasi</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                <label id="nimLabel" class="block text-sm font-semibold text-slate-700 mb-2">
                     NIM / NIDN
                 </label>
                 <input type="text"
+                       id="nim_nip" 
                        name="nim_nip"
                        value="{{ old('nim_nip') }}"
                        placeholder="NIM untuk mahasiswa / NIDN untuk dosen"
@@ -146,6 +148,41 @@
             </a>
         </p>
     </div>
+    <script>
+        const role = document.getElementById('role');
+        const label = document.getElementById('nimLabel');
+        const input = document.getElementById('nim_nip');
+
+        function updateLabel() {
+
+     if (role.value === 'mahasiswa') {
+
+        label.innerHTML = 'NIM';
+        input.placeholder = 'Masukkan NIM';
+
+        } else if (role.value === 'dosen') {
+
+        label.innerHTML = 'NIDN';
+        input.placeholder = 'Masukkan NIDN';
+
+        } else if (role.value === 'organisasi') {
+
+        label.innerHTML = 'Nama Organisasi';
+        input.placeholder = 'Masukkan Nama Organisasi';
+
+        } else {
+
+        label.innerHTML = 'NIM / NIDN';
+        input.placeholder = 'NIM untuk mahasiswa / NIDN untuk dosen';
+
+    }
+
+    }
+
+    role.addEventListener('change', updateLabel);
+
+    updateLabel();
+    </script>
 
 </body>
 </html>
