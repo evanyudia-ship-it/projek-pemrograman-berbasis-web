@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReputationSetting extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'code',
@@ -16,6 +17,7 @@ class ReputationSetting extends Model
         'point',
         'description',
         'is_active',
+        'deleted_at',
     ];
 
     protected function casts(): array

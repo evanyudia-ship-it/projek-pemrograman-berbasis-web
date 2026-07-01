@@ -93,10 +93,10 @@ class BookingController extends Controller
         $durasiJam = $start->diffInHours($end);
 
         $maxDurasi = match($user->role) {
-            'mahasiswa' => 2,  // 2 jam untuk mahasiswa
-            'dosen' => 6,      // 6 jam untuk dosen
-            'organisasi' => 4, // 4 jam untuk organisasi
-            default => 4,      // default 4 jam
+            'mahasiswa' => 3,
+            'dosen' => 6,
+            'organisasi' => 9,
+            default => 5,
         };
 
         if ($durasiJam > $maxDurasi) {

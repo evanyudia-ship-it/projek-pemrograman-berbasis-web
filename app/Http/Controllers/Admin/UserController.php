@@ -29,7 +29,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $query = User::with('faculty')->latest();
 
@@ -75,7 +75,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
 
@@ -87,7 +87,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -116,7 +116,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $user->load('faculty', 'managedFaculties', 'reputationLogs');
 
@@ -128,7 +128,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
 
@@ -140,7 +140,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -151,6 +151,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+            // PERBAIKAN: Gunakan string 'organisasi' (bukan tanpa quote)
             'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa', 'organisasi'])],
             'nim' => [
                 'nullable',
@@ -192,7 +193,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+        $this->checkSuperAdmin();
 
         if (session('user_id') == $user->id) {
             return back()->with('error', 'Akun yang sedang digunakan tidak boleh dihapus.');

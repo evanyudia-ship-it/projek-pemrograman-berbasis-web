@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookingCancellation extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'booking_id',
@@ -18,6 +19,7 @@ class BookingCancellation extends Model
         'alasan',
         'kena_penalti',
         'penalti_point',
+        'deleted_at',
     ];
 
     protected $casts = [

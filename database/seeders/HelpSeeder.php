@@ -57,11 +57,11 @@ class HelpSeeder extends Seeder
         }
 
         // ================================================================
-        // ARTIKEL
+        // ARTIKEL - PERBAIKAN: ganti 'category_id' -> 'help_category_id'
         // ================================================================
         $articles = [
             [
-                'category_id' => 1,
+                'help_category_id' => 1,  // ← PERBAIKAN
                 'title' => 'Cara Mengajukan Booking Ruang',
                 'slug' => 'cara-mengajukan-booking',
                 'excerpt' => 'Panduan lengkap cara mengajukan booking ruang di Smart Classroom, mulai dari memilih ruang hingga submit booking.',
@@ -71,7 +71,7 @@ class HelpSeeder extends Seeder
                 'is_featured' => true,
             ],
             [
-                'category_id' => 3,
+                'help_category_id' => 3,  // ← PERBAIKAN
                 'title' => 'Panduan Check-in Ruang',
                 'slug' => 'panduan-check-in',
                 'excerpt' => 'Pelajari cara melakukan check-in, batas waktu yang diberikan, dan apa yang terjadi jika Anda terlambat check-in.',
@@ -81,7 +81,7 @@ class HelpSeeder extends Seeder
                 'is_featured' => true,
             ],
             [
-                'category_id' => 4,
+                'help_category_id' => 4,  // ← PERBAIKAN
                 'title' => 'Memahami Sistem Reputasi',
                 'slug' => 'memahami-reputasi',
                 'excerpt' => 'Penjelasan lengkap tentang sistem reputation point, cara mendapatkannya, dan dampaknya terhadap kemampuan booking Anda.',
@@ -91,7 +91,7 @@ class HelpSeeder extends Seeder
                 'is_featured' => true,
             ],
             [
-                'category_id' => 2,
+                'help_category_id' => 2,  // ← PERBAIKAN
                 'title' => 'Cara Membatalkan Booking',
                 'slug' => 'cara-membatalkan-booking',
                 'excerpt' => 'Panduan membatalkan booking yang sudah diajukan, termasuk konsekuensi dan aturan pembatalan.',
@@ -101,7 +101,7 @@ class HelpSeeder extends Seeder
                 'is_featured' => false,
             ],
             [
-                'category_id' => 5,
+                'help_category_id' => 5,  // ← PERBAIKAN
                 'title' => 'Mengatasi Masalah Umum di Smart Classroom',
                 'slug' => 'mengatasi-masalah-umum',
                 'excerpt' => 'Solusi untuk masalah yang sering terjadi saat menggunakan Smart Classroom.',

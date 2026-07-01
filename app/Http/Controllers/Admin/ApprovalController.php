@@ -64,11 +64,12 @@ class ApprovalController extends Controller
                 ];
             });
 
-        // History
+        // ============================================================
+        // PERBAIKAN: Riwayat - Hapus limit(20) dan gunakan paginate atau semua data
+        // ============================================================
         $history = $query->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
             ->orderBy('updated_at', 'desc')
-            ->limit(20)
-            ->get()
+            ->get()  // Ambil SEMUA data
             ->map(function ($booking) {
                 return [
                     'id' => $booking->id,

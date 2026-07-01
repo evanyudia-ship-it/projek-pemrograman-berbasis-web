@@ -15,6 +15,11 @@ class LoginController extends Controller
         if (session('logged_in') || Auth::check()) {
             $role = session('user_role', Auth::user()?->role ?? 'mahasiswa');
 
+            // Cek jika user banned
+            if (Auth::check() && Auth::user()->status === 'banned') {
+                return redirect()->route('banned.index');
+            }
+
             return match ($role) {
                 'superadmin' => redirect()->route('dashboard'),
                 'admin' => redirect()->route('admin.dashboard'),
@@ -48,16 +53,34 @@ class LoginController extends Controller
                 ->onlyInput('email');
         }
 
+        // ============================================================
+        // CEK STATUS AKUN
+        // ============================================================
+
         if ($user->status === 'inactive') {
             return back()
                 ->withErrors(['email' => 'Akun Anda sedang dinonaktifkan oleh administrator.'])
                 ->onlyInput('email');
         }
 
+        // ============================================================
+        // CEK STATUS BANNED - TAMBAHKAN INI
+        // ============================================================
         if ($user->status === 'banned') {
-            return back()
-                ->withErrors(['email' => 'Akun Anda dibatasi karena reputasi atau pelanggaran penggunaan.'])
-                ->onlyInput('email');
+            // Login user terlebih dahulu agar bisa mengakses halaman banned
+            Auth::login($user);
+
+            session([
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_email' => $user->email,
+                'user_role' => $user->role,
+                'logged_in' => true,
+                'is_verified' => !is_null($user->email_verified_at),
+            ]);
+
+            return redirect()->route('banned.index')
+                ->with('error', 'Akun Anda sedang dibanned. Silakan kirim banding.');
         }
 
         $credentials = [
@@ -74,6 +97,12 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+
+        // Cek lagi setelah login (untuk jaga-jaga)
+        if ($user->status === 'banned') {
+            return redirect()->route('banned.index')
+                ->with('error', 'Akun Anda sedang dibanned. Silakan kirim banding.');
+        }
 
         session([
             'user_id' => $user->id,
@@ -121,8 +150,4 @@ class LoginController extends Controller
             ->route('login')
             ->with('success', 'Anda berhasil logout.');
     }
-
-
-
-
 }

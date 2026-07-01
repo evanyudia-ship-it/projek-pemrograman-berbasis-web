@@ -13,6 +13,7 @@ use App\Http\Controllers\BookingCancellationController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReputationController;
+use App\Http\Controllers\BannedController;
 
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoomManageController;
@@ -45,14 +46,24 @@ Route::get('/verify', [VerifyController::class, 'show'])->name('verify.show');
 Route::post('/verify', [VerifyController::class, 'process'])->name('verify.process');
 Route::post('/verify/resend', [VerifyController::class, 'resend'])->name('verify.resend');
 
-
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (Auth Required)
+| Banned Routes (Akses sebelum middleware banned)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/banned', [BannedController::class, 'index'])->name('banned.index');
+    Route::post('/banned/appeal', [BannedController::class, 'appeal'])->name('banned.appeal');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (Auth Required + Banned Check)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', \App\Http\Middleware\CheckBanned::class])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -70,7 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user/dashboard', [DashboardController::class, 'userDashboard'])
         ->name('user.dashboard')
-        ->middleware('role:mahasiswa,dosen');
+        ->middleware('role:mahasiswa,dosen,organisasi');
 
     Route::get('/dashboard/redirect', [DashboardController::class, 'redirectByRole'])
         ->name('dashboard.redirect');
@@ -348,6 +359,20 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/logs', [ReputationController::class, 'logs'])->name('logs');
                     Route::get('/levels', [ReputationController::class, 'levels'])->name('levels');
                     Route::put('/levels/{id}', [ReputationController::class, 'updateLevel'])->name('levels.update');
+                });
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Appeals Management (Admin)
+                |--------------------------------------------------------------------------
+                */
+
+                Route::prefix('appeals')->name('appeals.')->group(function () {
+                    Route::get('/', [BannedController::class, 'adminIndex'])->name('index');
+                    Route::get('/{id}', [BannedController::class, 'adminShow'])->name('show');
+                    Route::post('/{id}/approve', [BannedController::class, 'adminApprove'])->name('approve');
+                    Route::post('/{id}/reject', [BannedController::class, 'adminReject'])->name('reject');
                 });
 
             }); // End SuperAdmin Only

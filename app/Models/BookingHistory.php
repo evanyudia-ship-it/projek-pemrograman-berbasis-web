@@ -2,14 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Booking;
+use App\Models\BookingHistory; // ← TAMBAHKAN
+use App\Models\Room;
+use App\Models\RoomSchedule;
+use App\Helpers\NotificationHelper;
+use App\Helpers\PriorityHelper;
+use App\Services\ReputationService;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookingHistory extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'booking_id',
@@ -18,6 +25,7 @@ class BookingHistory extends Model
         'status_sebelumnya',
         'status_baru',
         'keterangan',
+        'deleted_at',
     ];
 
     protected $casts = [

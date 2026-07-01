@@ -69,19 +69,10 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\CheckRole::class,
         'auth.check' => \App\Http\Middleware\EnsureUserLoggedIn::class,
         'faculty.admin' => \App\Http\Middleware\CheckFacultyAdmin::class,
-    ];
 
-    /**
-     * Register the application's route middleware.
-     *
-     * These middleware may be assigned to groups or used individually.
-     *
-     * @var array<string, class-string|string>
-     */
-    protected $routeMiddleware = [
-        // ===== MIDDLEWARE CUSTOM =====
-        'role' => \App\Http\Middleware\CheckRole::class,
-        'auth.check' => \App\Http\Middleware\EnsureUserLoggedIn::class,
-        'faculty.admin' => \App\Http\Middleware\CheckFacultyAdmin::class,
+        // ============================================================
+        // ✅ TAMBAHKAN MIDDLEWARE BANNED DI SINI (WAJIB!)
+        // ============================================================
+        'banned' => \App\Http\Middleware\CheckBanned::class,
     ];
 }

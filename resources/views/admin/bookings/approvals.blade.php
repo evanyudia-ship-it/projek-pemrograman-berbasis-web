@@ -81,7 +81,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Expired / No Show</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">No Show</p>
                     <p class="text-2xl font-extrabold text-slate-400 dark:text-slate-500 mt-1">{{ $stats['expired'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500">
@@ -237,8 +237,14 @@
                     <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition" data-filter="rejected">
                         <i class="fas fa-times-circle text-red-500 mr-1"></i> Ditolak
                     </button>
-                    <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition" data-filter="expired">
-                        <i class="fas fa-hourglass-end text-slate-400 mr-1"></i> Expired
+                    <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition" data-filter="no_show">
+                        <i class="fas fa-hourglass-end text-slate-400 mr-1"></i> No Show
+                    </button>
+                    <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition" data-filter="cancelled">
+                        <i class="fas fa-ban text-slate-400 mr-1"></i> Dibatalkan
+                    </button>
+                    <button class="filter-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition" data-filter="completed">
+                        <i class="fas fa-check-double text-blue-500 mr-1"></i> Selesai
                     </button>
                 </div>
             </div>
@@ -286,6 +292,9 @@
                             {{ $bk['diproses'] }}
                         </td>
                         <td class="px-6 py-4">
+                            {{-- ============================================================ --}}
+                            {{-- ✅ PERBAIKAN STATUS BADGE --}}
+                            {{-- ============================================================ --}}
                             @if($bk['status'] === 'approved')
                                 <span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold inline-flex items-center gap-1">
                                     <i class="fas fa-check-circle"></i> Disetujui
@@ -294,9 +303,21 @@
                                 <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold inline-flex items-center gap-1">
                                     <i class="fas fa-times-circle"></i> Ditolak
                                 </span>
-                            @elseif($bk['status'] === 'expired')
+                            @elseif($bk['status'] === 'no_show')
                                 <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold inline-flex items-center gap-1">
-                                    <i class="fas fa-hourglass-end"></i> Expired
+                                    <i class="fas fa-hourglass-end"></i> No Show
+                                </span>
+                            @elseif($bk['status'] === 'cancelled')
+                                <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold inline-flex items-center gap-1">
+                                    <i class="fas fa-ban"></i> Dibatalkan
+                                </span>
+                            @elseif($bk['status'] === 'completed')
+                                <span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold inline-flex items-center gap-1">
+                                    <i class="fas fa-check-double"></i> Selesai
+                                </span>
+                            @else
+                                <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold">
+                                    {{ ucfirst($bk['status']) }}
                                 </span>
                             @endif
                         </td>
@@ -556,16 +577,31 @@ $(document).ready(function () {
     // ================================================================
     // SHOW DETAIL MODAL
     // ================================================================
+
     function showDetailModal(data) {
         let statusBadge = '';
         if (data.status === 'approved') {
             statusBadge = '<span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-check-circle"></i> Disetujui</span>';
         } else if (data.status === 'rejected') {
             statusBadge = '<span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-times-circle"></i> Ditolak</span>';
-        } else if (data.status === 'expired' || data.status === 'no_show') {
-            statusBadge = '<span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-hourglass-end"></i> Expired</span>';
+        } else if (data.status === 'no_show') {
+            statusBadge = '<span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-hourglass-end"></i> No Show</span>';
+        } else if (data.status === 'cancelled') {
+            statusBadge = '<span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-ban"></i> Dibatalkan</span>';
+        } else if (data.status === 'completed') {
+            statusBadge = '<span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-check-double"></i> Selesai</span>';
         } else {
             statusBadge = '<span class="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold inline-flex items-center gap-1"><i class="fas fa-clock"></i> Pending</span>';
+        }
+
+        let actorHtml = '';
+        if (data.aktor && data.aktor !== '-') {
+            actorHtml = `
+            <div class="border-b border-slate-100 dark:border-slate-700 pb-3 flex justify-between">
+                <strong class="text-slate-700 dark:text-slate-300">Dilakukan Oleh:</strong>
+                <span class="text-slate-600 dark:text-slate-400">${data.aktor === 'user' ? '👤 User' : (data.aktor === 'admin' ? '👨‍💼 Admin' : '🤖 Sistem')}</span>
+            </div>
+            `;
         }
 
         let catatanHtml = '';
@@ -619,6 +655,7 @@ $(document).ready(function () {
                     ${statusBadge}
                 </div>
                 ${diprosesHtml}
+                ${actorHtml}
                 ${catatanHtml}
                 <div>
                     <strong class="text-slate-700 dark:text-slate-300">Tujuan / Deskripsi:</strong><br>

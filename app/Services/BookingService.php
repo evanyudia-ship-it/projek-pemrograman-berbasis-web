@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BookingHistory;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\RoomSchedule;
@@ -44,12 +45,12 @@ class BookingService
             // ============================================================
             $user = \App\Models\User::find($userId);
             $maxDurasi = match($user->role ?? 'mahasiswa') {
-                'mahasiswa' => 2,      // 2 jam untuk mahasiswa
-                'dosen' => 6,          // 6 jam untuk dosen
-                'organisasi' => 4,     // 4 jam untuk organisasi
-                'admin' => 8,          // 8 jam untuk admin
-                'superadmin' => 12,    // 12 jam untuk superadmin
-                default => 4,          // default 4 jam
+                'mahasiswa' => 3,
+                'dosen' => 6,
+                'organisasi' => 9,
+                'admin' => 24,
+                'superadmin' => 24,
+                default => 5,
             };
 
             // Validasi durasi (jika melebihi max, throw error)
@@ -80,7 +81,7 @@ class BookingService
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi_menit' => $durasiMenit,
-                'priority_level' => $priority, // ✅ Sistem yang menentukan!
+                'priority_level' => $priority,
                 'status' => 'pending',
                 'check_in_status' => 'belum_checkin',
                 'checkin_deadline' => $checkinDeadline,
@@ -170,6 +171,8 @@ class BookingService
                 'cancelled_by' => $cancelledBy,
             ]);
 
+            $this->createHistory($booking, 'cancelled', $reason, 'user');
+
             // Update schedule status
             $booking->schedule()->delete();
 
@@ -212,20 +215,27 @@ class BookingService
     public function approve(Booking $booking, int $adminId): Booking
     {
         return DB::transaction(function () use ($booking, $adminId) {
+            $oldStatus = $booking->status; // Simpan status lama
+
             $booking->update([
                 'status' => 'approved',
                 'disetujui_oleh' => $adminId,
                 'disetujui_at' => now(),
             ]);
 
-            // Send notification to user
+            // ============================================================
+            // ✅ TAMBAHKAN: Buat history
+            // ============================================================
+            $this->createHistory($booking, 'approved', 'Booking disetujui oleh admin', 'admin');
+
+            // Send notification
             NotificationHelper::bookingApproved(
                 $booking->user_id,
                 $booking->booking_code,
                 $booking->room->nama
             );
 
-            // Apply reputation using ReputationService
+            // Apply reputation
             $reputationService = app(ReputationService::class);
             $reputationService->apply(
                 $booking->user,
@@ -253,6 +263,11 @@ class BookingService
                 'disetujui_at' => now(),
             ]);
 
+            // ============================================================
+            // ✅ TAMBAHKAN: Buat history
+            // ============================================================
+            $this->createHistory($booking, 'rejected', $reason, 'admin');
+
             // Delete schedule
             $booking->schedule()->delete();
 
@@ -265,6 +280,21 @@ class BookingService
 
             return $booking;
         });
+    }
+
+    /**
+     * Create booking history record.
+     */
+    private function createHistory(Booking $booking, string $statusBaru, ?string $keterangan = null, string $actorType = 'admin'): void
+    {
+        BookingHistory::create([
+            'booking_id' => $booking->id,
+            'user_id' => auth()->id() ?? session('user_id'),
+            'actor_type' => $actorType,
+            'status_sebelumnya' => $booking->getOriginal('status'),
+            'status_baru' => $statusBaru,
+            'keterangan' => $keterangan,
+        ]);
     }
 
     /**
@@ -282,6 +312,8 @@ class BookingService
                 'check_in_at' => $now,
                 'status' => 'ongoing',
             ]);
+
+            $this->createHistory($booking, 'ongoing', 'Check-in berhasil', 'user');
 
             // Apply reputation using ReputationService
             $reputationService = app(ReputationService::class);
@@ -322,6 +354,8 @@ class BookingService
                 'status' => 'completed',
             ]);
 
+            $this->createHistory($booking, 'completed', 'Booking selesai', 'user');
+
             // Apply reputation using ReputationService
             $reputationService = app(ReputationService::class);
             $reputationService->apply(
@@ -347,8 +381,6 @@ class BookingService
 
     /**
      * Process a single booking as no-show (admin triggered or system).
-     *
-     * PERBAIKAN: Method ini ditambahkan untuk menangani No-Show dari admin
      */
     public function processNoShow(Booking $booking): Booking
     {

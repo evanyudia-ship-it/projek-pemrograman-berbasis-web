@@ -14,8 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.session' => \App\Http\Middleware\EnsureUserLoggedIn::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'check.banned' => \App\Http\Middleware\CheckBanned::class,
         ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

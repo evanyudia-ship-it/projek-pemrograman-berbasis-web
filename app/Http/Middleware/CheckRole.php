@@ -19,7 +19,6 @@ class CheckRole
             $userRole = session('user_role');
         }
 
-        // PERBAIKAN: Support role organisasi
         if (!$userRole || !in_array($userRole, $roles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }

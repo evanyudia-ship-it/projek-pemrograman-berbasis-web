@@ -30,8 +30,8 @@ class RegisterController extends Controller
             [
                 'name' => ['required', 'string', 'min:3', 'max:100'],
                 'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-                'role' => ['required', Rule::in(['mahasiswa', 'dosen', 'organisasi'])], // ← PERBAIKAN: Tambahkan organisasi
-                'nim_nip' => ['nullable', 'string', 'max:30'], // ← PERBAIKAN: Tidak required untuk organisasi
+                'role' => ['required', Rule::in(['mahasiswa', 'dosen', 'organisasi'])],
+                'nim_nip' => ['nullable', 'string', 'max:30'], // ← PERBAIKAN: nullable untuk organisasi
                 'phone' => ['nullable', 'string', 'max:30'],
                 'faculty_id' => ['nullable', 'exists:faculties,id'],
                 'password' => ['required', 'string', 'min:6', 'confirmed'],
@@ -51,7 +51,7 @@ class RegisterController extends Controller
         );
 
         // ============================================================
-        // PERBAIKAN: Validasi NIM/NIDN berdasarkan role
+        // VALIDASI NIM/NIDN BERDASARKAN ROLE
         // ============================================================
         $nim = null;
         $nidn = null;
@@ -79,8 +79,9 @@ class RegisterController extends Controller
         }
 
         // PERBAIKAN: Organisasi tidak wajib mengisi NIM/NIDN
+        // Hapus block yang duplikat dan tidak perlu
         if ($validated['role'] === 'organisasi') {
-            // Organisasi tidak perlu NIM/NIDN
+            // Organisasi tidak perlu NIM/NIDN, simpan sebagai null
             $nim = null;
             $nidn = null;
         }

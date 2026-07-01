@@ -19,7 +19,7 @@
             </h1>
 
             <p class="text-sm text-slate-500 mt-1">
-                Daftar sebagai mahasiswa atau dosen
+                Daftar sebagai mahasiswa, dosen, atau organisasi
             </p>
         </div>
 
@@ -62,26 +62,28 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-2">
                     Role
                 </label>
-                <select name="role"
+                <select name="role" id="role"  {{-- PERBAIKAN: tambahkan id="role" --}}
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         required>
                     <option value="">Pilih Role</option>
                     <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                     <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>Dosen</option>
-                    <option value="organisasi" {{ old('role') == 'organisasi' ? 'selected' : '' }}>Organisasi</option> {{-- ← TAMBAHKAN --}}
+                    <option value="organisasi" {{ old('role') == 'organisasi' ? 'selected' : '' }}>Organisasi</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2" id="nimLabel">
+                <label id="nimLabel" class="block text-sm font-semibold text-slate-700 mb-2">
                     NIM / NIDN
                 </label>
                 <input type="text"
-                    name="nim_nip"
-                    value="{{ old('nim_nip') }}"
-                    placeholder="NIM untuk mahasiswa / NIDN untuk dosen"
-                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <p class="text-xs text-slate-400 mt-1" id="nimHelp">
+                       id="nim_nip"  {{-- PERBAIKAN: tambahkan id="nim_nip" --}}
+                       name="nim_nip"
+                       value="{{ old('nim_nip') }}"
+                       placeholder="NIM untuk mahasiswa / NIDN untuk dosen"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {{-- PERBAIKAN: tidak ada required, karena organisasi tidak wajib --}}
+                <p id="nimHelp" class="text-xs text-slate-400 mt-1">
                     Diisi sesuai role Anda
                 </p>
             </div>
@@ -149,6 +151,43 @@
             </a>
         </p>
     </div>
+
+    {{-- PERBAIKAN: JavaScript untuk dynamic label --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const role = document.getElementById('role');
+            const label = document.getElementById('nimLabel');
+            const input = document.getElementById('nim_nip');
+            const help = document.getElementById('nimHelp');
+
+            function updateLabel() {
+                if (role.value === 'mahasiswa') {
+                    label.innerHTML = 'NIM <span class="text-red-500">*</span>';
+                    input.placeholder = 'Masukkan NIM';
+                    input.required = true;
+                    help.textContent = 'Masukkan NIM mahasiswa Anda';
+                } else if (role.value === 'dosen') {
+                    label.innerHTML = 'NIDN <span class="text-red-500">*</span>';
+                    input.placeholder = 'Masukkan NIDN';
+                    input.required = true;
+                    help.textContent = 'Masukkan NIDN dosen Anda';
+                } else if (role.value === 'organisasi') {
+                    label.innerHTML = 'Nama Organisasi';
+                    input.placeholder = 'Masukkan Nama Organisasi (opsional)';
+                    input.required = false;
+                    help.textContent = 'Nama organisasi tidak wajib diisi';
+                } else {
+                    label.innerHTML = 'NIM / NIDN';
+                    input.placeholder = 'NIM untuk mahasiswa / NIDN untuk dosen';
+                    input.required = false;
+                    help.textContent = 'Diisi sesuai role Anda';
+                }
+            }
+
+            role.addEventListener('change', updateLabel);
+            updateLabel();
+        });
+    </script>
 
 </body>
 </html>
