@@ -10,7 +10,6 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingCancellationController;
-use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReputationController;
@@ -145,20 +144,6 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Organization
-    |--------------------------------------------------------------------------
-    */
-
-    Route::prefix('organization')->name('organization.')->group(function () {
-        Route::get('/', [OrganizationController::class, 'index'])->name('index');
-        Route::get('/create', [OrganizationController::class, 'create'])->name('create');
-        Route::post('/', [OrganizationController::class, 'store'])->name('store');
-        Route::delete('/{id}/cancel', [OrganizationController::class, 'cancel'])->name('cancel');
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Help
     |--------------------------------------------------------------------------
     */
@@ -243,22 +228,7 @@ Route::middleware(['auth'])->group(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Organization Approval
-            |--------------------------------------------------------------------------
-            */
-
-            Route::prefix('organization-approvals')->name('organization-approvals.')->group(function () {
-                Route::get('/', [OrganizationApprovalController::class, 'index'])->name('index');
-                Route::get('/{id}', [OrganizationApprovalController::class, 'show'])->name('show');
-                Route::post('/{id}/approve', [OrganizationApprovalController::class, 'approve'])->name('approve');
-                Route::post('/{id}/reject', [OrganizationApprovalController::class, 'reject'])->name('reject');
-                Route::get('/{id}/download', [OrganizationApprovalController::class, 'downloadFile'])->name('download');
-            });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Manage Rooms (Admin)
+            | Manage Rooms - Admin & SuperAdmin
             |--------------------------------------------------------------------------
             */
 
@@ -277,94 +247,111 @@ Route::middleware(['auth'])->group(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Manage Facilities
+            | SUPER ADMIN ONLY - Manajemen User, Fasilitas, Fakultas, dll
             |--------------------------------------------------------------------------
             */
 
-            Route::prefix('facilities')->name('facilities.')->group(function () {
-                Route::get('/', [FacilityController::class, 'index'])->name('index');
-                Route::get('/create', [FacilityController::class, 'create'])->name('create');
-                Route::post('/', [FacilityController::class, 'store'])->name('store');
-                Route::get('/{id}', [FacilityController::class, 'show'])->name('show');
-                Route::get('/{id}/edit', [FacilityController::class, 'edit'])->name('edit');
-                Route::put('/{id}', [FacilityController::class, 'update'])->name('update');
-                Route::delete('/{id}', [FacilityController::class, 'destroy'])->name('destroy');
-                Route::get('/{id}/rooms', [FacilityController::class, 'getRooms'])->name('rooms');
-            });
+            Route::middleware(['role:superadmin'])->group(function () {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Manage Users
+                |--------------------------------------------------------------------------
+                */
+
+                Route::resource('users', UserController::class);
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Manage Room Facilities
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | Manage Facilities
+                |--------------------------------------------------------------------------
+                */
 
-            Route::prefix('room-facilities')->name('room-facilities.')->group(function () {
-                Route::get('/', [RoomFacilityController::class, 'index'])->name('index');
-                Route::post('/attach', [RoomFacilityController::class, 'attach'])->name('attach');
-                Route::post('/bulk-attach', [RoomFacilityController::class, 'bulkAttach'])->name('bulk-attach');
-                Route::put('/{roomId}/{facilityId}', [RoomFacilityController::class, 'update'])->name('update');
-                Route::delete('/{roomId}/{facilityId}', [RoomFacilityController::class, 'detach'])->name('detach');
-                Route::get('/{roomId}/facilities', [RoomFacilityController::class, 'getRoomFacilities'])->name('get-room-facilities');
-                Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
-                Route::post('/{roomId}/{facilityId}/restore', [RoomFacilityController::class, 'restore'])->name('restore');
-                Route::delete('/{roomId}/{facilityId}/force', [RoomFacilityController::class, 'forceDetach'])->name('force-detach');
-                Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
-            });
-
-            // Tambahkan routes untuk notification force delete
-            Route::prefix('notifications')->name('notifications.')->group(function () {
-                // ... routes existing
-                Route::delete('/{id}/force', [NotificationController::class, 'forceDelete'])->name('force-delete');
-                Route::delete('/delete-read/force', [NotificationController::class, 'forceDeleteAllRead'])->name('force-delete-read');
-            });
+                Route::prefix('facilities')->name('facilities.')->group(function () {
+                    Route::get('/', [FacilityController::class, 'index'])->name('index');
+                    Route::get('/create', [FacilityController::class, 'create'])->name('create');
+                    Route::post('/', [FacilityController::class, 'store'])->name('store');
+                    Route::get('/{id}', [FacilityController::class, 'show'])->name('show');
+                    Route::get('/{id}/edit', [FacilityController::class, 'edit'])->name('edit');
+                    Route::put('/{id}', [FacilityController::class, 'update'])->name('update');
+                    Route::delete('/{id}', [FacilityController::class, 'destroy'])->name('destroy');
+                    Route::get('/{id}/rooms', [FacilityController::class, 'getRooms'])->name('rooms');
+                });
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Manage Faculties
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | Manage Room Facilities
+                |--------------------------------------------------------------------------
+                */
 
-            Route::resource('faculties', FacultyController::class)->except(['show']);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Manage Admin Faculties
-            |--------------------------------------------------------------------------
-            */
-
-            Route::prefix('admin-faculties')->name('admin-faculties.')->group(function () {
-                Route::get('/', [AdminFacultyController::class, 'index'])->name('index');
-                Route::post('/', [AdminFacultyController::class, 'store'])->name('store');
-                Route::delete('/{adminFaculty}', [AdminFacultyController::class, 'destroy'])->name('destroy');
-            });
+                Route::prefix('room-facilities')->name('room-facilities.')->group(function () {
+                    Route::get('/', [RoomFacilityController::class, 'index'])->name('index');
+                    Route::post('/attach', [RoomFacilityController::class, 'attach'])->name('attach');
+                    Route::post('/bulk-attach', [RoomFacilityController::class, 'bulkAttach'])->name('bulk-attach');
+                    Route::put('/{roomId}/{facilityId}', [RoomFacilityController::class, 'update'])->name('update');
+                    Route::delete('/{roomId}/{facilityId}', [RoomFacilityController::class, 'detach'])->name('detach');
+                    Route::get('/{roomId}/facilities', [RoomFacilityController::class, 'getRoomFacilities'])->name('get-room-facilities');
+                    Route::get('/{roomId}/available', [RoomFacilityController::class, 'getAvailableFacilities'])->name('get-available');
+                    Route::post('/{roomId}/{facilityId}/restore', [RoomFacilityController::class, 'restore'])->name('restore');
+                    Route::delete('/{roomId}/{facilityId}/force', [RoomFacilityController::class, 'forceDetach'])->name('force-detach');
+                });
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Manage Users
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | Manage Faculties
+                |--------------------------------------------------------------------------
+                */
 
-            Route::resource('users', UserController::class);
+                Route::resource('faculties', FacultyController::class)->except(['show']);
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Reputation Management (Admin)
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | Manage Admin Faculties
+                |--------------------------------------------------------------------------
+                */
 
-            Route::prefix('reputation')->name('reputation.')->group(function () {
-                Route::get('/settings', [ReputationController::class, 'settings'])->name('settings');
-                Route::put('/settings', [ReputationController::class, 'updateSettings'])->name('settings.update');
-                Route::get('/logs', [ReputationController::class, 'logs'])->name('logs');
-                Route::get('/levels', [ReputationController::class, 'levels'])->name('levels');
-                Route::put('/levels/{id}', [ReputationController::class, 'updateLevel'])->name('levels.update');
-            });
+                Route::prefix('admin-faculties')->name('admin-faculties.')->group(function () {
+                    Route::get('/', [AdminFacultyController::class, 'index'])->name('index');
+                    Route::post('/', [AdminFacultyController::class, 'store'])->name('store');
+                    Route::delete('/{adminFaculty}', [AdminFacultyController::class, 'destroy'])->name('destroy');
+                });
 
-        });
 
-});
+                /*
+                |--------------------------------------------------------------------------
+                | Organization Approval
+                |--------------------------------------------------------------------------
+                */
+
+                Route::prefix('organization-approvals')->name('organization-approvals.')->group(function () {
+                    Route::get('/', [OrganizationApprovalController::class, 'index'])->name('index');
+                    Route::get('/{id}', [OrganizationApprovalController::class, 'show'])->name('show');
+                    Route::post('/{id}/approve', [OrganizationApprovalController::class, 'approve'])->name('approve');
+                    Route::post('/{id}/reject', [OrganizationApprovalController::class, 'reject'])->name('reject');
+                    Route::get('/{id}/download', [OrganizationApprovalController::class, 'downloadFile'])->name('download');
+                });
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reputation Management
+                |--------------------------------------------------------------------------
+                */
+
+                Route::prefix('reputation')->name('reputation.')->group(function () {
+                    Route::get('/settings', [ReputationController::class, 'settings'])->name('settings');
+                    Route::put('/settings', [ReputationController::class, 'updateSettings'])->name('settings.update');
+                    Route::get('/logs', [ReputationController::class, 'logs'])->name('logs');
+                    Route::get('/levels', [ReputationController::class, 'levels'])->name('levels');
+                    Route::put('/levels/{id}', [ReputationController::class, 'updateLevel'])->name('levels.update');
+                });
+
+            }); // End SuperAdmin Only
+
+        }); // End Admin Section
+
+}); // End Auth Required

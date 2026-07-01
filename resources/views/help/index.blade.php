@@ -38,18 +38,68 @@
         </form>
     </div>
 
-    {{-- ===== ATURAN DURASI BOOKING ===== --}}
-    <div id="durasi" class="grid grid-cols-1 sm:grid-cols-3 gap-4 scroll-mt-28">
-        @foreach($durasiBooking as $durasi)
-        <div class="p-5 rounded-2xl bg-{{ $durasi['color'] }}-50 border border-{{ $durasi['color'] }}-100">
-            <div class="w-10 h-10 bg-{{ $durasi['color'] }}-100 rounded-xl flex items-center justify-center text-xl mb-3">
-                {{ $durasi['icon'] }}
+    {{-- ===== KATEGORI BANTUAN ===== --}}
+    <div id="kategori" class="scroll-mt-28">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">📂 Kategori Bantuan</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            @forelse($helpCategories as $category)
+            <a href="{{ route('help.category', $category->slug) }}"
+               class="p-4 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition group text-center">
+                <div class="text-3xl mb-2">{{ $category->icon ?? '📂' }}</div>
+                <h3 class="font-bold text-slate-800 group-hover:text-blue-600 transition text-sm">{{ $category->name }}</h3>
+                <p class="text-xs text-slate-400 mt-1">{{ $category->articles_count }} artikel</p>
+            </a>
+            @empty
+            <div class="col-span-full text-center text-slate-400 py-4">
+                Belum ada kategori bantuan.
             </div>
-            <p class="font-bold text-{{ $durasi['color'] }}-700">{{ $durasi['role'] }}</p>
-            <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ $durasi['durasi'] }}</p>
-            <p class="text-xs text-slate-500 mt-1">{{ $durasi['keterangan'] }}</p>
+            @endforelse
         </div>
-        @endforeach
+    </div>
+
+    {{-- ===== ARTIKEL UNGGULAN ===== --}}
+    @if($featuredArticles->count() > 0)
+    <div id="artikel" class="scroll-mt-28">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">⭐ Artikel Unggulan</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @foreach($featuredArticles as $article)
+            <a href="{{ route('help.article', $article->slug) }}"
+               class="block p-5 bg-white rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition group">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">{{ $article->icon ?? '📄' }}</span>
+                    <div>
+                        <h3 class="font-bold text-slate-800 group-hover:text-blue-600 transition text-sm">
+                            {{ $article->title }}
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ $article->excerpt }}</p>
+                        <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                            <span>{{ $article->category->name ?? 'Umum' }}</span>
+                            <span>•</span>
+                            <span>{{ $article->read_time }} menit</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- ===== ATURAN DURASI BOOKING ===== --}}
+    <div id="durasi" class="scroll-mt-28">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">⏱️ Batas Durasi Booking</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            @foreach($durasiBooking as $durasi)
+            <div class="p-5 rounded-2xl bg-{{ $durasi['color'] }}-50 border border-{{ $durasi['color'] }}-100">
+                <div class="w-10 h-10 bg-{{ $durasi['color'] }}-100 rounded-xl flex items-center justify-center text-xl mb-3">
+                    {{ $durasi['icon'] }}
+                </div>
+                <p class="font-bold text-{{ $durasi['color'] }}-700">{{ $durasi['role'] }}</p>
+                <p class="text-2xl font-extrabold text-slate-900 mt-1">{{ $durasi['durasi'] }}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ $durasi['keterangan'] }}</p>
+            </div>
+            @endforeach
+        </div>
     </div>
 
     {{-- ===== PANDUAN BOOKING ===== --}}
@@ -81,7 +131,8 @@
                 <ul class="list-disc pl-5 space-y-2 text-slate-600">
                     <li>Booking <strong>harus</strong> dilakukan melalui sistem</li>
                     <li>Tidak diperbolehkan menggunakan ruang tanpa booking resmi</li>
-                    <li>Semua booking berstatus <strong>Pending</strong> hingga disetujui</li>
+                    <li>Semua booking berstatus <strong>Pending</strong> hingga disetujui admin</li>
+                    <li>Maksimal <strong>3 booking aktif</strong> per hari</li>
                 </ul>
             </div>
 
@@ -92,6 +143,7 @@
                     <li>Booking untuk kepentingan fiktif / palsu</li>
                     <li>Booking berulang tanpa penggunaan yang jelas (spam)</li>
                     <li>Menggunakan akun orang lain</li>
+                    <li>Menggunakan ruang tanpa booking resmi</li>
                 </ul>
             </div>
         </div>
@@ -137,8 +189,12 @@
                         <span class="font-bold text-red-600">-15</span>
                     </div>
                     <div class="flex justify-between px-4 py-3 bg-red-50 border border-red-100 rounded-xl">
-                        <span>Membatalkan booking mendadak</span>
+                        <span>Membatalkan booking mendadak (&lt; 1 jam)</span>
                         <span class="font-bold text-red-600">-10</span>
+                    </div>
+                    <div class="flex justify-between px-4 py-3 bg-red-50 border border-red-100 rounded-xl">
+                        <span>Check-in terlambat</span>
+                        <span class="font-bold text-red-600">-5</span>
                     </div>
                     <div class="flex justify-between px-4 py-3 bg-red-50 border border-red-100 rounded-xl">
                         <span>Booking fiktif / penyalahgunaan</span>
@@ -178,6 +234,16 @@
                     <li><strong>&lt; 1 jam</strong> → Terkena pengurangan point (-10)</li>
                 </ul>
             </div>
+
+            <div>
+                <h3 class="font-semibold mb-3">Sanksi Berdasarkan Level</h3>
+                <ul class="list-disc pl-5 space-y-1.5 text-slate-600">
+                    <li><strong>Trusted User (80-100):</strong> Prioritas approval</li>
+                    <li><strong>Normal (50-79):</strong> Booking normal</li>
+                    <li><strong>Dibatasi (30-49):</strong> Booking wajib review manual</li>
+                    <li><strong>Diblokir (&lt; 30):</strong> Tidak bisa booking</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -185,25 +251,30 @@
     <div id="faq" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 scroll-mt-28">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-6">❓ 4. Pertanyaan yang Sering Diajukan</p>
         <div class="space-y-3">
-            @foreach($faqs as $faq)
+            @forelse($faqs as $faq)
             <div class="faq-item border border-slate-100 rounded-2xl overflow-hidden">
                 <button class="faq-toggle w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-50 transition" type="button">
                     <span class="flex items-center gap-3">
-                        <span class="text-lg">{{ $faq['icon'] ?? '❓' }}</span>
-                        <span class="text-sm font-semibold text-slate-800">{{ e($faq['pertanyaan'] ?? '-') }}</span>
+                        <span class="text-lg">{{ $faq->icon ?? '❓' }}</span>
+                        <span class="text-sm font-semibold text-slate-800">{{ $faq->question }}</span>
                     </span>
                     <span class="faq-icon shrink-0 w-7 h-7 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-bold">+</span>
                 </button>
                 <div class="faq-answer hidden px-5 pb-4">
-                    <p class="text-sm text-slate-600 leading-relaxed">{{ e($faq['jawaban'] ?? '-') }}</p>
-                    @if(isset($faq['kategori']))
+                    <p class="text-sm text-slate-600 leading-relaxed">{!! nl2br(e($faq->answer)) !!}</p>
+                    @if($faq->category)
                     <span class="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
-                        {{ $faq['kategori'] }}
+                        {{ $faq->category }}
                     </span>
                     @endif
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="text-center py-8 text-slate-400">
+                <p class="text-4xl mb-2">📭</p>
+                <p>Belum ada FAQ.</p>
+            </div>
+            @endforelse
         </div>
     </div>
 
@@ -309,6 +380,13 @@ $(document).ready(function() {
                 $('html, body').animate({ scrollTop: targetPosition }, 400);
             }, 100);
         }
+    }
+
+    // ===== Auto-open FAQ jika ada hash #faq =====
+    if (window.location.hash === '#faq') {
+        setTimeout(function() {
+            $('.faq-toggle:first').click();
+        }, 300);
     }
 });
 </script>

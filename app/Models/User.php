@@ -51,26 +51,20 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Relasi: 1 user memiliki 1 fakultas.
-     */
+    // ============================================================
+    // RELATIONS
+    // ============================================================
+
     public function faculty()
     {
         return $this->belongsTo(Faculty::class);
     }
 
-    /**
-     * Relasi: 1 user/admin bisa memiliki banyak data admin fakultas.
-     */
     public function adminFaculties()
     {
         return $this->hasMany(AdminFaculty::class);
     }
 
-    /**
-     * Relasi many-to-many:
-     * 1 admin bisa mengelola banyak fakultas.
-     */
     public function managedFaculties()
     {
         return $this->belongsToMany(Faculty::class, 'admin_faculties')
@@ -78,81 +72,75 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    /**
-     * Relasi: 1 user punya banyak log reputasi.
-     */
     public function reputationLogs()
     {
         return $this->hasMany(ReputationLog::class);
     }
 
-    /**
-     * Relasi: user/admin yang membuat log reputasi.
-     */
     public function createdReputationLogs()
     {
         return $this->hasMany(ReputationLog::class, 'created_by');
     }
 
-    /**
-     * Cek role superadmin.
-     */
+    // ============================================================
+    // ROLE CHECKS
+    // ============================================================
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'superadmin';
     }
 
-    /**
-     * Cek role admin.
-     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Cek role dosen.
-     */
     public function isDosen(): bool
     {
         return $this->role === 'dosen';
     }
 
-    /**
-     * Cek role mahasiswa.
-     */
     public function isMahasiswa(): bool
     {
         return $this->role === 'mahasiswa';
     }
 
     /**
-     * Cek akun aktif.
+     * PERBAIKAN: Tambahkan method untuk role organisasi
      */
+    public function isOrganisasi(): bool
+    {
+        return $this->role === 'organisasi';
+    }
+
+    /**
+     * PERBAIKAN: Cek apakah user adalah role umum (bukan superadmin/admin)
+     */
+    public function isRegularUser(): bool
+    {
+        return in_array($this->role, ['mahasiswa', 'dosen', 'organisasi']);
+    }
+
+    // ============================================================
+    // STATUS CHECKS
+    // ============================================================
+
     public function isActive(): bool
     {
         return $this->status === 'active';
     }
 
-    /**
-     * Cek akun pending.
-     */
     public function isPending(): bool
     {
         return $this->status === 'pending';
     }
 
-    /**
-     * Cek akun nonaktif.
-     */
     public function isInactive(): bool
     {
         return $this->status === 'inactive';
     }
 
-    /**
-     * Cek akun banned.
-     */
     public function isBanned(): bool
     {
         return $this->status === 'banned';

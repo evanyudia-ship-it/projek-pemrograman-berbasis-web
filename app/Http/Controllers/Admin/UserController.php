@@ -8,11 +8,29 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    /**
+     * Cek apakah user adalah SuperAdmin.
+     * Hanya SuperAdmin yang boleh mengelola user.
+     */
+    private function checkSuperAdmin(): void
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'superadmin') {
+            abort(403, 'Hanya SuperAdmin yang dapat mengelola user.');
+        }
+    }
+
+    /**
+     * Display a listing of users.
+     */
     public function index(Request $request)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $query = User::with('faculty')->latest();
 
         if ($request->filled('search')) {
@@ -40,7 +58,7 @@ class UserController extends Controller
         $totalAdmin = User::where('role', 'admin')->count();
         $totalDosen = User::where('role', 'dosen')->count();
         $totalMahasiswa = User::where('role', 'mahasiswa')->count();
-        $totalOrganisasi = 0;
+        $totalOrganisasi = User::where('role', 'organisasi')->count();
 
         return view('admin.users.index', compact(
             'users',
@@ -52,20 +70,30 @@ class UserController extends Controller
         ));
     }
 
+    /**
+     * Show form for creating a new user.
+     */
     public function create()
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
 
         return view('admin.users.create', compact('faculties'));
     }
 
+    /**
+     * Store a newly created user.
+     */
     public function store(Request $request)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa'])],
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa', 'organisasi'])],
             'nim' => ['nullable', 'string', 'max:30', 'unique:users,nim'],
             'nidn' => ['nullable', 'string', 'max:30', 'unique:users,nidn'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -83,22 +111,37 @@ class UserController extends Controller
             ->with('success', 'User berhasil ditambahkan.');
     }
 
+    /**
+     * Display the specified user.
+     */
     public function show(User $user)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $user->load('faculty', 'managedFaculties', 'reputationLogs');
 
         return view('admin.users.show', compact('user'));
     }
 
+    /**
+     * Show form for editing the specified user.
+     */
     public function edit(User $user)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $faculties = Faculty::where('status', 'active')->orderBy('name')->get();
 
         return view('admin.users.edit', compact('user', 'faculties'));
     }
 
+    /**
+     * Update the specified user.
+     */
     public function update(Request $request, User $user)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'email' => [
@@ -108,7 +151,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa'])],
+            'role' => ['required', Rule::in(['superadmin', 'admin', 'dosen', 'mahasiswa', 'organisasi'])],
             'nim' => [
                 'nullable',
                 'string',
@@ -144,8 +187,13 @@ class UserController extends Controller
             ->with('success', 'Data user berhasil diperbarui.');
     }
 
+    /**
+     * Remove the specified user.
+     */
     public function destroy(User $user)
     {
+        $this->checkSuperAdmin(); // ✅ Hanya SuperAdmin
+
         if (session('user_id') == $user->id) {
             return back()->with('error', 'Akun yang sedang digunakan tidak boleh dihapus.');
         }

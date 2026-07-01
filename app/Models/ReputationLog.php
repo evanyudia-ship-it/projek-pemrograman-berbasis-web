@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletes;  // ← TAMBAHKAN
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReputationLog extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;  // ← TAMBAHKAN SoftDeletes
 
     protected $fillable = [
         'user_id',
@@ -21,7 +22,7 @@ class ReputationLog extends Model
         'reason',
         'description',
         'created_by',
-        'deleted_at',
+        'deleted_at',  // ← TAMBAHKAN
     ];
 
     protected function casts(): array
@@ -36,7 +37,7 @@ class ReputationLog extends Model
     /**
      * Log reputasi milik 1 user.
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -44,7 +45,7 @@ class ReputationLog extends Model
     /**
      * Log reputasi berdasarkan aturan reputasi tertentu.
      */
-    public function reputationSetting()
+    public function reputationSetting(): BelongsTo
     {
         return $this->belongsTo(ReputationSetting::class);
     }
@@ -52,7 +53,7 @@ class ReputationLog extends Model
     /**
      * Log reputasi bisa terkait dengan booking.
      */
-    public function booking()
+    public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);
     }
@@ -60,7 +61,7 @@ class ReputationLog extends Model
     /**
      * User/admin yang membuat log reputasi.
      */
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }

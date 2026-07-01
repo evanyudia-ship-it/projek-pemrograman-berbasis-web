@@ -178,7 +178,6 @@
 
                     {{-- Status --}}
                     <td class="px-6 py-4">
-                        {{-- PERBAIKAN: route('admin.rooms.toggleStatus') -> route('admin.rooms.toggle-status') --}}
                         <form action="{{ route('admin.rooms.toggle-status', $room->id) }}" method="POST">
                             @csrf
                             <button type="submit"

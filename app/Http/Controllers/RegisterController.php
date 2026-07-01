@@ -30,8 +30,8 @@ class RegisterController extends Controller
             [
                 'name' => ['required', 'string', 'min:3', 'max:100'],
                 'email' => ['required', 'email', 'max:150', 'unique:users,email'],
-                'role' => ['required', Rule::in(['mahasiswa', 'dosen'])],
-                'nim_nip' => ['required', 'string', 'max:30'],
+                'role' => ['required', Rule::in(['mahasiswa', 'dosen', 'organisasi'])], // ← PERBAIKAN: Tambahkan organisasi
+                'nim_nip' => ['nullable', 'string', 'max:30'], // ← PERBAIKAN: Tidak required untuk organisasi
                 'phone' => ['nullable', 'string', 'max:30'],
                 'faculty_id' => ['nullable', 'exists:faculties,id'],
                 'password' => ['required', 'string', 'min:6', 'confirmed'],
@@ -44,34 +44,45 @@ class RegisterController extends Controller
                 'email.unique' => 'Email sudah terdaftar.',
                 'role.required' => 'Role wajib dipilih.',
                 'role.in' => 'Role tidak valid.',
-                'nim_nip.required' => 'NIM/NIDN wajib diisi.',
                 'password.required' => 'Password wajib diisi.',
                 'password.min' => 'Password minimal 6 karakter.',
                 'password.confirmed' => 'Konfirmasi password tidak cocok.',
             ]
         );
 
+        // ============================================================
+        // PERBAIKAN: Validasi NIM/NIDN berdasarkan role
+        // ============================================================
         $nim = null;
         $nidn = null;
 
         if ($validated['role'] === 'mahasiswa') {
+            // Mahasiswa wajib mengisi NIM
+            $request->validate([
+                'nim_nip' => ['required', 'string', 'max:30', 'unique:users,nim'],
+            ], [
+                'nim_nip.required' => 'NIM wajib diisi untuk mahasiswa.',
+                'nim_nip.unique' => 'NIM sudah terdaftar.',
+            ]);
             $nim = $validated['nim_nip'];
-
-            if (User::where('nim', $nim)->exists()) {
-                return back()
-                    ->withErrors(['nim_nip' => 'NIM sudah terdaftar.'])
-                    ->withInput();
-            }
         }
 
         if ($validated['role'] === 'dosen') {
+            // Dosen wajib mengisi NIDN
+            $request->validate([
+                'nim_nip' => ['required', 'string', 'max:30', 'unique:users,nidn'],
+            ], [
+                'nim_nip.required' => 'NIDN wajib diisi untuk dosen.',
+                'nim_nip.unique' => 'NIDN sudah terdaftar.',
+            ]);
             $nidn = $validated['nim_nip'];
+        }
 
-            if (User::where('nidn', $nidn)->exists()) {
-                return back()
-                    ->withErrors(['nim_nip' => 'NIDN sudah terdaftar.'])
-                    ->withInput();
-            }
+        // PERBAIKAN: Organisasi tidak wajib mengisi NIM/NIDN
+        if ($validated['role'] === 'organisasi') {
+            // Organisasi tidak perlu NIM/NIDN
+            $nim = null;
+            $nidn = null;
         }
 
         $user = User::create([

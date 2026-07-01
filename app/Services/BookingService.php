@@ -6,9 +6,11 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Models\RoomSchedule;
 use App\Helpers\NotificationHelper;
+use App\Helpers\PriorityHelper;
 use App\Services\ReputationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookingService
 {
@@ -35,6 +37,33 @@ class BookingService
             $start = Carbon::parse($data['tanggal'] . ' ' . $data['jam_mulai']);
             $end = Carbon::parse($data['tanggal'] . ' ' . $data['jam_selesai']);
             $durasiMenit = $start->diffInMinutes($end);
+            $durasiJam = $start->diffInHours($end);
+
+            // ============================================================
+            // ✅ CEK DURASI MAKSIMAL BERDASARKAN ROLE
+            // ============================================================
+            $user = \App\Models\User::find($userId);
+            $maxDurasi = match($user->role ?? 'mahasiswa') {
+                'mahasiswa' => 2,      // 2 jam untuk mahasiswa
+                'dosen' => 6,          // 6 jam untuk dosen
+                'organisasi' => 4,     // 4 jam untuk organisasi
+                'admin' => 8,          // 8 jam untuk admin
+                'superadmin' => 12,    // 12 jam untuk superadmin
+                default => 4,          // default 4 jam
+            };
+
+            // Validasi durasi (jika melebihi max, throw error)
+            if ($durasiJam > $maxDurasi) {
+                throw new \InvalidArgumentException(
+                    "Durasi booking ({$durasiJam} jam) melebihi batas maksimal untuk " . ucfirst($user->role ?? 'user') . " (Max: {$maxDurasi} jam)"
+                );
+            }
+
+            // ============================================================
+            // ✅ PRIORITY LEVEL - DARI SISTEM (BUKAN INPUT USER)
+            // ============================================================
+            $jenisKegiatan = $data['jenis_kegiatan'] ?? null;
+            $priority = PriorityHelper::getPriority($jenisKegiatan);
 
             // Check-in deadline: 30 minutes after start
             $checkinDeadline = $start->copy()->addMinutes(30);
@@ -45,12 +74,13 @@ class BookingService
                 'user_id' => $userId,
                 'room_id' => $data['room_id'],
                 'kegiatan' => $data['kegiatan'],
+                'jenis_kegiatan' => $jenisKegiatan,
                 'tujuan' => $data['tujuan'],
                 'tanggal' => $data['tanggal'],
                 'jam_mulai' => $data['jam_mulai'],
                 'jam_selesai' => $data['jam_selesai'],
                 'durasi_menit' => $durasiMenit,
-                'priority_level' => $priority,
+                'priority_level' => $priority, // ✅ Sistem yang menentukan!
                 'status' => 'pending',
                 'check_in_status' => 'belum_checkin',
                 'checkin_deadline' => $checkinDeadline,
@@ -282,7 +312,7 @@ class BookingService
         });
     }
 
-        /**
+    /**
      * Complete booking (after usage).
      */
     public function complete(Booking $booking): Booking
@@ -316,6 +346,48 @@ class BookingService
     }
 
     /**
+     * Process a single booking as no-show (admin triggered or system).
+     *
+     * PERBAIKAN: Method ini ditambahkan untuk menangani No-Show dari admin
+     */
+    public function processNoShow(Booking $booking): Booking
+    {
+        return DB::transaction(function () use ($booking) {
+            // Update booking status
+            $booking->update([
+                'status' => 'no_show',
+                'check_in_status' => 'no_show',
+            ]);
+
+            // Delete schedule
+            if ($booking->schedule) {
+                $booking->schedule()->delete();
+            }
+
+            // Apply reputation penalty
+            $reputationService = app(ReputationService::class);
+            $reputationService->apply(
+                $booking->user,
+                'NO_SHOW',
+                $booking,
+                'No Show (admin)',
+                auth()->id() ?? session('user_id')
+            );
+
+            // Send notification to user
+            NotificationHelper::noShow(
+                $booking->user_id,
+                $booking->booking_code,
+                $booking->room->nama
+            );
+
+            Log::info("Booking marked as no-show by admin: " . $booking->booking_code);
+
+            return $booking;
+        });
+    }
+
+    /**
      * Process auto-complete for bookings (called by cron).
      * Booking akan otomatis selesai 1 jam setelah jam selesai.
      */
@@ -329,7 +401,7 @@ class BookingService
                 ->whereRaw("DATE_ADD(CONCAT(tanggal, ' ', jam_selesai), INTERVAL 1 HOUR) < NOW()")
                 ->get();
 
-            \Log::info("Found " . $bookings->count() . " bookings to auto-complete.");
+            Log::info("Found " . $bookings->count() . " bookings to auto-complete.");
 
             foreach ($bookings as $booking) {
                 try {
@@ -339,8 +411,13 @@ class BookingService
                         ]);
 
                         // Tambah reputasi karena menggunakan ruang dengan baik
-                        $booking->user->increment('reputation_points', 10);
-                        $this->logReputation($booking->user_id, 10, 'reward', 'Auto-complete: Menggunakan ruang sesuai jadwal', $booking->id);
+                        $reputationService = app(ReputationService::class);
+                        $reputationService->apply(
+                            $booking->user,
+                            'ROOM_USAGE_GOOD',
+                            $booking,
+                            'Auto-complete: Menggunakan ruang sesuai jadwal'
+                        );
 
                         // Send notification
                         NotificationHelper::send(
@@ -353,14 +430,14 @@ class BookingService
                         );
 
                         $count++;
-                        \Log::info("Auto-completed booking: " . $booking->booking_code);
+                        Log::info("Auto-completed booking: " . $booking->booking_code);
                     });
                 } catch (\Exception $e) {
-                    \Log::error("Error auto-completing booking {$booking->id}: " . $e->getMessage());
+                    Log::error("Error auto-completing booking {$booking->id}: " . $e->getMessage());
                 }
             }
         } catch (\Exception $e) {
-            \Log::error("Error in processAutoComplete: " . $e->getMessage());
+            Log::error("Error in processAutoComplete: " . $e->getMessage());
             throw $e;
         }
 
@@ -381,7 +458,7 @@ class BookingService
                 ->where('checkin_deadline', '<', now())
                 ->get();
 
-            \Log::info("Found " . $bookings->count() . " bookings to process as no-show.");
+            Log::info("Found " . $bookings->count() . " bookings to process as no-show.");
 
             foreach ($bookings as $booking) {
                 try {
@@ -408,14 +485,14 @@ class BookingService
                         );
 
                         $count++;
-                        \Log::info("Processed no-show for booking: " . $booking->booking_code);
+                        Log::info("Processed no-show for booking: " . $booking->booking_code);
                     });
                 } catch (\Exception $e) {
-                    \Log::error("Error processing no-show for booking {$booking->id}: " . $e->getMessage());
+                    Log::error("Error processing no-show for booking {$booking->id}: " . $e->getMessage());
                 }
             }
         } catch (\Exception $e) {
-            \Log::error("Error in processNoShows: " . $e->getMessage());
+            Log::error("Error in processNoShows: " . $e->getMessage());
             throw $e;
         }
 
@@ -429,40 +506,5 @@ class BookingService
     {
         $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai->format('H:i:s'));
         return now()->diffInHours($startTime) < 1;
-    }
-
-    /**
-     * Calculate penalty points.
-     */
-    private function calculatePenaltyPoints(Booking $booking): int
-    {
-        $startTime = Carbon::parse($booking->tanggal->format('Y-m-d') . ' ' . $booking->jam_mulai->format('H:i:s'));
-        $diffHours = now()->diffInHours($startTime);
-
-        if ($diffHours < 1) {
-            return 10;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Log reputation change.
-     */
-    private function logReputation(int $userId, int $points, string $type, string $reason, ?int $bookingId = null): void
-    {
-        $user = \App\Models\User::find($userId);
-        if (!$user) return;
-
-        \App\Models\ReputationLog::create([
-            'user_id' => $userId,
-            'booking_id' => $bookingId,
-            'point_before' => $user->reputation_points - $points,
-            'point_change' => $points,
-            'point_after' => $user->reputation_points,
-            'type' => $type,
-            'reason' => $reason,
-            'description' => $reason,
-        ]);
     }
 }

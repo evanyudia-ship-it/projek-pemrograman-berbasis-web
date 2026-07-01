@@ -4,12 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Room;
-use App\Models\RoomSchedule;
+use App\Models\User;
 use App\Traits\AuthenticatesUser;
 use App\Helpers\PriorityHelper;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Carbon\Carbon;
 
 class BookingController extends Controller
@@ -42,27 +40,6 @@ class BookingController extends Controller
     }
 
     /**
-     * Check if user can create booking based on reputation.
-     */
-    private function checkReputation(User $user): ?string
-    {
-        $reputationService = app(\App\Services\ReputationService::class);
-
-        // Cek apakah user bisa booking
-        if (!$reputationService->canBook($user)) {
-            return 'Akun Anda diblokir karena reputasi rendah. Hubungi admin untuk informasi lebih lanjut.';
-        }
-
-        // Cek apakah sudah mencapai max active bookings
-        if ($reputationService->hasReachedMaxActiveBookings($user)) {
-            $max = $reputationService->getMaxActiveBookings($user);
-            return "Anda sudah mencapai batas maksimal booking aktif ({$max} booking). Selesaikan booking yang sedang berjalan terlebih dahulu.";
-        }
-
-        return null;
-    }
-
-    /**
      * Show form to create a new booking.
      */
     public function create()
@@ -77,6 +54,9 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        // ================================================================
+        // VALIDASI DASAR
+        // ================================================================
         $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'kegiatan' => 'required|string|max:150',
@@ -85,6 +65,7 @@ class BookingController extends Controller
             'tanggal' => 'required|date|after_or_equal:today',
             'jam_mulai' => 'required|date_format:H:i',
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+            'participant_count' => 'nullable|integer|min:1',
         ]);
 
         $userId = $this->currentUserId();
@@ -93,26 +74,83 @@ class BookingController extends Controller
         }
 
         $user = User::find($userId);
-
-        // CEK REPUTASI
-        $reputationError = $this->checkReputation($user);
-        if ($reputationError) {
-            return back()->withInput()->with('error', $reputationError);
-        }
-
-        // Cek ketersediaan ruang
         $room = Room::find($request->room_id);
-        if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai)) {
-            return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
+
+        // ================================================================
+        // VALIDASI A: CEK KAPASITAS RUANG
+        // ================================================================
+        if ($request->has('participant_count') && $request->participant_count > $room->kapasitas) {
+            return back()
+                ->withInput()
+                ->with('error', 'Jumlah peserta (' . $request->participant_count . ') melebihi kapasitas ruang (Max: ' . $room->kapasitas . ' orang)');
         }
 
-        // Gunakan BookingService dengan transaction
+        // ================================================================
+        // VALIDASI B: CEK DURASI MAKSIMAL BERDASARKAN ROLE
+        // ================================================================
+        $start = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
+        $end = Carbon::parse($request->tanggal . ' ' . $request->jam_selesai);
+        $durasiJam = $start->diffInHours($end);
+
+        $maxDurasi = match($user->role) {
+            'mahasiswa' => 2,  // 2 jam untuk mahasiswa
+            'dosen' => 6,      // 6 jam untuk dosen
+            'organisasi' => 4, // 4 jam untuk organisasi
+            default => 4,      // default 4 jam
+        };
+
+        if ($durasiJam > $maxDurasi) {
+            return back()
+                ->withInput()
+                ->with('error', 'Durasi booking (' . $durasiJam . ' jam) melebihi batas maksimal untuk ' . ucfirst($user->role) . ' (Max: ' . $maxDurasi . ' jam)');
+        }
+
+        // ================================================================
+        // VALIDASI C: CEK MAKSIMAL BOOKING AKTIF (3 booking/hari)
+        // ================================================================
+        $todayBookings = Booking::where('user_id', $userId)
+            ->whereDate('tanggal', $request->tanggal)
+            ->whereIn('status', ['pending', 'approved', 'ongoing'])
+            ->count();
+
+        if ($todayBookings >= 3) {
+            return back()
+                ->withInput()
+                ->with('error', 'Anda sudah mencapai batas maksimal 3 booking untuk hari ini (' . $request->tanggal . ').');
+        }
+
+        // ================================================================
+        // VALIDASI D: CEK REPUTASI USER MINIMAL 30
+        // ================================================================
+        if ($user->reputation_points < 30) {
+            return back()
+                ->withInput()
+                ->with('error', 'Reputasi Anda rendah (' . $user->reputation_points . '). Minimal 30 poin untuk melakukan booking.');
+        }
+
+        // ================================================================
+        // VALIDASI E: CEK BENTROK JADWAL (Method isAvailableAt di Room.php)
+        // ================================================================
+        if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Ruang tidak tersedia pada waktu yang dipilih. Silakan pilih waktu lain.');
+        }
+
+        // ================================================================
+        // SIMPAN BOOKING
+        // ================================================================
         $bookingService = app(\App\Services\BookingService::class);
         $booking = $bookingService->create($request->all(), $userId);
 
-        return redirect()->route('bookings.index')
+        return redirect()
+            ->route('bookings.index')
             ->with('success', 'Booking berhasil diajukan! Menunggu persetujuan admin.');
     }
+
+    // ================================================================
+    // METHOD LAINNYA (show, edit, update, checkin, complete, history, cancel)
+    // ================================================================
 
     /**
      * Display the specified booking.
@@ -139,10 +177,11 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
         $userId = $this->currentUserId();
-        // Hanya bisa edit jika status pending dan milik sendiri
+
         if ($userId != $booking->user_id || $booking->status != 'pending') {
             abort(403);
         }
+
         $rooms = Room::where('status', 'Tersedia')->get();
         return view('bookings.edit', compact('booking', 'rooms'));
     }
@@ -168,17 +207,16 @@ class BookingController extends Controller
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
         ]);
 
-        // Cek ketersediaan
         $room = Room::find($request->room_id);
         if (!$room->isAvailableAt($request->tanggal, $request->jam_mulai, $request->jam_selesai, $booking->id)) {
             return back()->withInput()->with('error', 'Ruang tidak tersedia pada waktu yang dipilih.');
         }
 
-        // Gunakan BookingService dengan transaction
         $bookingService = app(\App\Services\BookingService::class);
         $booking = $bookingService->update($booking, $request->all());
 
-        return redirect()->route('bookings.show', $booking->id)
+        return redirect()
+            ->route('bookings.show', $booking->id)
             ->with('success', 'Booking berhasil diperbarui.');
     }
 
@@ -198,11 +236,11 @@ class BookingController extends Controller
             return back()->with('error', 'Booking tidak dapat di-check-in. Status: ' . $booking->status);
         }
 
-        // Gunakan BookingService dengan transaction
         $bookingService = app(\App\Services\BookingService::class);
         $booking = $bookingService->checkIn($booking);
 
-        return redirect()->route('bookings.show', $booking->id)
+        return redirect()
+            ->route('bookings.show', $booking->id)
             ->with('success', 'Check-in berhasil!');
     }
 
@@ -214,21 +252,19 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
         $userId = $this->currentUserId();
 
-        // Cek apakah booking milik user yang sedang login
         if ($userId != $booking->user_id) {
             abort(403);
         }
 
-        // Cek apakah booking sedang berlangsung
         if ($booking->status !== 'ongoing') {
             return back()->with('error', 'Booking tidak dapat diselesaikan. Status: ' . $booking->status);
         }
 
-        // Complete booking dengan transaction
         $bookingService = app(\App\Services\BookingService::class);
         $booking = $bookingService->complete($booking);
 
-        return redirect()->route('bookings.show', $booking->id)
+        return redirect()
+            ->route('bookings.show', $booking->id)
             ->with('success', 'Booking berhasil diselesaikan! Terima kasih telah menggunakan ruangan.');
     }
 
@@ -252,8 +288,7 @@ class BookingController extends Controller
     }
 
     /**
-     * Cancel booking (old method, may be replaced by cancellation controller).
-     * We keep for backward compatibility.
+     * Cancel booking.
      */
     public function cancel(Request $request, $id)
     {
@@ -270,10 +305,30 @@ class BookingController extends Controller
 
         $reason = $request->input('reason', 'Dibatalkan oleh pemohon');
 
-        // Gunakan BookingService dengan transaction
         $bookingService = app(\App\Services\BookingService::class);
         $bookingService->cancel($booking, $reason, $userId);
 
-        return redirect()->route('bookings.index')->with('success', 'Booking dibatalkan.');
+        return redirect()
+            ->route('bookings.index')
+            ->with('success', 'Booking dibatalkan.');
+    }
+
+    /**
+     * Check if user can create booking based on reputation.
+     */
+    private function checkReputation(User $user): ?string
+    {
+        $reputationService = app(\App\Services\ReputationService::class);
+
+        if (!$reputationService->canBook($user)) {
+            return 'Akun Anda diblokir karena reputasi rendah. Hubungi admin untuk informasi lebih lanjut.';
+        }
+
+        if ($reputationService->hasReachedMaxActiveBookings($user)) {
+            $max = $reputationService->getMaxActiveBookings($user);
+            return "Anda sudah mencapai batas maksimal booking aktif ({$max} booking). Selesaikan booking yang sedang berjalan terlebih dahulu.";
+        }
+
+        return null;
     }
 }

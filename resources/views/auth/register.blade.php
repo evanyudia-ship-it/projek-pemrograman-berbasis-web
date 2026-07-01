@@ -68,19 +68,22 @@
                     <option value="">Pilih Role</option>
                     <option value="mahasiswa" {{ old('role') == 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                     <option value="dosen" {{ old('role') == 'dosen' ? 'selected' : '' }}>Dosen</option>
+                    <option value="organisasi" {{ old('role') == 'organisasi' ? 'selected' : '' }}>Organisasi</option> {{-- ← TAMBAHKAN --}}
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                <label class="block text-sm font-semibold text-slate-700 mb-2" id="nimLabel">
                     NIM / NIDN
                 </label>
                 <input type="text"
-                       name="nim_nip"
-                       value="{{ old('nim_nip') }}"
-                       placeholder="NIM untuk mahasiswa / NIDN untuk dosen"
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                       required>
+                    name="nim_nip"
+                    value="{{ old('nim_nip') }}"
+                    placeholder="NIM untuk mahasiswa / NIDN untuk dosen"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p class="text-xs text-slate-400 mt-1" id="nimHelp">
+                    Diisi sesuai role Anda
+                </p>
             </div>
 
             <div>

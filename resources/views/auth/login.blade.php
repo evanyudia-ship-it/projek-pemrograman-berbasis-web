@@ -178,10 +178,10 @@
 
                 {{-- Admin --}}
                 <button type="button"
-                        class="demo-login px-4 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-sm font-semibold transition text-center"
-                        data-email="admin@undiksha.ac.id"
-                        data-password="password123">
-                    ⚙️ Admin
+                            class="demo-login px-4 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-sm font-semibold transition text-center"
+                            data-email="admin@undiksha.ac.id"
+                            data-password="password123">
+                        ⚙️ Admin
                 </button>
 
                 {{-- Dosen --}}
@@ -194,10 +194,10 @@
 
                 {{-- Mahasiswa --}}
                 <button type="button"
-                        class="demo-login px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-sm font-semibold transition text-center"
-                        data-email="mahasiswa1@undiksha.ac.id"
+                        class="demo-login px-4 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-sm font-semibold transition text-center col-span-2"
+                        data-email="hmtifo@undiksha.ac.id"
                         data-password="password123">
-                    🎓 Mahasiswa
+                    🏢 Organisasi (HMTI)
                 </button>
             </div>
 

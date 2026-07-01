@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\Notifikasi;
 use App\Traits\AuthenticatesUser;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,8 @@ class DashboardController extends Controller
         if ($this->currentRole() !== 'superadmin') {
             return $this->redirectByRole();
         }
+
+        $userId = $this->currentUserId();
 
         $total_ruang = Room::count();
 
@@ -42,6 +45,29 @@ class DashboardController extends Controller
 
         $jadwal_hari_ini = $this->getJadwalHariIni();
 
+        // ============================================================
+        // PERBAIKAN: Ambil notifikasi untuk superadmin
+        // ============================================================
+        $notifikasi = Notifikasi::where('user_id', $userId)
+            ->where('status', 'belum_dibaca')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($notif) {
+                $iconMap = [
+                    'success' => '✅',
+                    'warning' => '⚠️',
+                    'approval' => '⏳',
+                    'danger' => '❌',
+                    'info' => 'ℹ️',
+                ];
+                return [
+                    'icon' => $iconMap[$notif->tipe] ?? '🔔',
+                    'pesan' => $notif->pesan,
+                    'waktu' => $notif->created_at->diffForHumans(),
+                ];
+            });
+
         return view('admin.SuperAdminDashboard', compact(
             'ruang_tersedia',
             'total_ruang',
@@ -52,7 +78,8 @@ class DashboardController extends Controller
             'total_dosen',
             'total_mahasiswa',
             'total_organisasi',
-            'jadwal_hari_ini'
+            'jadwal_hari_ini',
+            'notifikasi'  // ← TAMBAHKAN
         ));
     }
 

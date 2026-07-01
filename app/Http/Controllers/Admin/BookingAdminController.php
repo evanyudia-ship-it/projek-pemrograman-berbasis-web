@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Services\BookingService;
+use App\Services\ReputationService;  // ← PINDAHKAN KE SINI (di luar class)
+use App\Helpers\NotificationHelper;  // ← TAMBAHKAN
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookingAdminController extends Controller
 {
@@ -49,14 +53,37 @@ class BookingAdminController extends Controller
         return view('admin.bookings.show', compact('booking'));
     }
 
-    use App\Services\ReputationService;
+    /**
+     * Mark booking as no-show (admin only).
+     *
+     * PERBAIKAN: Method ini ditambahkan
+     */
+    public function markNoShow(Request $request, $id)
+    {
+        $booking = Booking::with(['user', 'room'])->findOrFail($id);
+
+        // Validasi: hanya bisa mark no-show jika status approved dan belum check-in
+        if ($booking->status !== 'approved') {
+            return back()->with('error', 'Booking tidak dapat ditandai No-Show. Status saat ini: ' . $booking->status);
+        }
+
+        if ($booking->check_in_status !== 'belum_checkin') {
+            return back()->with('error', 'Booking sudah melakukan check-in. Tidak dapat ditandai No-Show.');
+        }
+
+        // Proses No-Show menggunakan BookingService
+        $bookingService = app(BookingService::class);
+        $bookingService->processNoShow($booking);
+
+        return back()->with('success', "Booking {$booking->booking_code} ditandai No-Show.");
+    }
 
     /**
      * Mark booking as fake (admin only).
      */
     public function markFakeBooking(Request $request, $id)
     {
-        $booking = Booking::findOrFail($id);
+        $booking = Booking::with(['user'])->findOrFail($id);
 
         if ($booking->status !== 'pending' && $booking->status !== 'approved') {
             return back()->with('error', 'Booking tidak dapat ditandai fiktif.');
@@ -72,7 +99,7 @@ class BookingAdminController extends Controller
                 'status' => 'rejected',
                 'catatan_admin' => 'Booking Fiktif: ' . $request->reason,
                 'cancellation_reason' => 'Booking Fiktif: ' . $request->reason,
-                'disetujui_oleh' => session('user_id'),
+                'disetujui_oleh' => auth()->id() ?? session('user_id'),
                 'disetujui_at' => now(),
             ]);
 
@@ -83,7 +110,7 @@ class BookingAdminController extends Controller
                 'FAKE_BOOKING',
                 $booking,
                 'Booking fiktif: ' . $request->reason,
-                session('user_id')
+                auth()->id() ?? session('user_id')
             );
 
             // Send notification

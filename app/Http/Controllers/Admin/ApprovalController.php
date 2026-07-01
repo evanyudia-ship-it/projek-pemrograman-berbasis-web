@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Booking;
+use App\Models\AdminFaculty;
 use App\Services\BookingService;
 use App\Traits\AuthenticatesUser;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class ApprovalController extends Controller
 {
@@ -17,8 +19,31 @@ class ApprovalController extends Controller
      */
     public function index()
     {
-        $pending = Booking::with(['user', 'room'])
-            ->where('status', 'pending')
+        $user = Auth::user();
+        $query = Booking::with(['user', 'room']);
+
+        // Jika SuperAdmin, lihat semua
+        if ($user->role === 'superadmin') {
+            // Tidak ada filter
+        }
+        // Jika Admin, hanya lihat booking di fakultas yang dikelola
+        else if ($user->role === 'admin') {
+            $facultyIds = $user->adminFaculties()
+                ->where('status', 'active')
+                ->pluck('faculty_id')
+                ->toArray();
+
+            $query->whereHas('room', function ($q) use ($facultyIds) {
+                $q->whereIn('faculty_id', $facultyIds);
+            });
+        }
+        // Role lain tidak boleh akses
+        else {
+            abort(403, 'Akses tidak diizinkan.');
+        }
+
+        // Pending bookings
+        $pending = $query->where('status', 'pending')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($booking) {
@@ -39,8 +64,8 @@ class ApprovalController extends Controller
                 ];
             });
 
-        $history = Booking::with(['user', 'room'])
-            ->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
+        // History
+        $history = $query->whereIn('status', ['approved', 'rejected', 'cancelled', 'completed', 'no_show'])
             ->orderBy('updated_at', 'desc')
             ->limit(20)
             ->get()
@@ -64,24 +89,37 @@ class ApprovalController extends Controller
             });
 
         $stats = [
-            'pending' => Booking::where('status', 'pending')->count(),
-            'approved' => Booking::where('status', 'approved')->count(),
-            'rejected' => Booking::where('status', 'rejected')->count(),
-            'expired' => Booking::where('status', 'no_show')->count(),
+            'pending' => $pending->count(),
+            'approved' => $query->where('status', 'approved')->count(),
+            'rejected' => $query->where('status', 'rejected')->count(),
+            'expired' => $query->where('status', 'no_show')->count(),
         ];
 
         return view('admin.bookings.approvals', compact('pending', 'history', 'stats'));
     }
 
     /**
-     * Menyetujui booking.
+     * Menyetujui booking - dengan cek akses fakultas.
      */
     public function approve(Request $request, $id)
     {
-        $booking = Booking::findOrFail($id);
+        $booking = Booking::with('room')->findOrFail($id);
+        $user = Auth::user();
 
         if ($booking->status !== 'pending') {
             return back()->with('error', 'Booking sudah diproses.');
+        }
+
+        // Cek akses admin ke fakultas ruangan
+        if ($user->role === 'admin') {
+            $hasAccess = $user->adminFaculties()
+                ->where('faculty_id', $booking->room->faculty_id)
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$hasAccess) {
+                return back()->with('error', 'Anda tidak memiliki akses ke fakultas ruangan ini.');
+            }
         }
 
         $adminId = $this->currentUserId();
@@ -92,7 +130,7 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Menolak booking dengan alasan.
+     * Menolak booking - dengan cek akses fakultas.
      */
     public function reject(Request $request, $id)
     {
@@ -100,10 +138,23 @@ class ApprovalController extends Controller
             'reason' => 'required|string|max:255',
         ]);
 
-        $booking = Booking::findOrFail($id);
+        $booking = Booking::with('room')->findOrFail($id);
+        $user = Auth::user();
 
         if ($booking->status !== 'pending') {
             return back()->with('error', 'Booking sudah diproses.');
+        }
+
+        // Cek akses admin ke fakultas ruangan
+        if ($user->role === 'admin') {
+            $hasAccess = $user->adminFaculties()
+                ->where('faculty_id', $booking->room->faculty_id)
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$hasAccess) {
+                return back()->with('error', 'Anda tidak memiliki akses ke fakultas ruangan ini.');
+            }
         }
 
         $adminId = $this->currentUserId();
